@@ -1,10 +1,9 @@
-import { ComingSoon } from "@/components/ComingSoon";
+import { AdvisorApp } from "./AdvisorApp";
+
+export const metadata = {
+  title: "לוח היועץ | ארתור",
+};
 
 export default function AdvisorPage() {
-  return (
-    <ComingSoon
-      title="לוח הבקרה ליועץ"
-      note="דורש התחברות אמיתית ליועצים ומסד נתונים משותף עם האשף — בדרך."
-    />
-  );
+  return <AdvisorApp />;
 }
