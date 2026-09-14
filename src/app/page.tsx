@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArthurMascot } from "@/components/ArthurMascot";
 
 const STEPS = [
@@ -16,7 +17,7 @@ const STEPS = [
   },
   {
     title: "מקבלים את ההצעה הזוכה",
-    desc: "התיק (בעילום שם) יוצא ל-4 יועצים — ואתם מקבלים רק את המשתלמת ביותר.",
+    desc: "התיק (בעילום שם) יוצא ליועצים המתאימים לכם — ואתם מקבלים רק את ההצעה המשתלמת ביותר.",
   },
 ];
 
@@ -27,7 +28,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "איך זה עובד בפועל, שלב אחר שלב?",
-    a: "עונים על שאלון קצר, מעלים מסמך אחד שה-AI קורא בשבילכם, מאמתים את הזהות שלכם ב-SMS ובמייל, והתיק (ללא שם) יוצא ל-4 יועצים שמגישים הצעת מחיר.",
+    a: "עונים על שאלון קצר, מעלים מסמך אחד שה-AI קורא בשבילכם, מאמתים את הזהות שלכם ב-SMS ובמייל, והתיק (ללא שם) יוצא ליועצים המתאימים שמגישים הצעת מחיר.",
   },
   {
     q: "כמה זמן זה לוקח?",
@@ -46,7 +47,7 @@ const FAQ: { q: string; a: string }[] = [
     a: "אין בעיה — אפשר לדלג על שלב העלאת המסמך ולהמשיך עם הערכה כללית. יועץ יוכל להשלים את התמונה מולכם בהמשך.",
   },
   {
-    q: "איך בוחרים את 4 היועצים, ומה קורה עם ההצעות שלהם?",
+    q: "איך בוחרים את היועצים, ומה קורה עם ההצעות שלהם?",
     a: "היועצים נבחרים לפי סוג התיק שלכם (מיחזור, עצמאים, מסלולים משתנים ועוד). כל אחד מגיש הצעת מחיר, ואנחנו משווים ומעבירים אליכם רק את ההצעה המשתלמת ביותר.",
   },
   {
@@ -77,7 +78,7 @@ export default function Home() {
           </div>
           <Link
             href="/wizard"
-            className="font-display font-bold text-sm rounded-xl bg-accent text-[#2A1B02] px-4 py-2 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5"
+            className="font-display font-bold text-sm rounded-xl bg-accent text-[var(--hero-1)] px-4 py-2 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5"
           >
             בדיקה חינמית
           </Link>
@@ -93,10 +94,10 @@ export default function Home() {
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-5 py-14 md:py-20">
             <div className="flex-1">
               <span className="inline-flex font-display font-bold text-xs tracking-wide text-white bg-white/15 border border-white/30 rounded-full px-3.5 py-1.5">
-                בליווי אישי, שלב אחר שלב
+                🕵️ אני בודק לפניכם, לא מוכר לכם
               </span>
-              <h1 className="text-white text-3xl md:text-5xl font-display font-black leading-tight pt-4 max-w-[16ch] mx-auto md:mx-0">
-                היי, אני ארתור. בואו נבדוק את המשכנתא שלכם.
+              <h1 className="text-white text-3xl md:text-5xl font-display font-black leading-tight pt-4 max-w-[18ch] mx-auto md:mx-0">
+                אל תיקחו משכנתה לפני שארתור בודק
               </h1>
               <p className="text-white/85 pt-4 max-w-[40ch] mx-auto md:mx-0">
                 כמה שאלות פשוטות, מסמך אחד, ותוך כמה דקות תדעו בדיוק איפה אתם עומדים — ואם כדאי למחזר. בחינם, ובלי שום התחייבות.
@@ -105,7 +106,7 @@ export default function Home() {
                 href="/wizard"
                 className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-white text-[var(--hero-1)] px-6 py-3.5 shadow-lg transition hover:-translate-y-0.5"
               >
-                לבדיקה החינמית שלי ←
+                תנו לי לבדוק ←
               </Link>
             </div>
             <ArthurMascot className="w-40 h-40 md:w-56 md:h-56 flex-shrink-0 drop-shadow-[0_16px_20px_rgba(0,0,0,0.28)]" />
@@ -140,6 +141,19 @@ export default function Home() {
           </div>
         </section>
 
+        {/* MEET ARTHUR VISUAL */}
+        <section className="max-w-5xl mx-auto px-5 pb-16">
+          <div className="rounded-3xl border border-line bg-surface p-2.5 shadow-[var(--shadow)] overflow-hidden">
+            <Image
+              src="/brand/arthur-hero-banner.jpg"
+              alt="ארתור מעביר את התיק ליועצים המתאימים"
+              width={1536}
+              height={1024}
+              className="w-full h-auto rounded-2xl"
+            />
+          </div>
+        </section>
+
         {/* FAQ */}
         <section className="bg-surface-2/40 border-y border-line">
           <div className="max-w-3xl mx-auto px-5 py-16">
@@ -163,12 +177,14 @@ export default function Home() {
 
         {/* FINAL CTA */}
         <section className="max-w-3xl mx-auto px-5 py-16 text-center">
-          <ArthurMascot className="w-16 h-16 mx-auto" />
+          <div className="w-20 h-20 mx-auto rounded-2xl overflow-hidden shadow-[var(--shadow)]">
+            <Image src="/brand/arthur-logo.jpg" alt="ארתור" width={200} height={200} className="w-full h-full object-cover" />
+          </div>
           <h2 className="text-2xl md:text-3xl pt-4">מוכנים לדעת בדיוק איפה אתם עומדים?</h2>
-          <p className="text-ink-soft pt-2 max-w-[46ch] mx-auto">2 דקות, בלי התחייבות, ובלי עלות. ארתור כבר מחכה.</p>
+          <p className="text-ink-soft pt-2 max-w-[46ch] mx-auto">2 דקות, בלי התחייבות, ובלי עלות. ארתור כבר בודק.</p>
           <Link
             href="/wizard"
-            className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-accent text-[#2A1B02] px-7 py-3.5 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5"
+            className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-accent text-[var(--hero-1)] px-7 py-3.5 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5"
           >
             בואו נתחיל
           </Link>

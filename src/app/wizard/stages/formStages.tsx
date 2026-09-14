@@ -26,11 +26,11 @@ export function WelcomeStage({ go }: StageProps) {
                 <svg viewBox="0 0 24 24"><path d="M12 2 14.5 9 22 9 16 13.5 18 21 12 16.5 6 21 8 13.5 2 9 9.5 9Z" fill="currentColor" /></svg>
               </div>
               <div className="hero-band__copy">
-                <span className="kicker-onhero">בדיקת משכנתא בליווי אישי</span>
+                <span className="kicker-onhero">🕵️ אני בודק לפניכם, לא מוכר לכם</span>
                 <h1>
-                  היי, אני ארתור.
+                  אל תיקחו משכנתה
                   <br />
-                  בואו נבדוק אם המשכנתא שלכם <span className="hl">עובדת בשבילכם</span>.
+                  לפני ש<span className="hl">ארתור בודק</span>.
                 </h1>
                 <p>כמה שאלות פשוטות, מסמך אחד, ותוך כמה דקות תדעו בדיוק איפה אתם עומדים — ואם כדאי למחזר.</p>
               </div>

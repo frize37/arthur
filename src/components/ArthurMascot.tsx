@@ -11,9 +11,9 @@ export function ArthurMascot({ className }: { className?: string }) {
       <circle cx="71" cy="58" r="4.2" fill="#291B0E" />
       <ellipse cx="60" cy="70" rx="6.5" ry="4.5" fill="#291B0E" />
       <path d="M52 79 q8 6 16 0" stroke="#291B0E" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <path d="M20 42 a40 26 0 0 1 80 0 z" fill="#DE9F35" />
-      <ellipse cx="60" cy="42" rx="42" ry="7" fill="#B87A1D" />
-      <rect x="52" y="30" width="16" height="8" rx="2" fill="#FBEBCC" />
+      <path d="M20 42 a40 26 0 0 1 80 0 z" fill="#F2B705" />
+      <ellipse cx="60" cy="42" rx="42" ry="7" fill="#C98F00" />
+      <rect x="52" y="30" width="16" height="8" rx="2" fill="#FFFFFF" />
     </svg>
   );
 }

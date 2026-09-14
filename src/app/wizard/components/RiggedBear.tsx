@@ -14,7 +14,7 @@ export function RiggedBear({ mood = "idle" }: { mood?: RigMood }) {
           <ellipse cx="102" cy="118" rx="11" ry="9" fill="#8B5A2B" />
         </g>
         <ellipse cx="60" cy="118" rx="32" ry="24" fill="#8B5A2B" />
-        <ellipse cx="60" cy="124" rx="19" ry="13" fill="#A5734A" />
+        <ellipse cx="60" cy="124" rx="19" ry="13" fill="#1596A9" />
         <g className="earL">
           <circle cx="26" cy="30" r="13" fill="#8B5A2B" />
           <circle cx="26" cy="30" r="6" fill="#C88F52" />
@@ -33,9 +33,9 @@ export function RiggedBear({ mood = "idle" }: { mood?: RigMood }) {
         <path className="mouthSmile" d="M52 79 q8 6 16 0" stroke="#291B0E" strokeWidth="2" fill="none" strokeLinecap="round" />
         <path className="mouthFrown" d="M52 83 q8 -6 16 0" stroke="#291B0E" strokeWidth="2" fill="none" strokeLinecap="round" />
         <ellipse className="tear" cx="72" cy="63" rx="3" ry="4.2" fill="#6FB6EE" />
-        <path d="M20 42 a40 26 0 0 1 80 0 z" fill="#DE9F35" />
-        <ellipse cx="60" cy="42" rx="42" ry="7" fill="#B87A1D" />
-        <rect x="52" y="30" width="16" height="8" rx="2" fill="#FBEBCC" />
+        <path d="M20 42 a40 26 0 0 1 80 0 z" fill="#F2B705" />
+        <ellipse cx="60" cy="42" rx="42" ry="7" fill="#C98F00" />
+        <rect x="52" y="30" width="16" height="8" rx="2" fill="#FFFFFF" />
       </g>
     </svg>
   );

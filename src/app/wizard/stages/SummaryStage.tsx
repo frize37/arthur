@@ -77,13 +77,13 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
       </div>
 
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <h3 style={{ fontSize: 16 }}>התיק שלכם יוצא ל-4 יועצי משכנתאות מובילים</h3>
+        <h3 style={{ fontSize: 16 }}>התיק שלכם יוצא ליועצי המשכנתאות המתאימים לו</h3>
         <div className="sendflow">
           <svg style={{ width: 26, height: 26, color: "var(--teal)" }}><use href="#ic-layers" /></svg>
           <svg className="sendflow__arrow" viewBox="0 0 24 24" style={{ width: 18, height: 18, transform: "scaleX(-1)" }}>
             <path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <div className="sendflow__dot">1</div><div className="sendflow__dot">2</div><div className="sendflow__dot">3</div><div className="sendflow__dot">4</div>
+          <div className="sendflow__dot" /><div className="sendflow__dot" /><div className="sendflow__dot" />
         </div>
         <div className="specialty-grid">
           <div className="specialty"><svg><use href="#ic-down" /></svg><span>מיחזור וריביות</span></div>
@@ -92,7 +92,7 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
           <div className="specialty"><svg><use href="#ic-merge" /></svg><span>איחוד הלוואות</span></div>
         </div>
         <div className="anon-note">
-          הנתונים נשלחים ל-4 היועצים <b>ללא שם או פרטים מזהים</b>. כל יועץ מגיש הצעת מחיר, ואנחנו מעבירים אליכם רק את <b>ההצעה המשתלמת ביותר</b>.
+          הנתונים נשלחים ליועצים <b>ללא שם או פרטים מזהים</b>. כל יועץ מגיש הצעת מחיר, ואנחנו מעבירים אליכם רק את <b>ההצעה המשתלמת ביותר</b>.
         </div>
 
         <ContactAndVerify state={state} set={set} dispatch={dispatch} />
