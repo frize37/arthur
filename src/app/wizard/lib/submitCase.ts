@@ -54,7 +54,7 @@ export async function submitCaseToDatabase(state: WizardState) {
   const { data, error } = await supabase.from("cases").insert(row).select("id").single();
   if (error) {
     console.error("Failed to submit case to database:", error.message);
-    return null;
+    return { ok: false as const, error: error.message };
   }
-  return data.id as string;
+  return { ok: true as const, id: data.id as string };
 }

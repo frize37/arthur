@@ -153,6 +153,7 @@ function ContactAndVerify({
   }
 
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function handleVerify() {
     const okPhone = phoneCodeInput === codes.phone;
@@ -161,8 +162,13 @@ function ContactAndVerify({
     setEmailError(!okEmail);
     if (okPhone && okEmail) {
       setSubmitting(true);
-      await submitCaseToDatabase(state);
+      setSubmitError(null);
+      const result = await submitCaseToDatabase(state);
       setSubmitting(false);
+      if (!result.ok) {
+        setSubmitError("לא הצלחנו לשמור את התיק. נסו שוב בעוד רגע — אם זה חוזר, ספרו לנו: " + result.error);
+        return;
+      }
       dispatch({ type: "VERIFIED" });
     }
   }
@@ -232,6 +238,11 @@ function ContactAndVerify({
       <div className="savings-mini" style={{ alignSelf: "stretch" }}>
         🧪 לצורך ההדגמה בלבד (עדיין אין חיבור אמיתי ל-SMS/מייל): קוד הטלפון <b className="num">{codes.phone}</b>, קוד המייל <b className="num">{codes.email}</b>.
       </div>
+      {submitError && (
+        <div className="match-note warn">
+          <svg><use href="#ic-alert" /></svg>{submitError}
+        </div>
+      )}
       <button type="button" className="btn btn-primary" style={{ width: "100%", padding: 14 }} onClick={handleVerify} disabled={submitting}>
         {submitting ? "נועל את התיק…" : "אימות ונעילת התיק"}
       </button>
