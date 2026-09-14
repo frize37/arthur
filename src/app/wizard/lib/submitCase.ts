@@ -53,12 +53,16 @@ export async function submitCaseToDatabase(state: WizardState) {
 
   try {
     const supabase = createClient();
-    const { data, error } = await supabase.from("cases").insert(row).select("id").single();
+    // Plain insert, no .select() — the public wizard runs as the anonymous
+    // role, which (correctly) has no SELECT policy on cases, so asking
+    // Postgres to return the inserted row via RETURNING fails RLS even
+    // though the insert itself succeeds.
+    const { error } = await supabase.from("cases").insert(row);
     if (error) {
       console.error("Failed to submit case to database:", error.message);
       return { ok: false as const, error: error.message };
     }
-    return { ok: true as const, id: data.id as string };
+    return { ok: true as const };
   } catch (err) {
     // Network-level failures (blocked request, DNS, offline, content filter, etc.)
     // throw instead of returning { error }, so they must be caught explicitly.
