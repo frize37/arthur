@@ -37,7 +37,7 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
       const json = await res.json();
       if (!json.ok) {
         setPhase("error");
-        setErrorMsg(json.error ?? "קריאת המסמך נכשלה.");
+        setErrorMsg((json.error ?? "קריאת המסמך נכשלה.") + (json.detail ? ` — ${json.detail}` : ""));
         setMood("sad");
         return;
       }

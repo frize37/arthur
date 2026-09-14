@@ -96,13 +96,20 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const errText = await res.text();
       console.error("Gemini API error:", res.status, errText);
-      return NextResponse.json({ ok: false, error: "קריאת המסמך נכשלה. נסו שוב." }, { status: 502 });
+      return NextResponse.json(
+        { ok: false, error: `קריאת המסמך נכשלה (${res.status}). נסו שוב.`, detail: errText.slice(0, 500) },
+        { status: 502 }
+      );
     }
 
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      return NextResponse.json({ ok: false, error: "לא הצלחנו לחלץ נתונים מהמסמך." }, { status: 502 });
+      console.error("Gemini returned no text:", JSON.stringify(data).slice(0, 500));
+      return NextResponse.json(
+        { ok: false, error: "לא הצלחנו לחלץ נתונים מהמסמך.", detail: JSON.stringify(data).slice(0, 500) },
+        { status: 502 }
+      );
     }
 
     const parsed = JSON.parse(text);
@@ -110,6 +117,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Document parsing failed:", message);
-    return NextResponse.json({ ok: false, error: "קרתה תקלה בקריאת המסמך. נסו שוב." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "קרתה תקלה בקריאת המסמך. נסו שוב.", detail: message }, { status: 500 });
   }
 }
