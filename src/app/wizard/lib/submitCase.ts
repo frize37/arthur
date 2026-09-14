@@ -51,10 +51,18 @@ export async function submitCaseToDatabase(state: WizardState) {
     email_verified: true,
   };
 
-  const { data, error } = await supabase.from("cases").insert(row).select("id").single();
-  if (error) {
-    console.error("Failed to submit case to database:", error.message);
-    return { ok: false as const, error: error.message };
+  try {
+    const { data, error } = await supabase.from("cases").insert(row).select("id").single();
+    if (error) {
+      console.error("Failed to submit case to database:", error.message);
+      return { ok: false as const, error: error.message };
+    }
+    return { ok: true as const, id: data.id as string };
+  } catch (err) {
+    // Network-level failures (blocked request, DNS, offline, content filter, etc.)
+    // throw instead of returning { error }, so they must be caught explicitly.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Network error submitting case to database:", message);
+    return { ok: false as const, error: `שגיאת רשת: ${message}` };
   }
-  return { ok: true as const, id: data.id as string };
 }

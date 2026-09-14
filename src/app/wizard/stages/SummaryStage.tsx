@@ -163,7 +163,14 @@ function ContactAndVerify({
     if (okPhone && okEmail) {
       setSubmitting(true);
       setSubmitError(null);
-      const result = await submitCaseToDatabase(state);
+      let result: Awaited<ReturnType<typeof submitCaseToDatabase>>;
+      try {
+        result = await submitCaseToDatabase(state);
+      } catch (err) {
+        setSubmitting(false);
+        setSubmitError("קרתה תקלה לא צפויה. נסו שוב: " + (err instanceof Error ? err.message : String(err)));
+        return;
+      }
       setSubmitting(false);
       if (!result.ok) {
         setSubmitError("לא הצלחנו לשמור את התיק. נסו שוב בעוד רגע — אם זה חוזר, ספרו לנו: " + result.error);
