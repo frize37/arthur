@@ -385,7 +385,35 @@ export function CreditStage({ state, set, go, back }: StageProps) {
         </Field>
         {state.otherLoans === "yes" && (
           <Reveal>
-            <SliderField label="מה סך ההחזר החודשי שלהן?" value={state.otherLoansPayment} onChange={(v) => set("otherLoansPayment", v)} min={0} max={15000} step={100} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <SliderField label="מה סך ההחזר החודשי שלהן?" value={state.otherLoansPayment} onChange={(v) => set("otherLoansPayment", v)} min={0} max={15000} step={100} />
+              <Field label="אחת מההלוואות האלה מסתיימת בקרוב?" hint="הלוואה שנגמרת עד כ-18 חודשים לא נלקחת בחשבון בבדיקת ההחזר החדש.">
+                <ChipRow
+                  value={state.otherLoansEndingSoon}
+                  onSelect={(v) => set("otherLoansEndingSoon", v as typeof state.otherLoansEndingSoon)}
+                  options={[
+                    { value: "no", label: "לא, נמשכות עוד הרבה" },
+                    { value: "yes", label: "כן, מסתיימת בקרוב" },
+                  ]}
+                />
+              </Field>
+              {state.otherLoansEndingSoon === "yes" && (
+                <Reveal>
+                  <Field label="כמה חודשים נשארו לה?">
+                    <ChipRow
+                      value={state.otherLoansMonthsLeft}
+                      onSelect={(v) => set("otherLoansMonthsLeft", v as typeof state.otherLoansMonthsLeft)}
+                      options={[
+                        { value: "under6", label: "עד 6 חודשים" },
+                        { value: "6to12", label: "7–12 חודשים" },
+                        { value: "13to18", label: "13–18 חודשים" },
+                        { value: "over18", label: "מעל 18 חודשים" },
+                      ]}
+                    />
+                  </Field>
+                </Reveal>
+              )}
+            </div>
           </Reveal>
         )}
         <Field label="היו בשנים האחרונות חזרות של צ'קים, הוראות קבע, או חיווי אשראי לא תקין?" hint="עוזר לנו להתאים יועץ שמתמחה בתיקים כאלה — לא משפיע על הזכאות שלכם כאן.">

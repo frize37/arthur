@@ -34,6 +34,8 @@ export async function submitCaseToDatabase(state: WizardState) {
 
     other_loans: state.otherLoans,
     other_loans_payment: state.otherLoansPayment,
+    other_loans_ending_soon: state.otherLoansEndingSoon,
+    other_loans_months_left: state.otherLoansMonthsLeft,
     credit_issues: state.creditIssues,
 
     doc_confirmed: state.docConfirmed,

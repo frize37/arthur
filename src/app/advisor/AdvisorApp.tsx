@@ -248,7 +248,14 @@ function DetailView({
               {c.profile.hasSecond === "yes" && c.profile.employment2 && c.profile.seniority2 &&
                 briefRow("מבקש 2", `${LABELS.employment[c.profile.employment2]} · ותק ${LABELS.seniority[c.profile.seniority2]}`)}
               {briefRow("הכנסה נטו", shekel(c.income.net + c.income.extra))}
-              {briefRow("הלוואות נוספות", c.credit.otherLoans === "yes" ? "כן" : "אין")}
+              {briefRow(
+                "הלוואות נוספות",
+                c.credit.otherLoans === "yes"
+                  ? c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft
+                    ? `כן — מסתיימת בעוד ${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft]}`
+                    : "כן, נמשכות"
+                  : "אין"
+              )}
               {briefRow("חיווי אשראי", c.credit.creditIssues === "yes" ? "דורש תשומת לב" : "תקין")}
             </div>
           </div>

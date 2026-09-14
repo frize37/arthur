@@ -79,7 +79,12 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
         seniority2: row.seniority2 ?? undefined,
       },
       income: { net: row.income ?? 0, extra: row.extra ?? 0 },
-      credit: { otherLoans: row.other_loans ?? "no", creditIssues: row.credit_issues ?? "no" },
+      credit: {
+        otherLoans: row.other_loans ?? "no",
+        otherLoansEndingSoon: row.other_loans_ending_soon ?? undefined,
+        otherLoansMonthsLeft: row.other_loans_months_left ?? undefined,
+        creditIssues: row.credit_issues ?? "no",
+      },
       doc: { balance: row.doc_balance ?? 0, rate: row.doc_rate ?? 0, years: row.doc_years ?? 0, months: row.doc_months ?? 0 },
       offer: myOffer ? { savings: Number(myOffer.savings ?? 0), fee: Number(myOffer.fee ?? 0) } : undefined,
     };

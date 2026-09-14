@@ -61,6 +61,8 @@ export interface WizardState {
 
   otherLoans: "yes" | "no" | null;
   otherLoansPayment: number;
+  otherLoansEndingSoon: "yes" | "no" | null;
+  otherLoansMonthsLeft: "under6" | "6to12" | "13to18" | "over18" | null;
   creditIssues: "yes" | "no" | null;
 
   docSkipped: boolean;
@@ -110,6 +112,8 @@ export const initialWizardState: WizardState = {
 
   otherLoans: null,
   otherLoansPayment: 1500,
+  otherLoansEndingSoon: null,
+  otherLoansMonthsLeft: null,
   creditIssues: null,
 
   docSkipped: false,

@@ -15,7 +15,7 @@ export interface AdvisorCase {
   planning: { futureRelease: string; upcomingEvent: string; incomeChange: string };
   profile: { hasSecond: string; employment1: string; seniority1: string; employment2?: string; seniority2?: string };
   income: { net: number; extra: number };
-  credit: { otherLoans: string; creditIssues: string };
+  credit: { otherLoans: string; otherLoansEndingSoon?: string; otherLoansMonthsLeft?: string; creditIssues: string };
   doc: { balance: number; rate: number; years: number; months: number };
   offer?: { savings: number; fee: number };
 }
@@ -36,6 +36,7 @@ export const LABELS = {
   employment: { salaried: "שכיר/ה", selfemployed: "עצמאי/ת", controlling: "בעל/ת שליטה", none: "לא עובד/ת" } as Record<string, string>,
   seniority: { under1: "מתחת לשנה", "1to3": "1–3 שנים", over3: "מעל 3 שנים" } as Record<string, string>,
   yesno: { yes: "כן", no: "לא", unsure: "עוד לא ידוע" } as Record<string, string>,
+  monthsLeft: { under6: "עד 6 חודשים", "6to12": "7–12 חודשים", "13to18": "13–18 חודשים", over18: "מעל 18 חודשים" } as Record<string, string>,
   specialtyIcon: { new: "ic-home", refinance: "ic-down", consolidate: "ic-merge" } as Record<string, string>,
 };
 
