@@ -1,5 +1,14 @@
 import type { Dispatch } from "react";
-import { WizardState, initialWizardState, Stage } from "./types";
+import { WizardState, initialWizardState, Stage, LoanTrack, deriveEstimateFromTracks } from "./types";
+
+export interface ParsedDocumentTotals {
+  quoteValidDate: string | null;
+  totalPrincipal: number | null;
+  totalEarlyRepaymentFee: number | null;
+  totalPayoff: number | null;
+  accountComparisonRate: number | null;
+  accountForecastRate: number | null;
+}
 
 export type Action =
   | { type: "SET"; field: keyof WizardState; value: WizardState[keyof WizardState] }
@@ -7,7 +16,7 @@ export type Action =
   | { type: "BACK"; stages: readonly Stage[] }
   | { type: "RESET" }
   | { type: "HYDRATE"; state: Partial<WizardState> }
-  | { type: "DOC_PARSED"; balance: number }
+  | { type: "DOC_PARSED"; tracks: LoanTrack[]; totals: ParsedDocumentTotals }
   | { type: "DOC_SKIPPED" }
   | { type: "SUBMIT_CONTACT"; name: string; phone: string; email: string }
   | { type: "VERIFIED" }
@@ -28,8 +37,26 @@ export function wizardReducer(state: WizardState, action: Action): WizardState {
       return { ...initialWizardState };
     case "HYDRATE":
       return { ...state, ...action.state };
-    case "DOC_PARSED":
-      return { ...state, docConfirmed: true, docSkipped: false, docParsedOnce: true, docBalance: action.balance };
+    case "DOC_PARSED": {
+      const estimate = deriveEstimateFromTracks(action.tracks, action.totals.totalPrincipal);
+      return {
+        ...state,
+        docConfirmed: true,
+        docSkipped: false,
+        docParsedOnce: true,
+        docTracks: action.tracks,
+        docQuoteValidDate: action.totals.quoteValidDate,
+        docTotalPrincipal: action.totals.totalPrincipal,
+        docTotalEarlyRepaymentFee: action.totals.totalEarlyRepaymentFee,
+        docTotalPayoff: action.totals.totalPayoff,
+        docAccountComparisonRate: action.totals.accountComparisonRate,
+        docAccountForecastRate: action.totals.accountForecastRate,
+        docBalance: estimate.balance,
+        docRate: estimate.rate,
+        docYears: estimate.years,
+        docMonths: estimate.months,
+      };
+    }
     case "DOC_SKIPPED":
       return { ...state, docSkipped: true };
     case "SUBMIT_CONTACT":

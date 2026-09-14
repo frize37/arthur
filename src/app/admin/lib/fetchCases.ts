@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { bandFor, monthlyPayment } from "../../wizard/lib/finance";
-import { Advisor, AdminCase, Offer } from "./data";
+import { Advisor, AdminCase, LoanTrack, Offer } from "./data";
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -51,6 +51,13 @@ export async function fetchCases(): Promise<AdminCase[]> {
   if (assignErr) {
     console.error("Failed to fetch case assignments:", assignErr.message);
   }
+  const { data: trackRows, error: trackErr } = await supabase
+    .from("case_loan_tracks")
+    .select("*")
+    .order("track_order", { ascending: true });
+  if (trackErr) {
+    console.error("Failed to fetch loan tracks:", trackErr.message);
+  }
 
   return caseRows.map((row): AdminCase => {
     const totalMonths = (row.doc_years ?? 0) * 12 + (row.doc_months ?? 0);
@@ -95,6 +102,37 @@ export async function fetchCases(): Promise<AdminCase[]> {
         ...(row.phone_verified && row.email_verified ? [{ label: "זהות אומתה (טלפון+מייל)", time: relativeTime(row.created_at) }] : []),
       ],
       assignedAdvisorIds: (assignmentRows ?? []).filter((a) => a.case_id === row.id).map((a) => a.advisor_id),
+      docTracks: (trackRows ?? [])
+        .filter((t) => t.case_id === row.id)
+        .map(
+          (t): LoanTrack => ({
+            bankName: t.bank_name,
+            rateKind: t.rate_kind,
+            linkedToCpi: t.linked_to_cpi,
+            repaymentMethod: t.repayment_method,
+            annualRate: t.annual_rate != null ? Number(t.annual_rate) : null,
+            anchorRate: t.anchor_rate != null ? Number(t.anchor_rate) : null,
+            marginRate: t.margin_rate != null ? Number(t.margin_rate) : null,
+            nextRateChangeDate: t.next_rate_change_date,
+            monthsRemaining: t.months_remaining,
+            principalBalance: t.principal_balance != null ? Number(t.principal_balance) : null,
+            accruedInterest: t.accrued_interest != null ? Number(t.accrued_interest) : null,
+            arrearsBalance: t.arrears_balance != null ? Number(t.arrears_balance) : null,
+            arrearsInterest: t.arrears_interest != null ? Number(t.arrears_interest) : null,
+            payoffBalance: t.payoff_balance != null ? Number(t.payoff_balance) : null,
+            earlyRepaymentFee: t.early_repayment_fee != null ? Number(t.early_repayment_fee) : null,
+            comparisonRate: t.comparison_rate != null ? Number(t.comparison_rate) : null,
+            forecastRate: t.forecast_rate != null ? Number(t.forecast_rate) : null,
+          })
+        ),
+      docTotals: {
+        quoteValidDate: row.doc_quote_valid_date ?? null,
+        totalPrincipal: row.doc_total_principal != null ? Number(row.doc_total_principal) : null,
+        totalEarlyRepaymentFee: row.doc_total_early_repayment_fee != null ? Number(row.doc_total_early_repayment_fee) : null,
+        totalPayoff: row.doc_total_payoff != null ? Number(row.doc_total_payoff) : null,
+        accountComparisonRate: row.doc_account_comparison_rate != null ? Number(row.doc_account_comparison_rate) : null,
+        accountForecastRate: row.doc_account_forecast_rate != null ? Number(row.doc_account_forecast_rate) : null,
+      },
     };
   });
 }

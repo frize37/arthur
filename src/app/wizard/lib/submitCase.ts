@@ -2,7 +2,9 @@ import { createClient } from "@/lib/supabase/client";
 import { WizardState, isComplexCase } from "./types";
 
 export async function submitCaseToDatabase(state: WizardState) {
+  const caseId = crypto.randomUUID();
   const row = {
+    id: caseId,
     status: "new",
     complex: isComplexCase(state),
 
@@ -44,6 +46,12 @@ export async function submitCaseToDatabase(state: WizardState) {
     doc_rate: state.docRate,
     doc_years: state.docYears,
     doc_months: state.docMonths,
+    doc_quote_valid_date: state.docQuoteValidDate,
+    doc_total_principal: state.docTotalPrincipal,
+    doc_total_early_repayment_fee: state.docTotalEarlyRepaymentFee,
+    doc_total_payoff: state.docTotalPayoff,
+    doc_account_comparison_rate: state.docAccountComparisonRate,
+    doc_account_forecast_rate: state.docAccountForecastRate,
 
     contact_name: state.contactName,
     contact_phone: state.contactPhone,
@@ -64,6 +72,37 @@ export async function submitCaseToDatabase(state: WizardState) {
       console.error("Failed to submit case to database:", error.message);
       return { ok: false as const, error: error.message };
     }
+
+    if (state.docTracks.length > 0) {
+      const trackRows = state.docTracks.map((t, i) => ({
+        case_id: caseId,
+        track_order: i + 1,
+        bank_name: t.bankName,
+        rate_kind: t.rateKind,
+        linked_to_cpi: t.linkedToCpi,
+        repayment_method: t.repaymentMethod,
+        annual_rate: t.annualRate,
+        anchor_rate: t.anchorRate,
+        margin_rate: t.marginRate,
+        next_rate_change_date: t.nextRateChangeDate,
+        months_remaining: t.monthsRemaining,
+        principal_balance: t.principalBalance,
+        accrued_interest: t.accruedInterest,
+        arrears_balance: t.arrearsBalance,
+        arrears_interest: t.arrearsInterest,
+        payoff_balance: t.payoffBalance,
+        early_repayment_fee: t.earlyRepaymentFee,
+        comparison_rate: t.comparisonRate,
+        forecast_rate: t.forecastRate,
+      }));
+      const { error: tracksError } = await supabase.from("case_loan_tracks").insert(trackRows);
+      if (tracksError) {
+        // Don't fail the whole submission over this — the case itself is
+        // already saved with the blended fallback numbers.
+        console.error("Failed to submit loan tracks:", tracksError.message);
+      }
+    }
+
     return { ok: true as const };
   } catch (err) {
     // Network-level failures (blocked request, DNS, offline, content filter, etc.)

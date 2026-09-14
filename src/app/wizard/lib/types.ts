@@ -31,6 +31,26 @@ export const CHAPTERS = ["בקשה ומטרה", "פרטי הנכס", "תכנון
 
 export type YesNo = "yes" | "no" | "unsure" | null;
 
+export interface LoanTrack {
+  bankName: string | null;
+  rateKind: "fixed" | "variable" | null;
+  linkedToCpi: boolean | null;
+  repaymentMethod: string | null;
+  annualRate: number | null;
+  anchorRate: number | null;
+  marginRate: number | null;
+  nextRateChangeDate: string | null;
+  monthsRemaining: number | null;
+  principalBalance: number | null;
+  accruedInterest: number | null;
+  arrearsBalance: number | null;
+  arrearsInterest: number | null;
+  payoffBalance: number | null;
+  earlyRepaymentFee: number | null;
+  comparisonRate: number | null;
+  forecastRate: number | null;
+}
+
 export interface WizardState {
   stage: Stage;
   requestType: "new" | "refinance" | "consolidate" | null;
@@ -72,6 +92,14 @@ export interface WizardState {
   docRate: number;
   docYears: number;
   docMonths: number;
+
+  docTracks: LoanTrack[];
+  docQuoteValidDate: string | null;
+  docTotalPrincipal: number | null;
+  docTotalEarlyRepaymentFee: number | null;
+  docTotalPayoff: number | null;
+  docAccountComparisonRate: number | null;
+  docAccountForecastRate: number | null;
 
   contactTime: string | null;
   contactName: string;
@@ -124,6 +152,14 @@ export const initialWizardState: WizardState = {
   docYears: 22,
   docMonths: 3,
 
+  docTracks: [],
+  docQuoteValidDate: null,
+  docTotalPrincipal: null,
+  docTotalEarlyRepaymentFee: null,
+  docTotalPayoff: null,
+  docAccountComparisonRate: null,
+  docAccountForecastRate: null,
+
   contactTime: null,
   contactName: "",
   contactPhone: "",
@@ -143,6 +179,28 @@ export const GOAL_LABELS: Record<string, string> = {
   investment: "רכישת דירת ההשקעה",
   upgrade: "שדרוג הדירה",
 };
+
+export function deriveEstimateFromTracks(
+  tracks: LoanTrack[],
+  totalPrincipal: number | null
+): { balance: number; rate: number; years: number; months: number } {
+  const balance = totalPrincipal ?? tracks.reduce((sum, t) => sum + (t.principalBalance ?? 0), 0);
+  let weightedRateSum = 0;
+  let weightSum = 0;
+  for (const t of tracks) {
+    const w = t.principalBalance ?? 0;
+    weightedRateSum += w * (t.annualRate ?? 0);
+    weightSum += w;
+  }
+  const rate = weightSum > 0 ? weightedRateSum / weightSum : tracks[0]?.annualRate ?? 0;
+  const maxMonths = Math.max(0, ...tracks.map((t) => t.monthsRemaining ?? 0));
+  return {
+    balance: Math.round(balance),
+    rate: Math.round(rate * 100) / 100,
+    years: Math.floor(maxMonths / 12),
+    months: maxMonths % 12,
+  };
+}
 
 export function isComplexCase(state: WizardState): boolean {
   return (

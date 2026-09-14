@@ -3,6 +3,35 @@ import { monthlyPayment } from "../../wizard/lib/finance";
 export type CaseStatus = "pending" | "sent" | "won" | "lost";
 export type Band = "good" | "watch" | "risk";
 
+export interface LoanTrack {
+  bankName: string | null;
+  rateKind: string | null;
+  linkedToCpi: boolean | null;
+  repaymentMethod: string | null;
+  annualRate: number | null;
+  anchorRate: number | null;
+  marginRate: number | null;
+  nextRateChangeDate: string | null;
+  monthsRemaining: number | null;
+  principalBalance: number | null;
+  accruedInterest: number | null;
+  arrearsBalance: number | null;
+  arrearsInterest: number | null;
+  payoffBalance: number | null;
+  earlyRepaymentFee: number | null;
+  comparisonRate: number | null;
+  forecastRate: number | null;
+}
+
+export interface DocTotals {
+  quoteValidDate: string | null;
+  totalPrincipal: number | null;
+  totalEarlyRepaymentFee: number | null;
+  totalPayoff: number | null;
+  accountComparisonRate: number | null;
+  accountForecastRate: number | null;
+}
+
 export interface AdvisorCase {
   id: string;
   receivedAt: string;
@@ -17,6 +46,8 @@ export interface AdvisorCase {
   income: { net: number; extra: number };
   credit: { otherLoans: string; otherLoansEndingSoon?: string; otherLoansMonthsLeft?: string; creditIssues: string };
   doc: { balance: number; rate: number; years: number; months: number };
+  docTracks: LoanTrack[];
+  docTotals: DocTotals;
   offer?: { savings: number; fee: number };
 }
 

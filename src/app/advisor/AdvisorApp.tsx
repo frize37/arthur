@@ -261,11 +261,46 @@ function DetailView({
           </div>
           <div className="card">
             <h3><svg><use href="#ic-doc" /></svg>מסמכים שצורפו</h3>
-            <div className="brief-grid">
-              {briefRow("יתרת קרן (מהמסמך)", shekel(c.doc.balance))}
-              {briefRow("ריבית שנתית ממוצעת", `${c.doc.rate}%`)}
-              {briefRow("תקופה שנותרה", `${c.doc.years} שנים ו-${c.doc.months} חודשים`)}
-            </div>
+            {c.docTracks.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {c.docTracks.map((t, i) => (
+                  <div
+                    className="brief-grid"
+                    key={i}
+                    style={{ paddingBottom: 10, borderBottom: i < c.docTracks.length - 1 ? "1px solid var(--line)" : undefined }}
+                  >
+                    <div className="brief-item">
+                      <span>מסלול {String.fromCharCode(0x5d0 + i)}׳{t.bankName ? ` · ${t.bankName}` : ""}</span>
+                      <b>
+                        {t.rateKind === "fixed" ? "קבועה" : t.rateKind === "variable" ? "משתנה" : "לא ידוע"}
+                        {t.linkedToCpi ? " · צמודה למדד" : ""}
+                      </b>
+                    </div>
+                    {t.annualRate != null && briefRow("ריבית שנתית", `${t.annualRate}%`)}
+                    {t.monthsRemaining != null && briefRow("יתרת תקופה", `${t.monthsRemaining} חודשים`)}
+                    {t.principalBalance != null && briefRow("יתרת קרן", shekel(t.principalBalance))}
+                    {t.earlyRepaymentFee != null && briefRow("עמלת פרעון מוקדם", shekel(t.earlyRepaymentFee))}
+                    {t.comparisonRate != null && briefRow("ריבית לצרכי השוואה", `${t.comparisonRate}%`)}
+                    {(t.arrearsBalance ?? 0) > 0 && briefRow("יתרת פיגור", shekel(t.arrearsBalance ?? 0))}
+                  </div>
+                ))}
+                {(c.docTotals.totalEarlyRepaymentFee != null || c.docTotals.totalPayoff != null) && (
+                  <div className="brief-grid">
+                    {c.docTotals.totalPayoff != null && briefRow("סה״כ יתרה לסילוק", shekel(c.docTotals.totalPayoff))}
+                    {c.docTotals.totalEarlyRepaymentFee != null &&
+                      briefRow("סה״כ עמלת פרעון מוקדם", shekel(c.docTotals.totalEarlyRepaymentFee))}
+                    {c.docTotals.accountComparisonRate != null &&
+                      briefRow("ריבית לצרכי השוואה (חשבון)", `${c.docTotals.accountComparisonRate}%`)}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="brief-grid">
+                {briefRow("יתרת קרן (הערכה)", shekel(c.doc.balance))}
+                {briefRow("ריבית שנתית ממוצעת", `${c.doc.rate}%`)}
+                {briefRow("תקופה שנותרה", `${c.doc.years} שנים ו-${c.doc.months} חודשים`)}
+              </div>
+            )}
             <div className="anon-note" style={{ marginTop: 12 }}>
               התיק מוצג ללא שם או פרטי קשר של הלקוח, בהתאם למדיניות הפרטיות שלנו. פרטי הקשר יועברו רק אם ההצעה שלכם תיבחר.
             </div>

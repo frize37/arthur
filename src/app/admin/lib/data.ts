@@ -9,6 +9,35 @@ export interface Offer {
   winner?: boolean;
 }
 
+export interface LoanTrack {
+  bankName: string | null;
+  rateKind: string | null;
+  linkedToCpi: boolean | null;
+  repaymentMethod: string | null;
+  annualRate: number | null;
+  anchorRate: number | null;
+  marginRate: number | null;
+  nextRateChangeDate: string | null;
+  monthsRemaining: number | null;
+  principalBalance: number | null;
+  accruedInterest: number | null;
+  arrearsBalance: number | null;
+  arrearsInterest: number | null;
+  payoffBalance: number | null;
+  earlyRepaymentFee: number | null;
+  comparisonRate: number | null;
+  forecastRate: number | null;
+}
+
+export interface DocTotals {
+  quoteValidDate: string | null;
+  totalPrincipal: number | null;
+  totalEarlyRepaymentFee: number | null;
+  totalPayoff: number | null;
+  accountComparisonRate: number | null;
+  accountForecastRate: number | null;
+}
+
 export interface AdminCase {
   id: string;
   receivedAt: string;
@@ -21,6 +50,8 @@ export interface AdminCase {
   offers: Offer[];
   timeline: { label: string; time: string }[];
   assignedAdvisorIds: string[];
+  docTracks: LoanTrack[];
+  docTotals: DocTotals;
 }
 
 export interface Advisor {

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./admin.css";
 import { AdminIcons } from "./components/AdminIcons";
-import { Advisor, AdminCase, CaseStatus, LABELS, Offer, STATUS_META, TABS } from "./lib/data";
+import { Advisor, AdminCase, CaseStatus, DocTotals, LABELS, LoanTrack, Offer, STATUS_META, TABS } from "./lib/data";
 import { assignAdvisorsToCase, fetchAdvisors, fetchCases, persistWinner } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
@@ -237,6 +237,8 @@ function DetailView({
             </div>
           </div>
 
+          {c.docTracks.length > 0 && <LoanTracksCard tracks={c.docTracks} totals={c.docTotals} />}
+
           {c.status === "new" ? (
             <div className="card">
               <h3><svg><use href="#ic-send" /></svg>הקצאת התיק ליועצים</h3>
@@ -382,6 +384,38 @@ function OfferCard({
       </div>
       {offer.notes && <div className="offer-card__notes">{offer.notes}</div>}
       <small style={{ color: "var(--ink-faint)", fontSize: 10.5 }}>התקבל {offer.submittedAt}</small>
+    </div>
+  );
+}
+
+function LoanTracksCard({ tracks, totals }: { tracks: LoanTrack[]; totals: DocTotals }) {
+  return (
+    <div className="card">
+      <h3><svg><use href="#ic-doc" /></svg>מסלולי המשכנתה (מהמסמך שהועלה)</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {tracks.map((t, i) => (
+          <div className="brief-grid" key={i} style={{ paddingBottom: 10, borderBottom: i < tracks.length - 1 ? "1px solid var(--line)" : undefined }}>
+            <div className="brief-item">
+              <span>מסלול {String.fromCharCode(0x5d0 + i)}׳{t.bankName ? ` · ${t.bankName}` : ""}</span>
+              <b>{t.rateKind === "fixed" ? "קבועה" : t.rateKind === "variable" ? "משתנה" : "לא ידוע"}{t.linkedToCpi ? " · צמודה למדד" : ""}</b>
+            </div>
+            {t.annualRate != null && briefRow("ריבית שנתית", `${t.annualRate}%`)}
+            {t.monthsRemaining != null && briefRow("יתרת תקופה", `${t.monthsRemaining} חודשים`)}
+            {t.principalBalance != null && briefRow("יתרת קרן", shekel(t.principalBalance))}
+            {t.earlyRepaymentFee != null && briefRow("עמלת פרעון מוקדם", shekel(t.earlyRepaymentFee))}
+            {t.comparisonRate != null && briefRow("ריבית לצרכי השוואה", `${t.comparisonRate}%`)}
+            {(t.arrearsBalance ?? 0) > 0 && briefRow("יתרת פיגור", shekel(t.arrearsBalance ?? 0))}
+          </div>
+        ))}
+        {(totals.totalEarlyRepaymentFee != null || totals.totalPayoff != null) && (
+          <div className="brief-grid">
+            {totals.totalPayoff != null && briefRow("סה״כ יתרה לסילוק", shekel(totals.totalPayoff))}
+            {totals.totalEarlyRepaymentFee != null && briefRow("סה״כ עמלת פרעון מוקדם", shekel(totals.totalEarlyRepaymentFee))}
+            {totals.accountComparisonRate != null && briefRow("ריבית לצרכי השוואה (חשבון)", `${totals.accountComparisonRate}%`)}
+            {totals.quoteValidDate && briefRow("תוקף הנתונים", totals.quoteValidDate)}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
