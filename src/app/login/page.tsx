@@ -99,7 +99,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full font-display font-bold text-sm rounded-xl bg-accent text-[#2A1B02] px-5 py-3 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5 disabled:opacity-50"
+            className="w-full font-display font-bold text-sm rounded-xl bg-accent text-[var(--hero-1)] px-5 py-3 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5 disabled:opacity-50"
           >
             {loading ? "מתחברים…" : "כניסה"}
           </button>

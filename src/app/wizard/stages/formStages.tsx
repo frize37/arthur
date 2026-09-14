@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import type { StageProps } from "../lib/reducer";
 import { isComplexCase } from "../lib/types";
 import { heroLandingEffects } from "../lib/effects";
@@ -51,7 +52,7 @@ export function WelcomeStage({ go }: StageProps) {
             </svg>
           </div>
           <button type="button" className="float-cta" onClick={() => go("requestType")}>
-            <svg className="peek"><use href="#bear" /></svg>
+            <Image className="peek" src="/brand/arthur-bear-full.png" alt="" width={80} height={80} />
             <span className="txt">בואו נתחיל</span>
             <span className="chev">‹‹</span>
           </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { CHAPTERS } from "../lib/types";
 import { shekel } from "../lib/finance";
 
@@ -23,7 +24,13 @@ export function ProgressBar({ chapter }: { chapter: number | undefined }) {
 export function BuddyRow({ bubble, mood = "bear", size }: { bubble: string; mood?: "bear" | "bear-celebrate" | "bear-detective"; size?: "doc" }) {
   return (
     <div className={"buddy-row" + (size === "doc" ? " buddy-row--doc" : "")}>
-      <svg><use href={`#${mood}`} /></svg>
+      <Image
+        src="/brand/arthur-bear-full.png"
+        alt="ארתור"
+        width={120}
+        height={120}
+        className={`buddy-icon buddy-icon--${mood}`}
+      />
       <div className="bubble">{bubble}</div>
     </div>
   );

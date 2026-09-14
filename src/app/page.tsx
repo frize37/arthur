@@ -69,8 +69,8 @@ export default function Home() {
     <div className="flex flex-col min-h-full">
       <header className="border-b border-line">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 px-5 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <ArthurMascot className="w-8 h-8" />
+          <div className="flex items-center gap-2">
+            <ArthurMascot className="w-14 h-14 -my-2" />
             <div>
               <span className="font-display font-black text-base leading-none">ארתור</span>
               <small className="block text-[11px] text-ink-faint font-semibold">בדיקה ומחזור משכנתאות</small>
@@ -177,9 +177,7 @@ export default function Home() {
 
         {/* FINAL CTA */}
         <section className="max-w-3xl mx-auto px-5 py-16 text-center">
-          <div className="w-20 h-20 mx-auto rounded-2xl overflow-hidden shadow-[var(--shadow)]">
-            <Image src="/brand/arthur-logo.jpg" alt="ארתור" width={200} height={200} className="w-full h-full object-cover" />
-          </div>
+          <ArthurMascot className="w-24 h-24 mx-auto" />
           <h2 className="text-2xl md:text-3xl pt-4">מוכנים לדעת בדיוק איפה אתם עומדים?</h2>
           <p className="text-ink-soft pt-2 max-w-[46ch] mx-auto">2 דקות, בלי התחייבות, ובלי עלות. ארתור כבר בודק.</p>
           <Link
@@ -192,8 +190,8 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-line py-6">
-        <div className="max-w-5xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ink-faint">
-          <span>ארתור — פרויקט בפיתוח.</span>
+        <div className="max-w-5xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-faint">
+          <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-8 w-auto" />
           <Link href="/login" className="hover:text-ink-soft transition">כניסה ליועצים</Link>
         </div>
       </footer>

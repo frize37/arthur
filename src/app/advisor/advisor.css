@@ -132,7 +132,7 @@
 .field .prefix-input input { padding-inline-start: 26px; }
 .btn { font-family: var(--font-rubik), sans-serif; font-weight: 700; font-size: 14px; border-radius: 12px; padding: 11px 20px; border: none; cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, opacity .15s ease; }
 .btn:active { transform: scale(.97); }
-.btn-primary { background: var(--accent); color: #2A1B02; box-shadow: 0 12px 22px -12px color-mix(in srgb, var(--accent) 65%, transparent); }
+.btn-primary { background: var(--accent); color: var(--hero-1); box-shadow: 0 12px 22px -12px color-mix(in srgb, var(--accent) 65%, transparent); }
 .btn-primary:hover { transform: translateY(-1px); }
 .btn-ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--line); }
 .suggested-note { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--teal); background: var(--teal-soft); border-radius: 10px; padding: 8px 11px; }
