@@ -1,10 +1,9 @@
-import { ComingSoon } from "@/components/ComingSoon";
+import { WizardApp } from "./WizardApp";
+
+export const metadata = {
+  title: "בדיקת משכנתא | ארתור",
+};
 
 export default function WizardPage() {
-  return (
-    <ComingSoon
-      title="אשף בדיקת המשכנתא"
-      note="בפרוטוטייפ כבר בנוי אשף מלא בן 10 מסכים עם ניתוח AI ואימות זהות — עכשיו הוא עובר הסבה לגרסה החיה עם מסד נתונים אמיתי."
-    />
-  );
+  return <WizardApp />;
 }
