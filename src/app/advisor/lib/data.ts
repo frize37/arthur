@@ -46,61 +46,6 @@ export const STATUS_META: Record<CaseStatus, { label: string; cls: string }> = {
   lost: { label: "לא נבחרנו", cls: "pill-lost" },
 };
 
-export const MOCK_CASES: AdvisorCase[] = [
-  {
-    id: "C-1042", receivedAt: "לפני 20 דקות", status: "pending", requestType: "refinance", goal: "maximizeSavings", complex: false,
-    property: { value: 1950000, mortgage: 1080000, legal: "tabu" },
-    repayment: { comfort: 6500, max: 8500 },
-    planning: { futureRelease: "no", upcomingEvent: "none", incomeChange: "no" },
-    profile: { hasSecond: "yes", employment1: "salaried", seniority1: "over3", employment2: "salaried", seniority2: "over3" },
-    income: { net: 19500, extra: 0 },
-    credit: { otherLoans: "no", creditIssues: "no" },
-    doc: { balance: 1080000, rate: 5.1, years: 19, months: 0 },
-  },
-  {
-    id: "C-1039", receivedAt: "אתמול, 14:10", status: "pending", requestType: "new", goal: "investment", complex: true,
-    property: { value: 2450000, mortgage: 1400000, legal: "rmi" },
-    repayment: { comfort: 8000, max: 10500 },
-    planning: { futureRelease: "yes", upcomingEvent: "none", incomeChange: "unsure" },
-    profile: { hasSecond: "no", employment1: "controlling", seniority1: "1to3" },
-    income: { net: 23000, extra: 3200 },
-    credit: { otherLoans: "yes", creditIssues: "no" },
-    doc: { balance: 1400000, rate: 4.6, years: 27, months: 0 },
-  },
-  {
-    id: "C-1035", receivedAt: "לפני יומיים", status: "sent", requestType: "consolidate", goal: "closeExpensive", complex: true,
-    property: { value: 1600000, mortgage: 1220000, legal: "tabu" },
-    repayment: { comfort: 5800, max: 6800 },
-    planning: { futureRelease: "no", upcomingEvent: "family", incomeChange: "no" },
-    profile: { hasSecond: "yes", employment1: "salaried", seniority1: "over3", employment2: "selfemployed", seniority2: "under1" },
-    income: { net: 16200, extra: 1500 },
-    credit: { otherLoans: "yes", creditIssues: "yes" },
-    doc: { balance: 1220000, rate: 6.2, years: 21, months: 6 },
-    offer: { savings: 41000, fee: 3200 },
-  },
-  {
-    id: "C-1028", receivedAt: "לפני 5 ימים", status: "won", requestType: "refinance", goal: "lower", complex: false,
-    property: { value: 1750000, mortgage: 930000, legal: "tabu" },
-    repayment: { comfort: 5200, max: 6200 },
-    planning: { futureRelease: "no", upcomingEvent: "reno", incomeChange: "no" },
-    profile: { hasSecond: "no", employment1: "salaried", seniority1: "over3" },
-    income: { net: 14800, extra: 0 },
-    credit: { otherLoans: "no", creditIssues: "no" },
-    doc: { balance: 930000, rate: 5.4, years: 17, months: 0 },
-    offer: { savings: 38500, fee: 1900 },
-  },
-  {
-    id: "C-1021", receivedAt: "לפני שבוע", status: "lost", requestType: "new", goal: "singleHome", complex: false,
-    property: { value: 1450000, mortgage: 1050000, legal: "pending" },
-    repayment: { comfort: 5000, max: 6000 },
-    planning: { futureRelease: "no", upcomingEvent: "none", incomeChange: "no" },
-    profile: { hasSecond: "yes", employment1: "salaried", seniority1: "1to3", employment2: "salaried", seniority2: "1to3" },
-    income: { net: 13600, extra: 0 },
-    credit: { otherLoans: "no", creditIssues: "no" },
-    doc: { balance: 1050000, rate: 4.9, years: 28, months: 0 },
-  },
-];
-
 export function computeCase(c: AdvisorCase) {
   const totalMonths = c.doc.years * 12 + c.doc.months;
   const payment = monthlyPayment(c.doc.balance, c.doc.rate, totalMonths);

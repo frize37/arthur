@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./advisor.css";
 import { AdvisorIcons } from "./components/AdvisorIcons";
 import { ArthurMascot } from "@/components/ArthurMascot";
-import { AdvisorCase, LABELS, MOCK_CASES, STATUS_META, computeCase } from "./lib/data";
+import { AdvisorCase, LABELS, STATUS_META, computeCase } from "./lib/data";
+import { fetchMyCases, submitOffer } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
+import { SignOutButton } from "@/components/SignOutButton";
 
 function briefRow(label: string, value: string) {
   return (
@@ -17,11 +19,26 @@ function briefRow(label: string, value: string) {
   );
 }
 
-export function AdvisorApp() {
-  const [cases, setCases] = useState<AdvisorCase[]>(MOCK_CASES);
+export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advisorName: string }) {
+  const [cases, setCases] = useState<AdvisorCase[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bellOpen, setBellOpen] = useState(false);
   const [bellSeen, setBellSeen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const list = await fetchMyCases(advisorId);
+      if (cancelled) return;
+      setCases(list);
+      setLoading(false);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [advisorId]);
 
   const stats = useMemo(() => {
     const open = cases.filter((c) => c.status === "pending" || c.status === "sent").length;
@@ -77,22 +94,29 @@ export function AdvisorApp() {
               )}
             </div>
             <div className="advisor-chip">
-              <div className="advisor-chip__avatar">ר.כ</div>
+              <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
               <div className="advisor-chip__info">
-                <strong>רותם כהן</strong>
-                <small>מומחית מיחזור ואיחוד הלוואות</small>
+                <strong>{advisorName}</strong>
+                <small>יועץ/ת משכנתאות</small>
               </div>
             </div>
+            <SignOutButton className="btn btn-ghost" />
           </div>
         </div>
       </div>
 
       <div className="page">
-        {!selected && (
+        {loading ? (
+          <div className="empty">טוען תיקים…</div>
+        ) : !selected ? (
           <ListView cases={cases} stats={stats} onOpen={openCase} />
-        )}
-        {selected && (
-          <DetailView case_={selected} onBack={() => setSelectedId(null)} onUpdate={(patch) => updateCase(selected.id, patch)} />
+        ) : (
+          <DetailView
+            case_={selected}
+            advisorId={advisorId}
+            onBack={() => setSelectedId(null)}
+            onUpdate={(patch) => updateCase(selected.id, patch)}
+          />
         )}
       </div>
     </div>
@@ -150,10 +174,12 @@ function ListView({
 
 function DetailView({
   case_: c,
+  advisorId,
   onBack,
   onUpdate,
 }: {
   case_: AdvisorCase;
+  advisorId: string;
   onBack: () => void;
   onUpdate: (patch: Partial<AdvisorCase>) => void;
 }) {
@@ -163,12 +189,18 @@ function DetailView({
   const [offerSavings, setOfferSavings] = useState(Math.round(calc.suggestedSavings / 500) * 500);
   const [offerFee, setOfferFee] = useState(2500);
   const [offerNotes, setOfferNotes] = useState("");
+  const [sending, setSending] = useState(false);
 
   const showOfferForm = c.status === "pending";
 
-  function sendOffer() {
-    onUpdate({ status: "sent", offer: { savings: offerSavings, fee: offerFee } });
-    confettiBurst();
+  async function sendOffer() {
+    setSending(true);
+    const ok = await submitOffer(c.id, advisorId, { savings: offerSavings, fee: offerFee, notes: offerNotes });
+    setSending(false);
+    if (ok) {
+      onUpdate({ status: "sent", offer: { savings: offerSavings, fee: offerFee } });
+      confettiBurst();
+    }
   }
 
   return (
@@ -278,8 +310,8 @@ function DetailView({
                   <small className="hint">יוצג ללקוח יחד עם ההצעה</small>
                   <textarea placeholder="לדוגמה: מומלץ לשלב מסלול משתנה כדי לנצל את הריבית הנוכחית..." value={offerNotes} onChange={(e) => setOfferNotes(e.target.value)} />
                 </div>
-                <button className="btn btn-primary" type="button" style={{ width: "100%" }} onClick={sendOffer}>
-                  שליחת הצעה ללקוח
+                <button className="btn btn-primary" type="button" style={{ width: "100%" }} disabled={sending} onClick={sendOffer}>
+                  {sending ? "שולח…" : "שליחת הצעה ללקוח"}
                 </button>
               </div>
             ) : (

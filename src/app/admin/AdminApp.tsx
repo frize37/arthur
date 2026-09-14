@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import "./admin.css";
 import { AdminIcons } from "./components/AdminIcons";
 import { Advisor, AdminCase, CaseStatus, LABELS, Offer, STATUS_META, TABS } from "./lib/data";
-import { fetchAdvisors, fetchCases, persistWinner } from "./lib/fetchCases";
+import { assignAdvisorsToCase, fetchAdvisors, fetchCases, persistWinner } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
+import { SignOutButton } from "@/components/SignOutButton";
 
 function briefRow(label: string, value: string) {
   return (
@@ -17,7 +18,7 @@ function briefRow(label: string, value: string) {
   );
 }
 
-export function AdminApp() {
+export function AdminApp({ adminName }: { adminName: string }) {
   const [cases, setCases] = useState<AdminCase[]>([]);
   const [advisors, setAdvisors] = useState<Record<string, Advisor>>({});
   const [loading, setLoading] = useState(true);
@@ -46,6 +47,7 @@ export function AdminApp() {
     return {
       total: cases.length,
       closed: cases.filter((c) => c.status === "closed").length,
+      unassigned: cases.filter((c) => c.status === "new").length,
       verifying: cases.filter((c) => c.status === "verifying").length,
       ready: cases.filter((c) => c.status === "ready").length,
       savings: closedSavings,
@@ -72,12 +74,15 @@ export function AdminApp() {
               <small>קונסולת ניהול פנימית</small>
             </div>
           </div>
-          <div className="admin-chip">
-            <div className="admin-chip__avatar">מנ</div>
-            <div className="admin-chip__info">
-              <strong>צוות התפעול</strong>
-              <small>הרשאת מנהל</small>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div className="admin-chip">
+              <div className="admin-chip__avatar">{adminName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
+              <div className="admin-chip__info">
+                <strong>{adminName}</strong>
+                <small>הרשאת מנהל</small>
+              </div>
             </div>
+            <SignOutButton className="btn btn-ghost" />
           </div>
         </div>
       </div>
@@ -89,6 +94,7 @@ export function AdminApp() {
           <>
             <div className="stat-row" style={{ marginBottom: 22 }}>
               <div className="stat-tile"><span>תיקים החודש</span><b className="num">{stats.total}</b><em>{stats.closed} נסגרו בהצלחה</em></div>
+              <div className="stat-tile"><span>ממתינים להקצאה</span><b className="num">{stats.unassigned}</b><em>צריך לבחור יועצים</em></div>
               <div className="stat-tile"><span>ממתינים לאימות זהות</span><b className="num">{stats.verifying}</b><em>לא ניתן לשלוח ליועצים</em></div>
               <div className="stat-tile"><span>מוכנים לבחירת מנצח</span><b className="num">{stats.ready}</b><em>4/4 הצעות התקבלו</em></div>
               <div className="stat-tile"><span>חיסכון שאושר ללקוחות</span><b className="num">{shekel(stats.savings)}</b><em>בתיקים שנסגרו</em></div>
@@ -113,7 +119,8 @@ export function AdminApp() {
                 <div className="empty">אין תיקים בסטטוס הזה כרגע.</div>
               ) : (
                 visibleCases.map((c) => {
-                  const progress = c.status === "verifying" ? "טרם נשלח" : `${c.offers.length}/4 הצעות`;
+                  const progress =
+                    c.status === "new" ? "טרם הוקצה ליועצים" : c.status === "verifying" ? "טרם נשלח" : `${c.offers.length} הצעות התקבלו`;
                   return (
                     <button key={c.id} type="button" className="case-row" onClick={() => setSelectedId(c.id)}>
                       <span className="case-row__icon"><svg><use href={`#${LABELS.specialtyIcon[c.requestType]}`} /></svg></span>
@@ -230,6 +237,22 @@ function DetailView({
             </div>
           </div>
 
+          {c.status === "new" ? (
+            <div className="card">
+              <h3><svg><use href="#ic-send" /></svg>הקצאת התיק ליועצים</h3>
+              <AssignAdvisors
+                caseId={c.id}
+                advisors={advisors}
+                onAssigned={(ids) =>
+                  onUpdate({
+                    status: "awaiting",
+                    assignedAdvisorIds: ids,
+                    timeline: [...c.timeline, { label: `התיק הוקצה ל-${ids.length} יועצים`, time: "עכשיו" }],
+                  })
+                }
+              />
+            </div>
+          ) : (
           <div className="card">
             <h3><svg><use href="#ic-send" /></svg>השוואת הצעות מהיועצים</h3>
             <OfferCompare c={c} advisors={advisors} selectedOfferIdx={selectedOfferIdx} onSelect={setSelectedOfferIdx} />
@@ -256,6 +279,7 @@ function DetailView({
               </div>
             )}
           </div>
+          )}
         </div>
 
         <div className="detail-layout__side">
@@ -297,7 +321,7 @@ function OfferCompare({
   if (c.offers.length === 0) {
     return (
       <div className="offer-pending">
-        <svg><use href="#ic-clock" /></svg>נשלח ל-4 יועצים, טרם התקבלו הצעות.
+        <svg><use href="#ic-clock" /></svg>נשלח ל-{c.assignedAdvisorIds.length} יועצים, טרם התקבלו הצעות.
       </div>
     );
   }
@@ -314,9 +338,9 @@ function OfferCompare({
       {c.offers.map((o, idx) => (
         <OfferCard key={o.advisorId} offer={o} advisor={advisors[o.advisorId]} selected={selectedOfferIdx === idx} onClick={() => onSelect(idx)} />
       ))}
-      {c.status === "awaiting" && (
+      {c.status === "awaiting" && c.assignedAdvisorIds.length > c.offers.length && (
         <div className="offer-pending" style={{ gridColumn: "1/-1" }}>
-          <svg><use href="#ic-clock" /></svg>עדיין ממתינים ל-{4 - c.offers.length} הצעות נוספות — אפשר לבחור כבר עכשיו מבין ההצעות שהתקבלו, או להמתין להשלמת התמונה.
+          <svg><use href="#ic-clock" /></svg>עדיין ממתינים ל-{c.assignedAdvisorIds.length - c.offers.length} הצעות נוספות — אפשר לבחור כבר עכשיו מבין ההצעות שהתקבלו, או להמתין להשלמת התמונה.
         </div>
       )}
     </div>
@@ -358,6 +382,64 @@ function OfferCard({
       </div>
       {offer.notes && <div className="offer-card__notes">{offer.notes}</div>}
       <small style={{ color: "var(--ink-faint)", fontSize: 10.5 }}>התקבל {offer.submittedAt}</small>
+    </div>
+  );
+}
+
+function AssignAdvisors({
+  caseId,
+  advisors,
+  onAssigned,
+}: {
+  caseId: string;
+  advisors: Record<string, Advisor>;
+  onAssigned: (advisorIds: string[]) => void;
+}) {
+  const [selected, setSelected] = useState<string[]>([]);
+  const [sending, setSending] = useState(false);
+
+  function toggle(id: string) {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  async function send() {
+    if (selected.length === 0) return;
+    setSending(true);
+    const ok = await assignAdvisorsToCase(caseId, selected);
+    setSending(false);
+    if (ok) {
+      onAssigned(selected);
+      confettiBurst();
+    }
+  }
+
+  const advisorList = Object.values(advisors);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="anon-note">בחרו יועץ אחד או יותר לשלוח אליהם את התיק. אפשר לבחור את כולם או רק חלק, לפי שיקול דעתכם.</div>
+      <div className="lead-table">
+        {advisorList.map((a) => {
+          const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+          const checked = selected.includes(a.id);
+          return (
+            <label
+              className="lead-row"
+              key={a.id}
+              style={{ cursor: "pointer", outline: checked ? "2px solid var(--accent)" : undefined, borderRadius: 12 }}
+            >
+              <input type="checkbox" checked={checked} onChange={() => toggle(a.id)} style={{ width: 16, height: 16 }} />
+              <div className="lead-row__avatar">{initials}</div>
+              <div className="lead-row__info"><strong>{a.name}</strong><small>{a.specialty}</small></div>
+              <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
+              <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
+            </label>
+          );
+        })}
+      </div>
+      <button className="btn btn-primary" type="button" disabled={selected.length === 0 || sending} onClick={send}>
+        {sending ? "שולח…" : selected.length === 0 ? "בחרו יועצים לשליחה" : `שלחו את התיק ל-${selected.length} יועצים שנבחרו`}
+      </button>
     </div>
   );
 }

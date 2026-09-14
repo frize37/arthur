@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { bandFor, monthlyPayment } from "../../wizard/lib/finance";
 import { Advisor, AdminCase, Offer } from "./data";
 
@@ -16,6 +16,7 @@ function relativeTime(iso: string): string {
 }
 
 export async function fetchAdvisors(): Promise<Record<string, Advisor>> {
+  const supabase = createClient();
   const { data, error } = await supabase.from("advisors").select("*").order("cases_won", { ascending: false });
   if (error || !data) {
     console.error("Failed to fetch advisors:", error?.message);
@@ -36,6 +37,7 @@ export async function fetchAdvisors(): Promise<Record<string, Advisor>> {
 }
 
 export async function fetchCases(): Promise<AdminCase[]> {
+  const supabase = createClient();
   const { data: caseRows, error: caseErr } = await supabase.from("cases").select("*").order("created_at", { ascending: false });
   if (caseErr || !caseRows) {
     console.error("Failed to fetch cases:", caseErr?.message);
@@ -44,6 +46,10 @@ export async function fetchCases(): Promise<AdminCase[]> {
   const { data: offerRows, error: offerErr } = await supabase.from("offers").select("*");
   if (offerErr) {
     console.error("Failed to fetch offers:", offerErr.message);
+  }
+  const { data: assignmentRows, error: assignErr } = await supabase.from("case_advisors").select("case_id, advisor_id");
+  if (assignErr) {
+    console.error("Failed to fetch case assignments:", assignErr.message);
   }
 
   return caseRows.map((row): AdminCase => {
@@ -88,11 +94,30 @@ export async function fetchCases(): Promise<AdminCase[]> {
         { label: "התיק נקלט מהאשף", time: relativeTime(row.created_at) },
         ...(row.phone_verified && row.email_verified ? [{ label: "זהות אומתה (טלפון+מייל)", time: relativeTime(row.created_at) }] : []),
       ],
+      assignedAdvisorIds: (assignmentRows ?? []).filter((a) => a.case_id === row.id).map((a) => a.advisor_id),
     };
   });
 }
 
+export async function assignAdvisorsToCase(caseId: string, advisorIds: string[]) {
+  const supabase = createClient();
+  const { error: insertErr } = await supabase
+    .from("case_advisors")
+    .insert(advisorIds.map((advisor_id) => ({ case_id: caseId, advisor_id })));
+  if (insertErr) {
+    console.error("Failed to assign advisors:", insertErr.message);
+    return false;
+  }
+  const { error: updateErr } = await supabase.from("cases").update({ status: "awaiting" }).eq("id", caseId);
+  if (updateErr) {
+    console.error("Failed to update case status after assignment:", updateErr.message);
+    return false;
+  }
+  return true;
+}
+
 export async function persistWinner(caseId: string, offers: Offer[]) {
+  const supabase = createClient();
   await Promise.all(
     offers.map((o) =>
       supabase

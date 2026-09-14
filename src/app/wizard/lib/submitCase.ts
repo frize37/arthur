@@ -1,9 +1,9 @@
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { WizardState, isComplexCase } from "./types";
 
 export async function submitCaseToDatabase(state: WizardState) {
   const row = {
-    status: "awaiting",
+    status: "new",
     complex: isComplexCase(state),
 
     request_type: state.requestType,
@@ -52,6 +52,7 @@ export async function submitCaseToDatabase(state: WizardState) {
   };
 
   try {
+    const supabase = createClient();
     const { data, error } = await supabase.from("cases").insert(row).select("id").single();
     if (error) {
       console.error("Failed to submit case to database:", error.message);
