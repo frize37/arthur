@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #EEF2EF;
+  --surface: #FFFFFF;
+  --surface-2: #FBF3E2;
+  --ink: #1A2B27;
+  --ink-soft: #4C625C;
+  --ink-faint: #7D9088;
+  --line: rgba(26, 43, 39, 0.14);
+  --line-strong: rgba(26, 43, 39, 0.28);
+  --accent: #DE9F35;
+  --accent-strong: #B87A1D;
+  --accent-soft: #FBEBCC;
+  --teal: #2C7268;
+  --teal-soft: #DCEEEA;
+  --good: #2F8F5B;
+  --watch: #C98A1B;
+  --risk: #C24B3E;
+  --pop: #3E8FD1;
+  --pop-soft: #DDEBF7;
+  --hero-1: #173F39;
+  --hero-2: #2C7268;
+  --hero-3: #E3A63D;
+  --shadow: 0 20px 45px -30px rgba(26, 43, 39, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F1A17;
+    --surface: #16221F;
+    --surface-2: #241D10;
+    --ink: #ECF3EF;
+    --ink-soft: #A3B6AE;
+    --ink-faint: #6E827A;
+    --line: rgba(236, 243, 239, 0.14);
+    --line-strong: rgba(236, 243, 239, 0.28);
+    --accent: #F0B24E;
+    --accent-strong: #F7C978;
+    --accent-soft: #3A2C15;
+    --teal: #6FBBAA;
+    --teal-soft: #193430;
+    --good: #5CC98A;
+    --watch: #E8B84B;
+    --risk: #E2685B;
+    --pop: #6FB6EE;
+    --pop-soft: #132638;
+    --hero-1: #09150F;
+    --hero-2: #1B3A34;
+    --hero-3: #F0B24E;
+    --shadow: 0 20px 45px -28px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0F1A17;
+  --surface: #16221F;
+  --surface-2: #241D10;
+  --ink: #ECF3EF;
+  --ink-soft: #A3B6AE;
+  --ink-faint: #6E827A;
+  --line: rgba(236, 243, 239, 0.14);
+  --line-strong: rgba(236, 243, 239, 0.28);
+  --accent: #F0B24E;
+  --accent-strong: #F7C978;
+  --accent-soft: #3A2C15;
+  --teal: #6FBBAA;
+  --teal-soft: #193430;
+  --good: #5CC98A;
+  --watch: #E8B84B;
+  --risk: #E2685B;
+  --pop: #6FB6EE;
+  --pop-soft: #132638;
+  --hero-1: #09150F;
+  --hero-2: #1B3A34;
+  --hero-3: #F0B24E;
+  --shadow: 0 20px 45px -28px rgba(0, 0, 0, 0.6);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-good: var(--good);
+  --color-watch: var(--watch);
+  --color-risk: var(--risk);
+  --color-pop: var(--pop);
+  --color-pop-soft: var(--pop-soft);
+  --font-display: var(--font-rubik);
+  --font-sans: var(--font-assistant);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  background-image: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-rubik), var(--font-assistant), sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
