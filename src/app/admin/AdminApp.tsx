@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./admin.css";
 import { AdminIcons } from "./components/AdminIcons";
-import { ADVISORS, AdminCase, CaseStatus, LABELS, MOCK_CASES, Offer, STATUS_META, TABS } from "./lib/data";
+import { Advisor, AdminCase, CaseStatus, LABELS, Offer, STATUS_META, TABS } from "./lib/data";
+import { fetchAdvisors, fetchCases, persistWinner } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 
@@ -17,9 +18,26 @@ function briefRow(label: string, value: string) {
 }
 
 export function AdminApp() {
-  const [cases, setCases] = useState<AdminCase[]>(MOCK_CASES);
+  const [cases, setCases] = useState<AdminCase[]>([]);
+  const [advisors, setAdvisors] = useState<Record<string, Advisor>>({});
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<CaseStatus | "all">("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const [advisorMap, caseList] = await Promise.all([fetchAdvisors(), fetchCases()]);
+      if (cancelled) return;
+      setAdvisors(advisorMap);
+      setCases(caseList);
+      setLoading(false);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const stats = useMemo(() => {
     const closedSavings = cases
@@ -65,7 +83,9 @@ export function AdminApp() {
       </div>
 
       <div className="page">
-        {!selected ? (
+        {loading ? (
+          <div className="empty">טוען תיקים…</div>
+        ) : !selected ? (
           <>
             <div className="stat-row" style={{ marginBottom: 22 }}>
               <div className="stat-tile"><span>תיקים החודש</span><b className="num">{stats.total}</b><em>{stats.closed} נסגרו בהצלחה</em></div>
@@ -118,7 +138,7 @@ export function AdminApp() {
             </div>
             <div className="card">
               <div className="lead-table">
-                {Object.values(ADVISORS)
+                {Object.values(advisors)
                   .sort((a, b) => b.casesWon - a.casesWon)
                   .map((a) => {
                     const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
@@ -136,7 +156,7 @@ export function AdminApp() {
             </div>
           </>
         ) : (
-          <DetailView key={selected.id} case_={selected} onBack={() => setSelectedId(null)} onUpdate={(patch) => updateCase(selected.id, patch)} />
+          <DetailView key={selected.id} case_={selected} advisors={advisors} onBack={() => setSelectedId(null)} onUpdate={(patch) => updateCase(selected.id, patch)} />
         )}
       </div>
     </div>
@@ -145,19 +165,25 @@ export function AdminApp() {
 
 function DetailView({
   case_: c,
+  advisors,
   onBack,
   onUpdate,
 }: {
   case_: AdminCase;
+  advisors: Record<string, Advisor>;
   onBack: () => void;
   onUpdate: (patch: Partial<AdminCase>) => void;
 }) {
   const [selectedOfferIdx, setSelectedOfferIdx] = useState<number | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
-  function confirmWinner() {
+  async function confirmWinner() {
     if (selectedOfferIdx === null) return;
-    const winnerAdvisor = ADVISORS[c.offers[selectedOfferIdx].advisorId];
+    const winnerAdvisor = advisors[c.offers[selectedOfferIdx].advisorId];
     const offers: Offer[] = c.offers.map((o, i) => ({ ...o, winner: i === selectedOfferIdx }));
+    setConfirming(true);
+    await persistWinner(c.id, offers);
+    setConfirming(false);
     onUpdate({
       status: "sent",
       offers,
@@ -206,11 +232,11 @@ function DetailView({
 
           <div className="card">
             <h3><svg><use href="#ic-send" /></svg>השוואת הצעות מהיועצים</h3>
-            <OfferCompare c={c} selectedOfferIdx={selectedOfferIdx} onSelect={setSelectedOfferIdx} />
+            <OfferCompare c={c} advisors={advisors} selectedOfferIdx={selectedOfferIdx} onSelect={setSelectedOfferIdx} />
             {(c.status === "ready" || c.status === "awaiting") && c.offers.length > 0 && (
               <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-                <button className="btn btn-primary" type="button" style={{ width: "100%" }} disabled={selectedOfferIdx === null} onClick={confirmWinner}>
-                  אשרו את ההצעה שנבחרה ושלחו ללקוח
+                <button className="btn btn-primary" type="button" style={{ width: "100%" }} disabled={selectedOfferIdx === null || confirming} onClick={confirmWinner}>
+                  {confirming ? "שולח…" : "אשרו את ההצעה שנבחרה ושלחו ללקוח"}
                 </button>
                 <div className="anon-note">הבחירה כאן היא שלכם — המערכת רק מציגה את הנתונים לצד הצעת פתיחה חכמה, ההחלטה הסופית תמיד אנושית.</div>
               </div>
@@ -221,7 +247,7 @@ function DetailView({
                 <p>
                   {(() => {
                     const w = c.offers.find((o) => o.winner) ?? c.offers[0];
-                    const wa = ADVISORS[w.advisorId];
+                    const wa = advisors[w.advisorId];
                     return c.status === "closed"
                       ? `ההצעה של ${wa.name} נשלחה, הלקוח אישר, והתיק נסגר בהצלחה.`
                       : `ההצעה של ${wa.name} נשלחה ללקוח — ממתינים לתשובה.`;
@@ -252,10 +278,12 @@ function DetailView({
 
 function OfferCompare({
   c,
+  advisors,
   selectedOfferIdx,
   onSelect,
 }: {
   c: AdminCase;
+  advisors: Record<string, Advisor>;
   selectedOfferIdx: number | null;
   onSelect: (idx: number) => void;
 }) {
@@ -277,14 +305,14 @@ function OfferCompare({
     const w = c.offers.find((o) => o.winner) ?? c.offers[0];
     return (
       <div className="offer-compare">
-        <OfferCard offer={w} readOnly />
+        <OfferCard offer={w} advisor={advisors[w.advisorId]} readOnly />
       </div>
     );
   }
   return (
     <div className="offer-compare">
       {c.offers.map((o, idx) => (
-        <OfferCard key={o.advisorId} offer={o} selected={selectedOfferIdx === idx} onClick={() => onSelect(idx)} />
+        <OfferCard key={o.advisorId} offer={o} advisor={advisors[o.advisorId]} selected={selectedOfferIdx === idx} onClick={() => onSelect(idx)} />
       ))}
       {c.status === "awaiting" && (
         <div className="offer-pending" style={{ gridColumn: "1/-1" }}>
@@ -295,8 +323,20 @@ function OfferCompare({
   );
 }
 
-function OfferCard({ offer, selected, readOnly, onClick }: { offer: Offer; selected?: boolean; readOnly?: boolean; onClick?: () => void }) {
-  const a = ADVISORS[offer.advisorId];
+function OfferCard({
+  offer,
+  advisor,
+  selected,
+  readOnly,
+  onClick,
+}: {
+  offer: Offer;
+  advisor: Advisor | undefined;
+  selected?: boolean;
+  readOnly?: boolean;
+  onClick?: () => void;
+}) {
+  const a = advisor ?? { name: "יועץ לא ידוע", specialty: "", rating: 0 };
   const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
   return (
     <div

@@ -77,6 +77,11 @@ create table if not exists offers (
   submitted_at timestamptz not null default now()
 );
 
+-- Base table grants: without these, anon/authenticated get "permission denied"
+-- regardless of RLS policies below (RLS only restricts rows, it doesn't grant access).
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on advisors, cases, offers to anon, authenticated;
+
 -- Row Level Security: on, but temporarily permissive until real auth (advisor/admin login) exists.
 -- TODO: once auth is wired up, replace these with policies scoped to auth.uid() / role claims.
 alter table advisors enable row level security;

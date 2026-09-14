@@ -7,6 +7,7 @@ import { bandFor, computeSuggestedSavings, monthlyPayment, shekel } from "../lib
 import { confettiBurst } from "../lib/effects";
 import { ChipRow } from "../components/ui";
 import { RiggedBear } from "../components/RiggedBear";
+import { submitCaseToDatabase } from "../lib/submitCase";
 
 function goalLabel(goal: string | null): string {
   return (goal && GOAL_LABELS[goal]) || "המטרה שהגדרתם";
@@ -151,12 +152,17 @@ function ContactAndVerify({
     startVerification();
   }
 
-  function handleVerify() {
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleVerify() {
     const okPhone = phoneCodeInput === codes.phone;
     const okEmail = emailCodeInput === codes.email;
     setPhoneError(!okPhone);
     setEmailError(!okEmail);
     if (okPhone && okEmail) {
+      setSubmitting(true);
+      await submitCaseToDatabase(state);
+      setSubmitting(false);
       dispatch({ type: "VERIFIED" });
     }
   }
@@ -226,8 +232,8 @@ function ContactAndVerify({
       <div className="savings-mini" style={{ alignSelf: "stretch" }}>
         🧪 לצורך ההדגמה בלבד (עדיין אין חיבור אמיתי ל-SMS/מייל): קוד הטלפון <b className="num">{codes.phone}</b>, קוד המייל <b className="num">{codes.email}</b>.
       </div>
-      <button type="button" className="btn btn-primary" style={{ width: "100%", padding: 14 }} onClick={handleVerify}>
-        אימות ונעילת התיק
+      <button type="button" className="btn btn-primary" style={{ width: "100%", padding: 14 }} onClick={handleVerify} disabled={submitting}>
+        {submitting ? "נועל את התיק…" : "אימות ונעילת התיק"}
       </button>
       <button type="button" className="btn-link" style={{ alignSelf: "center" }} onClick={() => setShowVerify(false)}>
         חזרה לעריכת הפרטים
