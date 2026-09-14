@@ -79,6 +79,7 @@ export async function submitCaseToDatabase(state: WizardState) {
         track_order: i + 1,
         bank_name: t.bankName,
         rate_kind: t.rateKind,
+        anchor_basis: t.anchorBasis,
         linked_to_cpi: t.linkedToCpi,
         repayment_method: t.repaymentMethod,
         annual_rate: t.annualRate,

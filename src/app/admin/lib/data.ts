@@ -12,6 +12,7 @@ export interface Offer {
 export interface LoanTrack {
   bankName: string | null;
   rateKind: string | null;
+  anchorBasis: string | null;
   linkedToCpi: boolean | null;
   repaymentMethod: string | null;
   annualRate: number | null;

@@ -27,8 +27,11 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
   }
   const caseIds = assignmentRows.map((a) => a.case_id);
 
+  // advisor_cases is a view that only reveals contact_name/phone/email
+  // once this advisor's offer has actually won the case — querying
+  // `cases` directly would return those columns for every assigned case.
   const { data: caseRows, error: caseErr } = await supabase
-    .from("cases")
+    .from("advisor_cases")
     .select("*")
     .in("id", caseIds)
     .order("created_at", { ascending: false });
@@ -101,6 +104,7 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
           (t): LoanTrack => ({
             bankName: t.bank_name,
             rateKind: t.rate_kind,
+            anchorBasis: t.anchor_basis,
             linkedToCpi: t.linked_to_cpi,
             repaymentMethod: t.repayment_method,
             annualRate: t.annual_rate != null ? Number(t.annual_rate) : null,
@@ -127,6 +131,10 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
         accountForecastRate: row.doc_account_forecast_rate != null ? Number(row.doc_account_forecast_rate) : null,
       },
       offer: myOffer ? { savings: Number(myOffer.savings ?? 0), fee: Number(myOffer.fee ?? 0) } : undefined,
+      client:
+        row.contact_name || row.contact_phone || row.contact_email
+          ? { name: row.contact_name ?? "", phone: row.contact_phone ?? "", email: row.contact_email ?? "" }
+          : undefined,
     };
   });
 }

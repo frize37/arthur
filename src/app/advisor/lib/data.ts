@@ -6,6 +6,7 @@ export type Band = "good" | "watch" | "risk";
 export interface LoanTrack {
   bankName: string | null;
   rateKind: string | null;
+  anchorBasis: string | null;
   linkedToCpi: boolean | null;
   repaymentMethod: string | null;
   annualRate: number | null;
@@ -49,6 +50,7 @@ export interface AdvisorCase {
   docTracks: LoanTrack[];
   docTotals: DocTotals;
   offer?: { savings: number; fee: number };
+  client?: { name: string; phone: string; email: string };
 }
 
 export const LABELS = {

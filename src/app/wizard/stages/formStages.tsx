@@ -6,7 +6,7 @@ import { isComplexCase } from "../lib/types";
 import { heroLandingEffects } from "../lib/effects";
 import { BuddyRow, ChipRow, ChoiceGroup, Field, NavRow, Reveal, SliderField, Subhead } from "../components/ui";
 import { RiggedBear } from "../components/RiggedBear";
-import { computeSuggestedSavings, shekel } from "../lib/finance";
+import { shekel } from "../lib/finance";
 
 export function WelcomeStage({ go }: StageProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -267,9 +267,7 @@ export function PlanningStage({ state, set, go, back }: StageProps) {
 
 export function EmploymentStage({ state, set, go, back }: StageProps) {
   const complex = isComplexCase(state);
-  const showSavingsMini = state.docConfirmed || state.docSkipped;
-  const totalMonths = state.docYears * 12 + state.docMonths;
-  const savings = computeSuggestedSavings(state.docBalance, state.docRate, totalMonths);
+  const showDocMini = state.docConfirmed || state.docSkipped;
   return (
     <section className="stage">
       <BuddyRow
@@ -280,9 +278,9 @@ export function EmploymentStage({ state, set, go, back }: StageProps) {
             : "עכשיו נבדוק את יכולת ההחזר, כדי לוודא שכל תוכנית שנציע תשאיר לכם ראש שקט בסוף החודש."
         }
       />
-      {showSavingsMini && (
+      {showDocMini && (
         <div className="savings-mini">
-          💰 פוטנציאל חיסכון עד כה: <b className="num">{shekel(savings)}</b>
+          {state.docConfirmed ? "📎 מסמך המשכנתה נטען בהצלחה — הנתונים יועברו ליועצים" : "ממשיכים עם הערכה כללית, בלי מסמך"}
         </div>
       )}
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>

@@ -4,8 +4,9 @@ import { useState } from "react";
 import type { StageProps } from "../lib/reducer";
 import { NavRow } from "../components/ui";
 import { RiggedBear, type RigMood } from "../components/RiggedBear";
-import { computeSuggestedSavings, shekel } from "../lib/finance";
+import { shekel } from "../lib/finance";
 import { confettiBurst } from "../lib/effects";
+import type { LoanTrack } from "../lib/types";
 
 type Phase = "idle" | "parsing" | "error";
 
@@ -21,10 +22,12 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
   const [bubble, setBubble] = useState(state.docSkipped ? SKIPPED_BUBBLE : state.docConfirmed ? PARSED_BUBBLE : IDLE_BUBBLE);
   const [skipLabel, setSkipLabel] = useState(state.docSkipped ? "דילגתם על שלב זה — אפשר להמשיך" : "דלגו כרגע, אין לי מסמך זמין");
 
-  const totalMonths = state.docYears * 12 + state.docMonths;
-  const currentSavings = computeSuggestedSavings(state.docBalance, state.docRate, totalMonths);
-  const savingsFillPct = Math.min(100, (currentSavings / 70000) * 100);
   const matchDiffPct = state.mortgageAmount ? Math.abs(state.docBalance - state.mortgageAmount) / state.mortgageAmount : 0;
+
+  function updateTrack(index: number, patch: Partial<LoanTrack>) {
+    const next = state.docTracks.map((t, i) => (i === index ? { ...t, ...patch } : t));
+    set("docTracks", next);
+  }
 
   async function handleFile(file: File) {
     setFileName(file.name);
@@ -157,43 +160,90 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
 
             {state.docTracks.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ fontSize: 12.5, color: "var(--ink-faint)" }}>
+                  אם ה-AI טעה במשהו, אפשר לתקן כל שדה ישירות כאן.
+                </div>
                 {state.docTracks.map((t, i) => (
                   <div className="card" key={i} style={{ padding: 14 }}>
-                    <div style={{ fontWeight: 700, marginBottom: 8 }}>
-                      מסלול {String.fromCharCode(0x5d0 + i)}׳{t.bankName ? ` · ${t.bankName}` : ""}
-                    </div>
-                    <div className="brief-grid">
-                      <div className="brief-item">
-                        <span>סוג ריבית</span>
-                        <b>
-                          {t.rateKind === "fixed" ? "קבועה" : t.rateKind === "variable" ? "משתנה" : "לא ידוע"}
-                          {t.linkedToCpi ? " · צמודה למדד" : ""}
-                        </b>
+                    <div style={{ fontWeight: 700, marginBottom: 8 }}>מסלול {String.fromCharCode(0x5d0 + i)}׳</div>
+                    <div className="parsed-grid">
+                      <div className="parsed-field">
+                        <label>שם הבנק</label>
+                        <input type="text" value={t.bankName ?? ""} onChange={(e) => updateTrack(i, { bankName: e.target.value })} />
                       </div>
-                      {t.annualRate != null && (
-                        <div className="brief-item">
-                          <span>ריבית שנתית</span>
-                          <b>{t.annualRate}%</b>
+                      <div className="parsed-field">
+                        <label>סוג ריבית</label>
+                        <select
+                          value={t.rateKind ?? ""}
+                          onChange={(e) => updateTrack(i, { rateKind: (e.target.value || null) as LoanTrack["rateKind"] })}
+                        >
+                          <option value="">לא ידוע</option>
+                          <option value="fixed">קבועה</option>
+                          <option value="variable">משתנה</option>
+                        </select>
+                      </div>
+                      {t.rateKind === "variable" && (
+                        <div className="parsed-field">
+                          <label>בסיס הריבית (למשל פריים)</label>
+                          <input
+                            type="text"
+                            value={t.anchorBasis ?? ""}
+                            onChange={(e) => updateTrack(i, { anchorBasis: e.target.value })}
+                          />
                         </div>
                       )}
-                      {t.monthsRemaining != null && (
-                        <div className="brief-item">
-                          <span>יתרת תקופה</span>
-                          <b>{t.monthsRemaining} חודשים</b>
-                        </div>
-                      )}
-                      {t.principalBalance != null && (
-                        <div className="brief-item">
-                          <span>יתרת קרן</span>
-                          <b>{shekel(t.principalBalance)}</b>
-                        </div>
-                      )}
-                      {t.earlyRepaymentFee != null && (
-                        <div className="brief-item">
-                          <span>עמלת פרעון מוקדם</span>
-                          <b>{shekel(t.earlyRepaymentFee)}</b>
-                        </div>
-                      )}
+                      <div className="parsed-field">
+                        <label>צמודה למדד?</label>
+                        <select
+                          value={t.linkedToCpi ? "yes" : "no"}
+                          onChange={(e) => updateTrack(i, { linkedToCpi: e.target.value === "yes" })}
+                        >
+                          <option value="no">לא</option>
+                          <option value="yes">כן</option>
+                        </select>
+                      </div>
+                      <div className="parsed-field">
+                        <label>ריבית שנתית %</label>
+                        <input
+                          type="number"
+                          step={0.01}
+                          value={t.annualRate ?? 0}
+                          onChange={(e) => updateTrack(i, { annualRate: Number(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="parsed-field">
+                        <label>יתרת תקופה (חודשים)</label>
+                        <input
+                          type="number"
+                          value={t.monthsRemaining ?? 0}
+                          onChange={(e) => updateTrack(i, { monthsRemaining: Number(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="parsed-field">
+                        <label>יתרת קרן</label>
+                        <input
+                          type="number"
+                          value={t.principalBalance ?? 0}
+                          onChange={(e) => updateTrack(i, { principalBalance: Number(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="parsed-field">
+                        <label>עמלת פרעון מוקדם</label>
+                        <input
+                          type="number"
+                          value={t.earlyRepaymentFee ?? 0}
+                          onChange={(e) => updateTrack(i, { earlyRepaymentFee: Number(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="parsed-field">
+                        <label>ריבית לצרכי השוואה %</label>
+                        <input
+                          type="number"
+                          step={0.01}
+                          value={t.comparisonRate ?? 0}
+                          onChange={(e) => updateTrack(i, { comparisonRate: Number(e.target.value) || 0 })}
+                        />
+                      </div>
                       {(t.arrearsBalance ?? 0) > 0 && (
                         <div className="brief-item">
                           <span>יתרת פיגור</span>
@@ -224,14 +274,9 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
 
             <div className="savings-meter">
               <div className="savings-meter__head">
-                <svg><use href="#ic-cash" /></svg>מד החיסכון המשוער
+                <svg><use href="#ic-cash" /></svg>מה קורה עכשיו
               </div>
-              <p>
-                לפי הנתונים הראשוניים שלכם, אנחנו מזהים פוטנציאל חיסכון של כ-<b className="num">{shekel(currentSavings)}</b> לאורך חיי ההלוואה! 🎉
-              </p>
-              <div className="meter-bar">
-                <div className="meter-bar__fill" style={{ width: `${savingsFillPct}%` }} />
-              </div>
+              <p>המערכת בודקת את הנתונים ושולחת אותם למספר יועצי משכנתאות, שיבחנו את הכדאיות ויגישו הצעת מחיר בהתאם לתיק שלכם.</p>
             </div>
           </div>
         )}

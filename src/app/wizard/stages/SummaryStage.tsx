@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { StageProps } from "../lib/reducer";
 import { GOAL_LABELS, isComplexCase } from "../lib/types";
-import { bandFor, computeSuggestedSavings, monthlyPayment, shekel } from "../lib/finance";
+import { bandFor, monthlyPayment, shekel } from "../lib/finance";
 import { confettiBurst } from "../lib/effects";
 import { ChipRow } from "../components/ui";
 import { RiggedBear } from "../components/RiggedBear";
@@ -260,9 +260,7 @@ function ContactAndVerify({
   );
 }
 
-function DonePanel({ state }: { state: StageProps["state"] }) {
-  const totalMonths = state.docYears * 12 + state.docMonths;
-  const savings = computeSuggestedSavings(state.docBalance, state.docRate, totalMonths);
+function DonePanel(_props: { state: StageProps["state"] }) {
   return (
     <section className="stage">
       <div className="done-panel">
@@ -273,7 +271,7 @@ function DonePanel({ state }: { state: StageProps["state"] }) {
         <span className="kicker-onhero">✓ נשלח בהצלחה</span>
         <h2>סיימנו! נהיה בקשר 👋</h2>
         <p>
-          תודה! הזהות שלכם אומתה, והתיק (בעילום שם) ננעל ונשלח ל-4 יועצים, עם פוטנציאל חיסכון משוער של <b>{shekel(savings)}</b>. ברגע שתתקבל ההצעה המשתלמת ביותר, ניצור קשר בטווח השעות שבחרתם.
+          תודה! הזהות שלכם אומתה, והתיק (בעילום שם) ננעל ונשלח לבדיקה. הצוות שלנו יבחר את היועצים המתאימים ביותר לתיק שלכם, וברגע שתתקבל הצעה משתלמת ניצור קשר בטווח השעות שבחרתם.
         </p>
         <button
           type="button"

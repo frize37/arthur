@@ -388,23 +388,43 @@ function OfferCard({
   );
 }
 
+function rateKindLabel(t: LoanTrack): string {
+  if (t.rateKind === "fixed") return "קבועה";
+  if (t.rateKind === "variable") {
+    if (t.anchorBasis?.includes("פריים")) return "פריים";
+    return t.anchorBasis ? `משתנה (${t.anchorBasis})` : "משתנה";
+  }
+  return "לא ידוע";
+}
+
 function LoanTracksCard({ tracks, totals }: { tracks: LoanTrack[]; totals: DocTotals }) {
+  const commonBank = tracks.every((t) => t.bankName && t.bankName === tracks[0].bankName) ? tracks[0].bankName : null;
   return (
     <div className="card">
-      <h3><svg><use href="#ic-doc" /></svg>מסלולי המשכנתה (מהמסמך שהועלה)</h3>
+      <h3>
+        <svg><use href="#ic-doc" /></svg>מסלולי המשכנתה (מהמסמך שהועלה){commonBank ? ` · ${commonBank}` : ""}
+      </h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {tracks.map((t, i) => (
           <div className="brief-grid" key={i} style={{ paddingBottom: 10, borderBottom: i < tracks.length - 1 ? "1px solid var(--line)" : undefined }}>
             <div className="brief-item">
-              <span>מסלול {String.fromCharCode(0x5d0 + i)}׳{t.bankName ? ` · ${t.bankName}` : ""}</span>
-              <b>{t.rateKind === "fixed" ? "קבועה" : t.rateKind === "variable" ? "משתנה" : "לא ידוע"}{t.linkedToCpi ? " · צמודה למדד" : ""}</b>
+              <span>מסלול {String.fromCharCode(0x5d0 + i)}׳{!commonBank && t.bankName ? ` · ${t.bankName}` : ""}</span>
+              <b>{rateKindLabel(t)}{t.linkedToCpi ? " · צמודה למדד" : ""}</b>
             </div>
             {t.annualRate != null && briefRow("ריבית שנתית", `${t.annualRate}%`)}
+            {t.anchorRate != null && briefRow("ריבית עוגן", `${t.anchorRate}%`)}
+            {t.marginRate != null && briefRow("מרווח מעל העוגן", `${t.marginRate}%`)}
+            {t.nextRateChangeDate && briefRow("שינוי ריבית קרוב", t.nextRateChangeDate)}
+            {t.repaymentMethod && briefRow("שיטת פרעון", t.repaymentMethod)}
             {t.monthsRemaining != null && briefRow("יתרת תקופה", `${t.monthsRemaining} חודשים`)}
             {t.principalBalance != null && briefRow("יתרת קרן", shekel(t.principalBalance))}
+            {t.accruedInterest != null && briefRow("ריבית צבורה", shekel(t.accruedInterest))}
+            {t.payoffBalance != null && briefRow("יתרה לסילוק (מסלול)", shekel(t.payoffBalance))}
             {t.earlyRepaymentFee != null && briefRow("עמלת פרעון מוקדם", shekel(t.earlyRepaymentFee))}
             {t.comparisonRate != null && briefRow("ריבית לצרכי השוואה", `${t.comparisonRate}%`)}
+            {t.forecastRate != null && briefRow("ריבית כוללת חזויה", `${t.forecastRate}%`)}
             {(t.arrearsBalance ?? 0) > 0 && briefRow("יתרת פיגור", shekel(t.arrearsBalance ?? 0))}
+            {(t.arrearsInterest ?? 0) > 0 && briefRow("ריבית פיגורים", shekel(t.arrearsInterest ?? 0))}
           </div>
         ))}
         {(totals.totalEarlyRepaymentFee != null || totals.totalPayoff != null) && (
@@ -415,6 +435,9 @@ function LoanTracksCard({ tracks, totals }: { tracks: LoanTrack[]; totals: DocTo
             {totals.quoteValidDate && briefRow("תוקף הנתונים", totals.quoteValidDate)}
           </div>
         )}
+        <div className="anon-note">
+          &ldquo;ריבית לצרכי השוואה&rdquo; כבר כוללת בתוכה את עמלת הפרעון המוקדם ואת תחזית הריבית — זו הריבית האפקטיבית האמיתית להשוואה מול הצעה חדשה, לא תוספת על גבי העמלה.
+        </div>
       </div>
     </div>
   );

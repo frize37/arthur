@@ -34,6 +34,7 @@ export type YesNo = "yes" | "no" | "unsure" | null;
 export interface LoanTrack {
   bankName: string | null;
   rateKind: "fixed" | "variable" | null;
+  anchorBasis: string | null;
   linkedToCpi: boolean | null;
   repaymentMethod: string | null;
   annualRate: number | null;

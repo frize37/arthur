@@ -108,6 +108,7 @@ export async function fetchCases(): Promise<AdminCase[]> {
           (t): LoanTrack => ({
             bankName: t.bank_name,
             rateKind: t.rate_kind,
+            anchorBasis: t.anchor_basis,
             linkedToCpi: t.linked_to_cpi,
             repaymentMethod: t.repayment_method,
             annualRate: t.annual_rate != null ? Number(t.annual_rate) : null,

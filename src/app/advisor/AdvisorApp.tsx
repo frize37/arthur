@@ -218,6 +218,19 @@ function DetailView({
 
       <div className="detail-layout">
         <div className="detail-layout__main">
+          {c.client && (
+            <div className="card" style={{ borderColor: "var(--good)" }}>
+              <h3><svg><use href="#ic-check-circle" /></svg>מזל טוב, זכיתם בתיק! פרטי הלקוח</h3>
+              <div className="brief-grid">
+                {briefRow("שם מלא", c.client.name)}
+                {briefRow("טלפון", c.client.phone)}
+                {briefRow("מייל", c.client.email)}
+              </div>
+              <div className="anon-note" style={{ marginTop: 12 }}>
+                אפשר ליצור קשר ישירות עם הלקוח כדי לסגור את התהליך.
+              </div>
+            </div>
+          )}
           <div className="card">
             <h3><svg><use href="#ic-target" /></svg>בקשה ומטרה</h3>
             <div className="brief-grid">
@@ -263,6 +276,12 @@ function DetailView({
             <h3><svg><use href="#ic-doc" /></svg>מסמכים שצורפו</h3>
             {c.docTracks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {(() => {
+                  const commonBank = c.docTracks.every((t) => t.bankName && t.bankName === c.docTracks[0].bankName)
+                    ? c.docTracks[0].bankName
+                    : null;
+                  return commonBank && <div style={{ fontSize: 12.5, color: "var(--ink-faint)" }}>בנק: {commonBank}</div>;
+                })()}
                 {c.docTracks.map((t, i) => (
                   <div
                     className="brief-grid"
@@ -270,18 +289,34 @@ function DetailView({
                     style={{ paddingBottom: 10, borderBottom: i < c.docTracks.length - 1 ? "1px solid var(--line)" : undefined }}
                   >
                     <div className="brief-item">
-                      <span>מסלול {String.fromCharCode(0x5d0 + i)}׳{t.bankName ? ` · ${t.bankName}` : ""}</span>
+                      <span>מסלול {String.fromCharCode(0x5d0 + i)}׳</span>
                       <b>
-                        {t.rateKind === "fixed" ? "קבועה" : t.rateKind === "variable" ? "משתנה" : "לא ידוע"}
+                        {t.rateKind === "fixed"
+                          ? "קבועה"
+                          : t.rateKind === "variable"
+                          ? t.anchorBasis?.includes("פריים")
+                            ? "פריים"
+                            : t.anchorBasis
+                            ? `משתנה (${t.anchorBasis})`
+                            : "משתנה"
+                          : "לא ידוע"}
                         {t.linkedToCpi ? " · צמודה למדד" : ""}
                       </b>
                     </div>
                     {t.annualRate != null && briefRow("ריבית שנתית", `${t.annualRate}%`)}
+                    {t.anchorRate != null && briefRow("ריבית עוגן", `${t.anchorRate}%`)}
+                    {t.marginRate != null && briefRow("מרווח מעל העוגן", `${t.marginRate}%`)}
+                    {t.nextRateChangeDate && briefRow("שינוי ריבית קרוב", t.nextRateChangeDate)}
+                    {t.repaymentMethod && briefRow("שיטת פרעון", t.repaymentMethod)}
                     {t.monthsRemaining != null && briefRow("יתרת תקופה", `${t.monthsRemaining} חודשים`)}
                     {t.principalBalance != null && briefRow("יתרת קרן", shekel(t.principalBalance))}
+                    {t.accruedInterest != null && briefRow("ריבית צבורה", shekel(t.accruedInterest))}
+                    {t.payoffBalance != null && briefRow("יתרה לסילוק (מסלול)", shekel(t.payoffBalance))}
                     {t.earlyRepaymentFee != null && briefRow("עמלת פרעון מוקדם", shekel(t.earlyRepaymentFee))}
                     {t.comparisonRate != null && briefRow("ריבית לצרכי השוואה", `${t.comparisonRate}%`)}
+                    {t.forecastRate != null && briefRow("ריבית כוללת חזויה", `${t.forecastRate}%`)}
                     {(t.arrearsBalance ?? 0) > 0 && briefRow("יתרת פיגור", shekel(t.arrearsBalance ?? 0))}
+                    {(t.arrearsInterest ?? 0) > 0 && briefRow("ריבית פיגורים", shekel(t.arrearsInterest ?? 0))}
                   </div>
                 ))}
                 {(c.docTotals.totalEarlyRepaymentFee != null || c.docTotals.totalPayoff != null) && (
@@ -293,6 +328,9 @@ function DetailView({
                       briefRow("ריבית לצרכי השוואה (חשבון)", `${c.docTotals.accountComparisonRate}%`)}
                   </div>
                 )}
+                <div className="anon-note">
+                  &ldquo;ריבית לצרכי השוואה&rdquo; כבר כוללת בתוכה את עמלת הפרעון המוקדם ואת תחזית הריבית — זו הריבית האפקטיבית להשוואה מול הצעה חדשה.
+                </div>
               </div>
             ) : (
               <div className="brief-grid">
