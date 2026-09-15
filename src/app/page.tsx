@@ -111,10 +111,10 @@ export default async function Home() {
           className="relative overflow-hidden text-center"
           style={{ background: "linear-gradient(155deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%)" }}
         >
-          <div className="max-w-2xl mx-auto flex flex-col items-center px-5 pt-8 pb-14 md:pb-20">
+          <div className="max-w-2xl mx-auto flex flex-col items-center px-5 pt-6 pb-10 md:pb-14">
             <div className="hero-visual w-full">
               <div className="bear-drop">
-                <ArthurMascot className="w-[400px] sm:w-[560px] md:w-[680px] h-auto drop-shadow-[0_24px_30px_rgba(0,0,0,0.32)]" />
+                <ArthurMascot className="w-[340px] sm:w-[440px] md:w-[520px] h-auto drop-shadow-[0_24px_30px_rgba(0,0,0,0.32)]" />
               </div>
               <h1 className="comic-bubble">
                 אל תיקחו משכנתה

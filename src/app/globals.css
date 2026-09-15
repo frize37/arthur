@@ -106,7 +106,7 @@ h1, h2, h3 {
 .hero-visual {
   position: relative;
   width: 100%;
-  height: clamp(300px, 48vw, 520px);
+  height: clamp(230px, 32vw, 360px);
   overflow: hidden;
 }
 

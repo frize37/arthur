@@ -60,7 +60,7 @@
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand svg, .brand img { width: 34px; height: 34px; flex-shrink: 0; object-fit: contain; }
 .brand span { font-family: var(--font-rubik), sans-serif; font-weight: 900; font-size: 18px; }
-.brand__wordmark { height: 64px; width: auto; }
+.brand img.brand__wordmark { width: auto; height: 64px; }
 
 .progress { display: flex; align-items: flex-start; gap: 0; padding: 4px 2px 28px; }
 .progress[hidden] { display: none; }
