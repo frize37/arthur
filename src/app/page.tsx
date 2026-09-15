@@ -95,7 +95,7 @@ export default async function Home() {
     <div className="flex flex-col min-h-full">
       <header className="border-b border-line">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 px-5 py-3.5">
-          <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={220} height={110} className="h-12 w-auto" />
+          <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={280} height={140} className="h-16 w-auto" />
           <Link
             href="/wizard"
             className="font-display font-bold text-sm rounded-xl bg-accent text-[var(--hero-1)] px-4 py-2 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5"
