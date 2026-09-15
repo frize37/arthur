@@ -9,5 +9,5 @@ export const metadata = {
 export default async function AdminPage() {
   const role = await getCurrentRole();
   if (role.kind !== "admin") redirect("/login");
-  return <AdminApp adminName={role.name} />;
+  return <AdminApp adminId={role.adminId} adminName={role.name} />;
 }

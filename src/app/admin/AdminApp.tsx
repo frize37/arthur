@@ -8,6 +8,7 @@ import { assignAdvisorsToCase, fetchAdvisors, fetchCases, persistWinner } from "
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
+import { CaseChat } from "@/components/CaseChat";
 
 function briefRow(label: string, value: string) {
   return (
@@ -18,7 +19,7 @@ function briefRow(label: string, value: string) {
   );
 }
 
-export function AdminApp({ adminName }: { adminName: string }) {
+export function AdminApp({ adminId, adminName }: { adminId: string; adminName: string }) {
   const [cases, setCases] = useState<AdminCase[]>([]);
   const [advisors, setAdvisors] = useState<Record<string, Advisor>>({});
   const [loading, setLoading] = useState(true);
@@ -163,7 +164,15 @@ export function AdminApp({ adminName }: { adminName: string }) {
             </div>
           </>
         ) : (
-          <DetailView key={selected.id} case_={selected} advisors={advisors} onBack={() => setSelectedId(null)} onUpdate={(patch) => updateCase(selected.id, patch)} />
+          <DetailView
+            key={selected.id}
+            case_={selected}
+            advisors={advisors}
+            adminId={adminId}
+            adminName={adminName}
+            onBack={() => setSelectedId(null)}
+            onUpdate={(patch) => updateCase(selected.id, patch)}
+          />
         )}
       </div>
     </div>
@@ -173,11 +182,15 @@ export function AdminApp({ adminName }: { adminName: string }) {
 function DetailView({
   case_: c,
   advisors,
+  adminId,
+  adminName,
   onBack,
   onUpdate,
 }: {
   case_: AdminCase;
   advisors: Record<string, Advisor>;
+  adminId: string;
+  adminName: string;
   onBack: () => void;
   onUpdate: (patch: Partial<AdminCase>) => void;
 }) {
@@ -296,6 +309,13 @@ function DetailView({
               ))}
             </div>
           </div>
+
+          {c.status !== "new" && (
+            <div className="card">
+              <h3><svg><use href="#ic-send" /></svg>שיחה עם היועצים</h3>
+              <CaseChat caseId={c.id} sender={{ kind: "admin", adminId, name: adminName }} />
+            </div>
+          )}
         </div>
       </div>
     </>

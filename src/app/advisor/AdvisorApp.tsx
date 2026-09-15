@@ -9,6 +9,7 @@ import { fetchMyCases, submitOffer } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
+import { CaseChat } from "@/components/CaseChat";
 
 function briefRow(label: string, value: string) {
   return (
@@ -114,6 +115,7 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
           <DetailView
             case_={selected}
             advisorId={advisorId}
+            advisorName={advisorName}
             onBack={() => setSelectedId(null)}
             onUpdate={(patch) => updateCase(selected.id, patch)}
           />
@@ -175,11 +177,13 @@ function ListView({
 function DetailView({
   case_: c,
   advisorId,
+  advisorName,
   onBack,
   onUpdate,
 }: {
   case_: AdvisorCase;
   advisorId: string;
+  advisorName: string;
   onBack: () => void;
   onUpdate: (patch: Partial<AdvisorCase>) => void;
 }) {
@@ -405,6 +409,11 @@ function DetailView({
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="card">
+            <h3><svg><use href="#ic-sparkle" /></svg>שיחה עם הצוות</h3>
+            <CaseChat caseId={c.id} sender={{ kind: "advisor", advisorId, name: advisorName }} />
           </div>
         </div>
       </div>
