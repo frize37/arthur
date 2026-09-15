@@ -36,7 +36,19 @@
 .admin-chip__info strong { display: block; font-size: 12.5px; }
 .admin-chip__info small { color: var(--ink-faint); font-size: 11px; }
 
-.page { max-width: 1280px; margin-inline: auto; padding: 22px clamp(16px, 4vw, 40px) 60px; display: flex; flex-direction: column; gap: 22px; }
+.page { max-width: 1280px; margin-inline: auto; padding: 22px clamp(16px, 4vw, 40px) 60px; }
+
+.admin-shell { display: flex; align-items: flex-start; gap: 26px; }
+.admin-sidebar { width: 168px; flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; position: sticky; top: 84px; }
+.admin-sidebar button { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; border: none; background: transparent; color: var(--ink-soft); font-family: var(--font-rubik), sans-serif; font-weight: 700; font-size: 13.5px; cursor: pointer; text-align: right; transition: background .15s ease, color .15s ease; }
+.admin-sidebar button svg { width: 17px; height: 17px; flex-shrink: 0; }
+.admin-sidebar button:hover { background: var(--surface-2); }
+.admin-sidebar button.active { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+@media (max-width: 760px) {
+  .admin-shell { flex-direction: column; }
+  .admin-sidebar { width: 100%; flex-direction: row; overflow-x: auto; position: static; }
+}
 
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .stat-tile { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow); }

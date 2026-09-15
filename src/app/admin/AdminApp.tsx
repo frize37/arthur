@@ -8,6 +8,7 @@ import {
   assignAdvisorsToCase,
   createAdminAccount,
   createAdvisorAccount,
+  deleteAdvisorAccount,
   fetchAdvisors,
   fetchCases,
   markCaseCompleted,
@@ -35,6 +36,7 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<CaseStatus | "all">("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [view, setView] = useState<"cases" | "team">("cases");
 
   useEffect(() => {
     let cancelled = false;
@@ -103,7 +105,26 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
       </div>
 
       <div className="page">
-        {loading ? (
+        <div className="admin-shell">
+          <nav className="admin-sidebar">
+            <button type="button" className={view === "cases" ? "active" : ""} onClick={() => setView("cases")}>
+              <svg><use href="#ic-doc" /></svg>תיקים
+            </button>
+            <button
+              type="button"
+              className={view === "team" ? "active" : ""}
+              onClick={() => {
+                setView("team");
+                setSelectedId(null);
+              }}
+            >
+              <svg><use href="#ic-user" /></svg>יועצים וצוות
+            </button>
+          </nav>
+          <div className="admin-main">
+        {view === "team" ? (
+          <TeamPage advisors={advisors} onChanged={reloadAdvisors} />
+        ) : loading ? (
           <div className="empty">טוען תיקים…</div>
         ) : !selected ? (
           <>
@@ -153,22 +174,6 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
                 })
               )}
             </div>
-
-            <div className="section-head" style={{ marginTop: 8 }}>
-              <h2>ביצועי יועצים ועמלות</h2>
-              <span>לפי תיקים שנסגרו וזמן תגובה ממוצע</span>
-            </div>
-            <div className="card">
-              <div className="lead-table">
-                {Object.values(advisors)
-                  .sort((a, b) => b.casesWon - a.casesWon)
-                  .map((a) => (
-                    <AdvisorRow key={a.id} advisor={a} onSaved={reloadAdvisors} />
-                  ))}
-              </div>
-            </div>
-
-            <TeamManagement onCreated={reloadAdvisors} />
           </>
         ) : (
           <DetailView
@@ -181,6 +186,8 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
             onUpdate={(patch) => updateCase(selected.id, patch)}
           />
         )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -310,11 +317,20 @@ function DetailView({
                       הערת סגירה ({c.completedBy === "advisor" ? "מהיועץ" : "מהצוות"}): {c.completionNote}
                     </div>
                   )}
-                  {c.status === "sent" && <CaseCompletion caseId={c.id} onUpdate={onUpdate} />}
                 </>
               );
             })()}
           </div>
+          )}
+
+          {c.status !== "new" && c.status !== "closed" && c.status !== "closed_no_deal" && (
+            <div className="card">
+              <h3><svg><use href="#ic-check-circle" /></svg>סגירת התיק</h3>
+              <div className="anon-note" style={{ marginBottom: 10 }}>
+                אפשר לסמן שהעסקה בוצעה בהצלחה, או לסגור את התיק ללא ביצוע — בכל שלב, לא רק אחרי שהוצעה הצעה.
+              </div>
+              <CaseCompletion caseId={c.id} onUpdate={onUpdate} />
+            </div>
           )}
         </div>
 
@@ -584,6 +600,8 @@ function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => 
   const [commissionType, setCommissionType] = useState<"percent" | "fixed">(a.commissionType ?? "percent");
   const [commissionValue, setCommissionValue] = useState(a.commissionValue ?? 10);
   const [saving, setSaving] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
 
   async function save() {
@@ -594,6 +612,13 @@ function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => 
       setEditing(false);
       onSaved();
     }
+  }
+
+  async function confirmDelete() {
+    setDeleting(true);
+    const res = await deleteAdvisorAccount(a.id);
+    setDeleting(false);
+    if (res.ok) onSaved();
   }
 
   return (
@@ -624,11 +649,27 @@ function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => 
           עמלה: {a.commissionType === "fixed" ? shekel(a.commissionValue ?? 0) : `${a.commissionValue ?? 0}%`} · לעריכה
         </button>
       )}
+      {confirmingDelete ? (
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <span style={{ fontSize: 11.5, color: "var(--risk)" }}>למחוק לצמיתות?</span>
+          <button type="button" className="btn btn-ghost" style={{ padding: "5px 10px", fontSize: 12, borderColor: "var(--risk)", color: "var(--risk)" }} disabled={deleting} onClick={confirmDelete}>
+            {deleting ? "מוחק…" : "כן, מחקו"}
+          </button>
+          <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={() => setConfirmingDelete(false)}>
+            ביטול
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="btn-link" style={{ fontSize: 12, color: "var(--risk)" }} onClick={() => setConfirmingDelete(true)}>
+          מחיקת יועץ
+        </button>
+      )}
     </div>
   );
 }
 
-function TeamManagement({ onCreated }: { onCreated: () => void }) {
+function TeamPage({ advisors, onChanged }: { advisors: Record<string, Advisor>; onChanged: () => void }) {
+  const onCreated = onChanged;
   const [addingAdvisor, setAddingAdvisor] = useState(false);
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [name, setName] = useState("");
@@ -679,8 +720,24 @@ function TeamManagement({ onCreated }: { onCreated: () => void }) {
     }
   }
 
+  const advisorList = Object.values(advisors).sort((a, b) => b.casesWon - a.casesWon);
+
   return (
     <>
+      <div className="section-head">
+        <h2>יועצים</h2>
+        <span>{advisorList.length} יועצים פעילים · עמלות וביצועים</span>
+      </div>
+      <div className="card">
+        <div className="lead-table">
+          {advisorList.length === 0 ? (
+            <div className="empty">אין עדיין יועצים במערכת — הוסיפו אחד למטה.</div>
+          ) : (
+            advisorList.map((a) => <AdvisorRow key={a.id} advisor={a} onSaved={onChanged} />)
+          )}
+        </div>
+      </div>
+
       <div className="section-head" style={{ marginTop: 8 }}>
         <h2>ניהול צוות</h2>
         <span>הוספת יועצים ואנשי צוות למערכת</span>

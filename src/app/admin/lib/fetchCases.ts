@@ -70,6 +70,17 @@ export async function createAdminAccount(input: {
   return { ok: true, password: json.password };
 }
 
+export async function deleteAdvisorAccount(advisorId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const res = await fetch("/api/admin/delete-account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ advisorId }),
+  });
+  const json = await res.json();
+  if (!json.ok) return { ok: false, error: json.error ?? "מחיקת היועץ נכשלה." };
+  return { ok: true };
+}
+
 export async function updateAdvisorCommission(advisorId: string, commissionType: "percent" | "fixed", commissionValue: number) {
   const supabase = createClient();
   const { error } = await supabase
