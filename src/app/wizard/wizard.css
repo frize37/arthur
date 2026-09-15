@@ -80,7 +80,7 @@
 
 .stage { display: flex; flex-direction: column; gap: 20px; animation: stageIn .4s ease; }
 
-.buddy-row { display: flex; align-items: flex-start; gap: 10px; }
+.buddy-row { display: flex; align-items: center; gap: 10px; }
 .buddy-icon { width: 112px; height: 112px; flex-shrink: 0; object-fit: contain; transition: transform .3s ease; }
 .buddy-row--doc { align-items: center; }
 .buddy-row--doc .buddy-icon, .buddy-row--doc .rigged-bear { width: 148px; height: 148px; }
@@ -90,26 +90,28 @@
 .bubble {
   position: relative;
   background: var(--surface);
-  border: none;
+  border: 1.5px solid var(--line);
   border-radius: 20px;
-  padding: 13px 17px;
+  padding: 14px 18px;
   font-size: 14.5px;
   color: var(--ink-soft);
   flex: 1;
-  margin-top: 10px;
   box-shadow: 0 10px 24px -16px rgba(14, 32, 56, 0.35);
   transition: background .25s ease;
 }
 .bubble::after {
   content: "";
   position: absolute;
-  top: 16px;
-  right: -6px;
-  width: 16px;
-  height: 16px;
+  top: 50%;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
   background: var(--surface);
-  transform: rotate(45deg);
-  box-shadow: 3px -3px 5px -4px rgba(14, 32, 56, 0.2);
+  border-inline-end: 1.5px solid var(--line);
+  border-block-end: 1.5px solid var(--line);
+  transform: rotate(-45deg);
+  border-radius: 0 0 3px 0;
 }
 
 .card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 22px; }
@@ -227,7 +229,7 @@
 .gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
 .gauge-wrap::before { content: ""; position: absolute; top: -10px; width: 220px; height: 180px; border-radius: 50%; background: radial-gradient(circle, var(--glow, transparent) 0%, transparent 72%); opacity: .4; z-index: -1; }
 .gauge { width: 220px; height: 112px; position: relative; overflow: hidden; }
-.gauge__arc { position: absolute; top: 0; left: 0; width: 220px; height: 220px; border-radius: 50%; background: conic-gradient(from 180deg, var(--good) 0deg 90deg, var(--watch) 90deg 120deg, var(--risk) 120deg 180deg, transparent 180deg 360deg); }
+.gauge__arc { position: absolute; top: 0; left: 0; width: 220px; height: 220px; border-radius: 50%; background: conic-gradient(from 270deg, var(--good) 0deg 105deg, var(--watch) 105deg 120deg, var(--risk) 120deg 180deg, transparent 180deg 360deg); }
 .gauge__hole { position: absolute; top: 24px; left: 24px; width: 172px; height: 172px; border-radius: 50%; background: var(--surface); }
 .gauge__needle { position: absolute; bottom: 0; left: 50%; width: 3px; height: 96px; background: var(--ink); border-radius: 3px; transform-origin: bottom center; }
 .gauge__hub { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--ink); }

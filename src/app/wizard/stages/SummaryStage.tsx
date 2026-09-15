@@ -5,7 +5,7 @@ import type { StageProps } from "../lib/reducer";
 import { GOAL_LABELS, isComplexCase } from "../lib/types";
 import { bandFor, monthlyPayment, shekel } from "../lib/finance";
 import { confettiBurst } from "../lib/effects";
-import { ChipRow } from "../components/ui";
+import { BuddyRow, ChipRow } from "../components/ui";
 import { RiggedBear } from "../components/RiggedBear";
 import { submitCaseToDatabase } from "../lib/submitCase";
 
@@ -46,10 +46,7 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
 
   return (
     <section className="stage">
-      <div className="buddy-row">
-        <svg><use href={`#${summaryMood}`} /></svg>
-        <div className="bubble">{summaryBubble}</div>
-      </div>
+      <BuddyRow mood={summaryMood} bubble={summaryBubble} />
 
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div className="card-badge">📊 בזמן אמת</div>
@@ -60,7 +57,7 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
             <div className="gauge__needle" style={{ transform: `rotate(${needleDeg}deg)` }} />
             <div className="gauge__hub" />
           </div>
-          <div className="gauge-ticks"><span>0%</span><span>30%</span><span>40%</span><span>60%+</span></div>
+          <div className="gauge-ticks"><span>0%</span><span>35%</span><span>40%</span><span>60%+</span></div>
           <div className="ratio-big">
             יחס החזר מהכנסה<b className="num">{(ratio * 100).toFixed(0)}%</b>
           </div>
