@@ -7,7 +7,6 @@ import { isComplexCase } from "../lib/types";
 import { heroLandingEffects } from "../lib/effects";
 import { BuddyRow, ChipRow, ChoiceGroup, Field, NavRow, Reveal, SliderField, Subhead } from "../components/ui";
 import { RiggedBear } from "../components/RiggedBear";
-import { shekel } from "../lib/finance";
 
 export function WelcomeStage({ go }: StageProps) {
   const stageRef = useRef<HTMLDivElement>(null);

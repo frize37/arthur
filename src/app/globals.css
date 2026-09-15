@@ -112,3 +112,38 @@ h1, h2, h3 {
   font-weight: 900;
   letter-spacing: -0.01em;
 }
+
+@keyframes heroBearPop {
+  0% { transform: scale(0.4); opacity: 0; }
+  65% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.hero-bear-pop {
+  animation: heroBearPop 0.7s cubic-bezier(0.24, 0.9, 0.4, 1) both;
+}
+
+.comic-bubble {
+  position: absolute;
+  background: #fff;
+  color: var(--hero-1);
+  border-radius: 26px;
+  padding: 12px 20px;
+  font-family: var(--font-rubik), sans-serif;
+  font-weight: 900;
+  font-size: clamp(15px, 3.6vw, 22px);
+  line-height: 1.35;
+  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.4);
+  width: max-content;
+  max-width: 26ch;
+}
+.comic-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 3px 3px 5px -3px rgba(0, 0, 0, 0.2);
+}

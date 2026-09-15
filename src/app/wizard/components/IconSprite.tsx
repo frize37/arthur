@@ -7,7 +7,6 @@ export function IconSprite() {
         <symbol id="ic-merge" viewBox="0 0 24 24"><path d="M6 4v6a4 4 0 0 0 4 4h4m0 0-3-3m3 3-3 3M6 14v6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></symbol>
         <symbol id="check" viewBox="0 0 12 12"><path d="M2 6.2 L4.8 9 L10 3" stroke="#2A1B02" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></symbol>
         <symbol id="ic-check2" viewBox="0 0 12 12"><path d="M2 6.2 L4.8 9 L10 3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></symbol>
-        <symbol id="ic-save" viewBox="0 0 16 16"><path d="M2 8.2 L6 12 L14 3" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" /></symbol>
         <symbol id="ic-down" viewBox="0 0 24 24"><path d="M12 4v13m0 0-5-5m5 5 5-5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></symbol>
         <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2" fill="none" /><path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /></symbol>
         <symbol id="ic-cash" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5" stroke="currentColor" strokeWidth="2" fill="none" /><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" fill="none" /></symbol>

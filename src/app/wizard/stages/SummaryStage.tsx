@@ -41,7 +41,7 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
   }, [band]);
 
   if (state.submitted) {
-    return <DonePanel state={state} />;
+    return <DonePanel />;
   }
 
   return (
@@ -104,10 +104,7 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
         <button
           type="button"
           className="btn-link"
-          onClick={() => {
-            try { localStorage.removeItem("mb_wizard_v2"); } catch {}
-            dispatch({ type: "RESET" });
-          }}
+          onClick={() => dispatch({ type: "RESET" })}
         >
           התחלת תהליך מחדש
         </button>
@@ -260,7 +257,7 @@ function ContactAndVerify({
   );
 }
 
-function DonePanel(_props: { state: StageProps["state"] }) {
+function DonePanel() {
   return (
     <section className="stage">
       <div className="done-panel">
@@ -276,12 +273,7 @@ function DonePanel(_props: { state: StageProps["state"] }) {
         <button
           type="button"
           className="btn-link"
-          onClick={() => {
-            try {
-              localStorage.removeItem("mb_wizard_v2");
-            } catch {}
-            location.reload();
-          }}
+          onClick={() => location.reload()}
         >
           התחלת תהליך חדש
         </button>

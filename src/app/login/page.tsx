@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArthurMascot } from "@/components/ArthurMascot";
 import { createClient } from "@/lib/supabase/client";
 
@@ -48,9 +49,9 @@ export default function LoginPage() {
     <div className="min-h-full flex flex-col">
       <header className="border-b border-line">
         <div className="max-w-5xl mx-auto flex items-center gap-2.5 px-5 py-3.5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <ArthurMascot className="w-7 h-7" />
-            <span className="font-display font-black text-base">ארתור</span>
+          <Link href="/" className="flex items-center gap-2">
+            <ArthurMascot className="w-12 h-12 -my-2" />
+            <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-6 w-auto" />
           </Link>
         </div>
       </header>

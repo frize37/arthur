@@ -72,7 +72,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <ArthurMascot className="w-14 h-14 -my-2" />
             <div>
-              <span className="font-display font-black text-base leading-none">ארתור</span>
+              <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-6 w-auto" />
               <small className="block text-[11px] text-ink-faint font-semibold">בדיקה ומחזור משכנתאות</small>
             </div>
           </div>
@@ -88,28 +88,32 @@ export default function Home() {
       <main className="flex-1">
         {/* HERO */}
         <section
-          className="relative overflow-hidden text-center md:text-start"
+          className="relative overflow-hidden text-center"
           style={{ background: "linear-gradient(155deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%)" }}
         >
-          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-5 py-14 md:py-20">
-            <div className="flex-1">
-              <span className="inline-flex font-display font-bold text-xs tracking-wide text-white bg-white/15 border border-white/30 rounded-full px-3.5 py-1.5">
-                🕵️ אני בודק לפניכם, לא מוכר לכם
-              </span>
-              <h1 className="text-white text-3xl md:text-5xl font-display font-black leading-tight pt-4 max-w-[18ch] mx-auto md:mx-0">
-                אל תיקחו משכנתה לפני שארתור בודק
+          <div className="max-w-2xl mx-auto flex flex-col items-center px-5 pt-12 pb-14 md:pt-16 md:pb-20">
+            <span className="inline-flex font-display font-bold text-xs tracking-wide text-white bg-white/15 border border-white/30 rounded-full px-3.5 py-1.5">
+              🕵️ אני בודק לפניכם, לא מוכר לכם
+            </span>
+
+            <div className="relative mt-2">
+              <h1 className="comic-bubble absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 z-10">
+                אל תיקחו משכנתה
+                <br />
+                לפני ש<b>ארתור בודק</b>.
               </h1>
-              <p className="text-white/85 pt-4 max-w-[40ch] mx-auto md:mx-0">
-                כמה שאלות פשוטות, מסמך אחד, ותוך כמה דקות תדעו בדיוק איפה אתם עומדים — ואם כדאי למחזר. בחינם, ובלי שום התחייבות.
-              </p>
-              <Link
-                href="/wizard"
-                className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-white text-[var(--hero-1)] px-6 py-3.5 shadow-lg transition hover:-translate-y-0.5"
-              >
-                תנו לי לבדוק ←
-              </Link>
+              <ArthurMascot className="hero-bear-pop w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] md:w-[380px] md:h-[380px] drop-shadow-[0_20px_26px_rgba(0,0,0,0.3)]" />
             </div>
-            <ArthurMascot className="w-40 h-40 md:w-56 md:h-56 flex-shrink-0 drop-shadow-[0_16px_20px_rgba(0,0,0,0.28)]" />
+
+            <p className="text-white/85 pt-2 max-w-[40ch]">
+              כמה שאלות פשוטות, מסמך אחד, ותוך כמה דקות תדעו בדיוק איפה אתם עומדים — ואם כדאי למחזר. בחינם, ובלי שום התחייבות.
+            </p>
+            <Link
+              href="/wizard"
+              className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-white text-[var(--hero-1)] px-6 py-3.5 shadow-lg transition hover:-translate-y-0.5"
+            >
+              תנו לי לבדוק ←
+            </Link>
           </div>
         </section>
 
