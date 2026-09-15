@@ -10,18 +10,19 @@ function generatePassword(): string {
 
 export async function POST(req: NextRequest) {
   const role = await getCurrentRole();
-  if (role.kind !== "admin") {
-    return NextResponse.json({ ok: false, error: "אין לך הרשאה לפעולה הזו." }, { status: 403 });
+  if (role.kind !== "admin" || role.adminRole !== "admin") {
+    return NextResponse.json({ ok: false, error: "רק מנהל מלא יכול לבצע פעולה זו." }, { status: 403 });
   }
 
   const body = await req.json();
-  const { kind, name, email, specialty, commissionType, commissionValue } = body as {
+  const { kind, name, email, specialty, commissionType, commissionValue, adminRole } = body as {
     kind: "advisor" | "admin";
     name?: string;
     email?: string;
     specialty?: string;
     commissionType?: "percent" | "fixed";
     commissionValue?: number;
+    adminRole?: "admin" | "staff";
   };
 
   if (!name || !email || (kind !== "advisor" && kind !== "admin")) {
@@ -40,7 +41,9 @@ export async function POST(req: NextRequest) {
   }
 
   if (kind === "admin") {
-    const { error: insertErr } = await supabaseAdmin.from("admins").insert({ auth_user_id: created.user.id, name });
+    const { error: insertErr } = await supabaseAdmin
+      .from("admins")
+      .insert({ auth_user_id: created.user.id, name, role: adminRole === "staff" ? "staff" : "admin" });
     if (insertErr) {
       return NextResponse.json({ ok: false, error: insertErr.message }, { status: 500 });
     }

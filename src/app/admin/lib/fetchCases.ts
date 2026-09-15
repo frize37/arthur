@@ -59,6 +59,7 @@ export async function createAdvisorAccount(input: {
 export async function createAdminAccount(input: {
   name: string;
   email: string;
+  adminRole: "admin" | "staff";
 }): Promise<{ ok: true; password: string } | { ok: false; error: string }> {
   const res = await fetch("/api/admin/create-account", {
     method: "POST",

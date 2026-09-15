@@ -5,8 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   const role = await getCurrentRole();
-  if (role.kind !== "admin") {
-    return NextResponse.json({ ok: false, error: "אין לך הרשאה לפעולה הזו." }, { status: 403 });
+  if (role.kind !== "admin" || role.adminRole !== "admin") {
+    return NextResponse.json({ ok: false, error: "רק מנהל מלא יכול לבצע פעולה זו." }, { status: 403 });
   }
 
   const { advisorId } = (await req.json()) as { advisorId?: string };

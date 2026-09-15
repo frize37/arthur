@@ -30,7 +30,15 @@ function briefRow(label: string, value: string) {
   );
 }
 
-export function AdminApp({ adminId, adminName }: { adminId: string; adminName: string }) {
+export function AdminApp({
+  adminId,
+  adminName,
+  adminRole,
+}: {
+  adminId: string;
+  adminName: string;
+  adminRole: "admin" | "staff";
+}) {
   const [cases, setCases] = useState<AdminCase[]>([]);
   const [advisors, setAdvisors] = useState<Record<string, Advisor>>({});
   const [loading, setLoading] = useState(true);
@@ -96,7 +104,7 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
               <div className="admin-chip__avatar">{adminName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
               <div className="admin-chip__info">
                 <strong>{adminName}</strong>
-                <small>הרשאת מנהל</small>
+                <small>{adminRole === "admin" ? "הרשאת מנהל מלאה" : "הרשאת צוות"}</small>
               </div>
             </div>
             <SignOutButton className="btn btn-ghost" />
@@ -123,7 +131,7 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
           </nav>
           <div className="admin-main">
         {view === "team" ? (
-          <TeamPage advisors={advisors} onChanged={reloadAdvisors} />
+          <TeamPage advisors={advisors} onChanged={reloadAdvisors} canManage={adminRole === "admin"} />
         ) : loading ? (
           <div className="empty">טוען תיקים…</div>
         ) : !selected ? (
@@ -595,7 +603,7 @@ function CaseCompletion({ caseId, onUpdate }: { caseId: string; onUpdate: (patch
   );
 }
 
-function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => void }) {
+function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSaved: () => void; canManage: boolean }) {
   const [editing, setEditing] = useState(false);
   const [commissionType, setCommissionType] = useState<"percent" | "fixed">(a.commissionType ?? "percent");
   const [commissionValue, setCommissionValue] = useState(a.commissionValue ?? 10);
@@ -628,7 +636,7 @@ function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => 
       <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
       <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
       <div className="lead-row__stat"><span>זמן תגובה</span><b>{a.avgResponseHours} ש׳</b></div>
-      {editing ? (
+      {!canManage ? null : editing ? (
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <select value={commissionType} onChange={(e) => setCommissionType(e.target.value as "percent" | "fixed")} style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}>
             <option value="percent">אחוז</option>
@@ -649,7 +657,7 @@ function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => 
           עמלה: {a.commissionType === "fixed" ? shekel(a.commissionValue ?? 0) : `${a.commissionValue ?? 0}%`} · לעריכה
         </button>
       )}
-      {confirmingDelete ? (
+      {!canManage ? null : confirmingDelete ? (
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <span style={{ fontSize: 11.5, color: "var(--risk)" }}>למחוק לצמיתות?</span>
           <button type="button" className="btn btn-ghost" style={{ padding: "5px 10px", fontSize: 12, borderColor: "var(--risk)", color: "var(--risk)" }} disabled={deleting} onClick={confirmDelete}>
@@ -668,7 +676,15 @@ function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => 
   );
 }
 
-function TeamPage({ advisors, onChanged }: { advisors: Record<string, Advisor>; onChanged: () => void }) {
+function TeamPage({
+  advisors,
+  onChanged,
+  canManage,
+}: {
+  advisors: Record<string, Advisor>;
+  onChanged: () => void;
+  canManage: boolean;
+}) {
   const onCreated = onChanged;
   const [addingAdvisor, setAddingAdvisor] = useState(false);
   const [addingAdmin, setAddingAdmin] = useState(false);
@@ -677,6 +693,7 @@ function TeamPage({ advisors, onChanged }: { advisors: Record<string, Advisor>; 
   const [specialty, setSpecialty] = useState("");
   const [commissionType, setCommissionType] = useState<"percent" | "fixed">("percent");
   const [commissionValue, setCommissionValue] = useState(10);
+  const [adminRoleToCreate, setAdminRoleToCreate] = useState<"admin" | "staff">("staff");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ email: string; password: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -709,7 +726,7 @@ function TeamPage({ advisors, onChanged }: { advisors: Record<string, Advisor>; 
     if (!name || !email) return;
     setSending(true);
     setError(null);
-    const res = await createAdminAccount({ name, email });
+    const res = await createAdminAccount({ name, email, adminRole: adminRoleToCreate });
     setSending(false);
     if (res.ok) {
       setResult({ email, password: res.password });
@@ -733,11 +750,15 @@ function TeamPage({ advisors, onChanged }: { advisors: Record<string, Advisor>; 
           {advisorList.length === 0 ? (
             <div className="empty">אין עדיין יועצים במערכת — הוסיפו אחד למטה.</div>
           ) : (
-            advisorList.map((a) => <AdvisorRow key={a.id} advisor={a} onSaved={onChanged} />)
+            advisorList.map((a) => <AdvisorRow key={a.id} advisor={a} onSaved={onChanged} canManage={canManage} />)
           )}
         </div>
       </div>
 
+      {!canManage ? (
+        <div className="anon-note">עמלות, הוספה והסרה של יועצים ואנשי צוות זמינים רק למנהל מלא.</div>
+      ) : (
+      <>
       <div className="section-head" style={{ marginTop: 8 }}>
         <h2>ניהול צוות</h2>
         <span>הוספת יועצים ואנשי צוות למערכת</span>
@@ -804,12 +825,21 @@ function TeamPage({ advisors, onChanged }: { advisors: Record<string, Advisor>; 
               <label>אימייל</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
+            <div className="parsed-field">
+              <label>רמת הרשאה</label>
+              <select value={adminRoleToCreate} onChange={(e) => setAdminRoleToCreate(e.target.value as "admin" | "staff")}>
+                <option value="staff">צוות — ללא עמלות, ללא הוספה/הסרה של יועצים</option>
+                <option value="admin">מנהל מלא — גישה לכל הדברים</option>
+              </select>
+            </div>
             <button type="button" className="btn btn-primary" style={{ gridColumn: "1/-1" }} disabled={!name || !email || sending} onClick={submitAdmin}>
               {sending ? "יוצר…" : "יצירת חשבון איש צוות"}
             </button>
           </div>
         )}
       </div>
+      </>
+      )}
     </>
   );
 }

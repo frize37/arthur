@@ -26,7 +26,7 @@ export function WelcomeStage({ go }: StageProps) {
                 <svg viewBox="0 0 24 24"><path d="M12 2 14.5 9 22 9 16 13.5 18 21 12 16.5 6 21 8 13.5 2 9 9.5 9Z" fill="currentColor" /></svg>
               </div>
               <div className="hero-band__copy">
-                <span className="kicker-onhero">🕵️ אני בודק לפניכם, לא מוכר לכם</span>
+                <span className="kicker-onhero">🕵️ לא אתם מחפשים יועץ — היועצים מתחרים עליכם</span>
                 <h1>
                   אל תיקחו משכנתה
                   <br />
