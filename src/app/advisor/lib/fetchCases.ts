@@ -60,14 +60,12 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
 
   return caseRows.map((row): AdvisorCase => {
     const myOffer = (offerRows ?? []).find((o) => o.case_id === row.id);
-    const status: AdvisorCase["status"] =
-      row.status === "sent" || row.status === "closed"
-        ? myOffer?.is_winner
-          ? "won"
-          : "lost"
-        : myOffer
-        ? "sent"
-        : "pending";
+    const isWinner = !!myOffer?.is_winner;
+    let status: AdvisorCase["status"];
+    if (row.status === "closed" && isWinner) status = "closed";
+    else if (row.status === "closed_no_deal" && isWinner) status = "closed_no_deal";
+    else if (row.status === "sent" || row.status === "closed" || row.status === "closed_no_deal") status = isWinner ? "won" : "lost";
+    else status = myOffer ? "sent" : "pending";
 
     return {
       id: row.id,
@@ -136,8 +134,40 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
         row.contact_name || row.contact_phone || row.contact_email
           ? { name: row.contact_name ?? "", phone: row.contact_phone ?? "", email: row.contact_email ?? "" }
           : undefined,
+      completionNote: row.completion_note ?? null,
+      completedBy: row.completed_by ?? null,
     };
   });
+}
+
+export async function fetchMyCommission(advisorId: string): Promise<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null }> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("advisors_directory")
+    .select("commission_type, commission_value")
+    .eq("id", advisorId)
+    .maybeSingle();
+  if (error || !data) {
+    if (error) console.error("Failed to fetch commission:", error.message);
+    return { commissionType: null, commissionValue: null };
+  }
+  return {
+    commissionType: data.commission_type ?? null,
+    commissionValue: data.commission_value != null ? Number(data.commission_value) : null,
+  };
+}
+
+export async function submitCompletion(caseId: string, outcome: "closed" | "closed_no_deal", note: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("cases")
+    .update({ status: outcome, completion_note: note || null, completed_by: "advisor" })
+    .eq("id", caseId);
+  if (error) {
+    console.error("Failed to submit case completion:", error.message);
+    return false;
+  }
+  return true;
 }
 
 export async function submitOffer(

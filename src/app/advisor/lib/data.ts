@@ -1,6 +1,6 @@
 import { monthlyPayment } from "../../wizard/lib/finance";
 
-export type CaseStatus = "pending" | "sent" | "won" | "lost";
+export type CaseStatus = "pending" | "sent" | "won" | "closed" | "closed_no_deal" | "lost";
 export type Band = "good" | "watch" | "risk";
 
 export interface LoanTrack {
@@ -52,6 +52,8 @@ export interface AdvisorCase {
   docSource: "ai" | "manual" | null;
   offer?: { savings: number; fee: number };
   client?: { name: string; phone: string; email: string };
+  completionNote: string | null;
+  completedBy: "advisor" | "admin" | null;
 }
 
 export const LABELS = {
@@ -78,8 +80,16 @@ export const STATUS_META: Record<CaseStatus, { label: string; cls: string }> = {
   pending: { label: "ממתין להצעה", cls: "pill-pending" },
   sent: { label: "הצעה נשלחה", cls: "pill-sent" },
   won: { label: "זכינו בתיק", cls: "pill-won" },
+  closed: { label: "העסקה בוצעה", cls: "pill-won" },
+  closed_no_deal: { label: "נסגר ללא ביצוע", cls: "pill-lost" },
   lost: { label: "לא נבחרנו", cls: "pill-lost" },
 };
+
+export function computeCommission(feeIncVat: number, commissionType: "percent" | "fixed" | null, commissionValue: number | null): number {
+  if (commissionType === "fixed") return commissionValue ?? 0;
+  if (commissionType === "percent") return feeIncVat * ((commissionValue ?? 0) / 100);
+  return 0;
+}
 
 export function computeCase(c: AdvisorCase) {
   const totalMonths = c.doc.years * 12 + c.doc.months;

@@ -4,7 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import "./admin.css";
 import { AdminIcons } from "./components/AdminIcons";
 import { Advisor, AdminCase, CaseStatus, DocTotals, LABELS, LoanTrack, Offer, STATUS_META, TABS } from "./lib/data";
-import { assignAdvisorsToCase, fetchAdvisors, fetchCases, persistWinner } from "./lib/fetchCases";
+import {
+  assignAdvisorsToCase,
+  createAdminAccount,
+  createAdvisorAccount,
+  fetchAdvisors,
+  fetchCases,
+  markCaseCompleted,
+  markCaseNoDeal,
+  persistWinner,
+  updateAdvisorCommission,
+} from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -40,6 +50,10 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
       cancelled = true;
     };
   }, []);
+
+  async function reloadAdvisors() {
+    setAdvisors(await fetchAdvisors());
+  }
 
   const stats = useMemo(() => {
     const closedSavings = cases
@@ -141,27 +155,20 @@ export function AdminApp({ adminId, adminName }: { adminId: string; adminName: s
             </div>
 
             <div className="section-head" style={{ marginTop: 8 }}>
-              <h2>ביצועי יועצים</h2>
+              <h2>ביצועי יועצים ועמלות</h2>
               <span>לפי תיקים שנסגרו וזמן תגובה ממוצע</span>
             </div>
             <div className="card">
               <div className="lead-table">
                 {Object.values(advisors)
                   .sort((a, b) => b.casesWon - a.casesWon)
-                  .map((a) => {
-                    const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
-                    return (
-                      <div className="lead-row" key={a.id}>
-                        <div className="lead-row__avatar">{initials}</div>
-                        <div className="lead-row__info"><strong>{a.name}</strong><small>{a.specialty}</small></div>
-                        <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
-                        <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
-                        <div className="lead-row__stat"><span>זמן תגובה</span><b>{a.avgResponseHours} ש׳</b></div>
-                      </div>
-                    );
-                  })}
+                  .map((a) => (
+                    <AdvisorRow key={a.id} advisor={a} onSaved={reloadAdvisors} />
+                  ))}
               </div>
             </div>
+
+            <TeamManagement onCreated={reloadAdvisors} />
           </>
         ) : (
           <DetailView
@@ -279,20 +286,34 @@ function DetailView({
                 <div className="anon-note">הבחירה כאן היא שלכם — המערכת רק מציגה את הנתונים לצד הצעת פתיחה חכמה, ההחלטה הסופית תמיד אנושית.</div>
               </div>
             )}
-            {(c.status === "sent" || c.status === "closed") && (
-              <div className="sent-note" style={{ marginTop: 14 }}>
-                <svg><use href="#ic-check-circle" /></svg>
-                <p>
-                  {(() => {
-                    const w = c.offers.find((o) => o.winner) ?? c.offers[0];
-                    const wa = advisors[w.advisorId];
-                    return c.status === "closed"
-                      ? `ההצעה של ${wa.name} נשלחה, הלקוח אישר, והתיק נסגר בהצלחה.`
-                      : `ההצעה של ${wa.name} נשלחה ללקוח — ממתינים לתשובה.`;
-                  })()}
-                </p>
-              </div>
-            )}
+            {(c.status === "sent" || c.status === "closed" || c.status === "closed_no_deal") && (() => {
+              const w = c.offers.find((o) => o.winner) ?? c.offers[0];
+              const wa = advisors[w.advisorId];
+              const commission =
+                wa?.commissionType === "fixed"
+                  ? wa.commissionValue ?? 0
+                  : w.fee * ((wa?.commissionValue ?? 0) / 100);
+              return (
+                <>
+                  <div className="sent-note" style={{ marginTop: 14 }}>
+                    <svg><use href="#ic-check-circle" /></svg>
+                    <p>
+                      {c.status === "closed"
+                        ? `ההצעה של ${wa.name} בוצעה בהצלחה. עמלה לארתור: ${shekel(commission)}.`
+                        : c.status === "closed_no_deal"
+                        ? `ההצעה של ${wa.name} נשלחה — התיק נסגר ללא ביצוע עסקה.`
+                        : `ההצעה של ${wa.name} נשלחה ללקוח — ממתינים לביצוע. עמלה משוערת לארתור: ${shekel(commission)}.`}
+                    </p>
+                  </div>
+                  {c.completionNote && (
+                    <div className="anon-note" style={{ marginTop: 8 }}>
+                      הערת סגירה ({c.completedBy === "advisor" ? "מהיועץ" : "מהצוות"}): {c.completionNote}
+                    </div>
+                  )}
+                  {c.status === "sent" && <CaseCompletion caseId={c.id} onUpdate={onUpdate} />}
+                </>
+              );
+            })()}
           </div>
           )}
         </div>
@@ -347,7 +368,7 @@ function OfferCompare({
       </div>
     );
   }
-  if (c.status === "sent" || c.status === "closed") {
+  if (c.status === "sent" || c.status === "closed" || c.status === "closed_no_deal") {
     const w = c.offers.find((o) => o.winner) ?? c.offers[0];
     return (
       <div className="offer-compare">
@@ -523,5 +544,215 @@ function AssignAdvisors({
         {sending ? "שולח…" : selected.length === 0 ? "בחרו יועצים לשליחה" : `שלחו את התיק ל-${selected.length} יועצים שנבחרו`}
       </button>
     </div>
+  );
+}
+
+function CaseCompletion({ caseId, onUpdate }: { caseId: string; onUpdate: (patch: Partial<AdminCase>) => void }) {
+  const [note, setNote] = useState("");
+  const [sending, setSending] = useState<"closed" | "closed_no_deal" | null>(null);
+
+  async function submit(outcome: "closed" | "closed_no_deal") {
+    setSending(outcome);
+    const ok = outcome === "closed" ? await markCaseCompleted(caseId, note) : await markCaseNoDeal(caseId, note);
+    setSending(null);
+    if (ok) {
+      onUpdate({ status: outcome, completionNote: note || null, completedBy: "admin" });
+      if (outcome === "closed") confettiBurst();
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="parsed-field">
+        <label>הערת סגירה (אופציונלי)</label>
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="כמה מילים על התיק, אם יש..." />
+      </div>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button type="button" className="btn btn-primary" style={{ flex: 1 }} disabled={sending !== null} onClick={() => submit("closed")}>
+          {sending === "closed" ? "מעדכן…" : "לסמן שהעסקה בוצעה"}
+        </button>
+        <button type="button" className="btn btn-ghost" style={{ flex: 1 }} disabled={sending !== null} onClick={() => submit("closed_no_deal")}>
+          {sending === "closed_no_deal" ? "מעדכן…" : "לסגור ללא ביצוע"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AdvisorRow({ advisor: a, onSaved }: { advisor: Advisor; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [commissionType, setCommissionType] = useState<"percent" | "fixed">(a.commissionType ?? "percent");
+  const [commissionValue, setCommissionValue] = useState(a.commissionValue ?? 10);
+  const [saving, setSaving] = useState(false);
+  const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+
+  async function save() {
+    setSaving(true);
+    const ok = await updateAdvisorCommission(a.id, commissionType, commissionValue);
+    setSaving(false);
+    if (ok) {
+      setEditing(false);
+      onSaved();
+    }
+  }
+
+  return (
+    <div className="lead-row" key={a.id}>
+      <div className="lead-row__avatar">{initials}</div>
+      <div className="lead-row__info"><strong>{a.name}</strong><small>{a.specialty}{a.email ? ` · ${a.email}` : ""}</small></div>
+      <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
+      <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
+      <div className="lead-row__stat"><span>זמן תגובה</span><b>{a.avgResponseHours} ש׳</b></div>
+      {editing ? (
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <select value={commissionType} onChange={(e) => setCommissionType(e.target.value as "percent" | "fixed")} style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}>
+            <option value="percent">אחוז</option>
+            <option value="fixed">סכום קבוע</option>
+          </select>
+          <input
+            type="number"
+            value={commissionValue}
+            onChange={(e) => setCommissionValue(Number(e.target.value) || 0)}
+            style={{ width: 70, fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}
+          />
+          <button type="button" className="btn btn-primary" style={{ padding: "5px 10px", fontSize: 12 }} disabled={saving} onClick={save}>
+            {saving ? "שומר…" : "שמירה"}
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={() => setEditing(true)}>
+          עמלה: {a.commissionType === "fixed" ? shekel(a.commissionValue ?? 0) : `${a.commissionValue ?? 0}%`} · לעריכה
+        </button>
+      )}
+    </div>
+  );
+}
+
+function TeamManagement({ onCreated }: { onCreated: () => void }) {
+  const [addingAdvisor, setAddingAdvisor] = useState(false);
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [commissionType, setCommissionType] = useState<"percent" | "fixed">("percent");
+  const [commissionValue, setCommissionValue] = useState(10);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ email: string; password: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  function resetForm() {
+    setName("");
+    setEmail("");
+    setSpecialty("");
+    setCommissionType("percent");
+    setCommissionValue(10);
+  }
+
+  async function submitAdvisor() {
+    if (!name || !email) return;
+    setSending(true);
+    setError(null);
+    const res = await createAdvisorAccount({ name, email, specialty, commissionType, commissionValue });
+    setSending(false);
+    if (res.ok) {
+      setResult({ email, password: res.password });
+      resetForm();
+      setAddingAdvisor(false);
+      onCreated();
+    } else {
+      setError(res.error);
+    }
+  }
+
+  async function submitAdmin() {
+    if (!name || !email) return;
+    setSending(true);
+    setError(null);
+    const res = await createAdminAccount({ name, email });
+    setSending(false);
+    if (res.ok) {
+      setResult({ email, password: res.password });
+      resetForm();
+      setAddingAdmin(false);
+    } else {
+      setError(res.error);
+    }
+  }
+
+  return (
+    <>
+      <div className="section-head" style={{ marginTop: 8 }}>
+        <h2>ניהול צוות</h2>
+        <span>הוספת יועצים ואנשי צוות למערכת</span>
+      </div>
+      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {result && (
+          <div className="match-note ok">
+            <svg><use href="#ic-check-circle" /></svg>
+            נוצר חשבון עבור {result.email} — סיסמה זמנית: <b className="num">{result.password}</b> (תעבירו אותה אליו, זו הפעם היחידה שהיא מוצגת)
+          </div>
+        )}
+        {error && (
+          <div className="match-note warn">
+            <svg><use href="#ic-alert" /></svg>{error}
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button type="button" className="btn btn-ghost" onClick={() => { setAddingAdvisor((v) => !v); setAddingAdmin(false); setResult(null); }}>
+            + הוספת יועץ חדש
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => { setAddingAdmin((v) => !v); setAddingAdvisor(false); setResult(null); }}>
+            + הוספת איש צוות
+          </button>
+        </div>
+
+        {addingAdvisor && (
+          <div className="parsed-grid">
+            <div className="parsed-field">
+              <label>שם מלא</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="parsed-field">
+              <label>אימייל</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="parsed-field">
+              <label>התמחות</label>
+              <input type="text" value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="למשל: מיחזור ואיחוד הלוואות" />
+            </div>
+            <div className="parsed-field">
+              <label>סוג עמלה</label>
+              <select value={commissionType} onChange={(e) => setCommissionType(e.target.value as "percent" | "fixed")}>
+                <option value="percent">אחוז משכר הטרחה (כולל מע״מ)</option>
+                <option value="fixed">סכום קבוע</option>
+              </select>
+            </div>
+            <div className="parsed-field">
+              <label>{commissionType === "percent" ? "אחוז %" : "סכום ₪"}</label>
+              <input type="number" value={commissionValue} onChange={(e) => setCommissionValue(Number(e.target.value) || 0)} />
+            </div>
+            <button type="button" className="btn btn-primary" style={{ gridColumn: "1/-1" }} disabled={!name || !email || sending} onClick={submitAdvisor}>
+              {sending ? "יוצר…" : "יצירת חשבון יועץ"}
+            </button>
+          </div>
+        )}
+
+        {addingAdmin && (
+          <div className="parsed-grid">
+            <div className="parsed-field">
+              <label>שם מלא</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="parsed-field">
+              <label>אימייל</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <button type="button" className="btn btn-primary" style={{ gridColumn: "1/-1" }} disabled={!name || !email || sending} onClick={submitAdmin}>
+              {sending ? "יוצר…" : "יצירת חשבון איש צוות"}
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

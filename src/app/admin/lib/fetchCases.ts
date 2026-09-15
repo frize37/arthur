@@ -17,7 +17,7 @@ function relativeTime(iso: string): string {
 
 export async function fetchAdvisors(): Promise<Record<string, Advisor>> {
   const supabase = createClient();
-  const { data, error } = await supabase.from("advisors").select("*").order("cases_won", { ascending: false });
+  const { data, error } = await supabase.from("advisors_directory").select("*").order("cases_won", { ascending: false });
   if (error || !data) {
     console.error("Failed to fetch advisors:", error?.message);
     return {};
@@ -31,9 +31,56 @@ export async function fetchAdvisors(): Promise<Record<string, Advisor>> {
       rating: Number(row.rating),
       casesWon: row.cases_won,
       avgResponseHours: Number(row.avg_response_hours),
+      email: row.email ?? null,
+      commissionType: row.commission_type ?? null,
+      commissionValue: row.commission_value != null ? Number(row.commission_value) : null,
     };
   }
   return map;
+}
+
+export async function createAdvisorAccount(input: {
+  name: string;
+  email: string;
+  specialty: string;
+  commissionType: "percent" | "fixed";
+  commissionValue: number;
+}): Promise<{ ok: true; password: string } | { ok: false; error: string }> {
+  const res = await fetch("/api/admin/create-account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind: "advisor", ...input }),
+  });
+  const json = await res.json();
+  if (!json.ok) return { ok: false, error: json.error ?? "יצירת היועץ נכשלה." };
+  return { ok: true, password: json.password };
+}
+
+export async function createAdminAccount(input: {
+  name: string;
+  email: string;
+}): Promise<{ ok: true; password: string } | { ok: false; error: string }> {
+  const res = await fetch("/api/admin/create-account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind: "admin", ...input }),
+  });
+  const json = await res.json();
+  if (!json.ok) return { ok: false, error: json.error ?? "יצירת איש הצוות נכשלה." };
+  return { ok: true, password: json.password };
+}
+
+export async function updateAdvisorCommission(advisorId: string, commissionType: "percent" | "fixed", commissionValue: number) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("advisors")
+    .update({ commission_type: commissionType, commission_value: commissionValue })
+    .eq("id", advisorId);
+  if (error) {
+    console.error("Failed to update advisor commission:", error.message);
+    return false;
+  }
+  return true;
 }
 
 export async function fetchCases(): Promise<AdminCase[]> {
@@ -135,6 +182,8 @@ export async function fetchCases(): Promise<AdminCase[]> {
         accountForecastRate: row.doc_account_forecast_rate != null ? Number(row.doc_account_forecast_rate) : null,
       },
       docSource: row.doc_source ?? null,
+      completionNote: row.completion_note ?? null,
+      completedBy: row.completed_by ?? null,
     };
   });
 }
@@ -168,4 +217,30 @@ export async function persistWinner(caseId: string, offers: Offer[]) {
     )
   );
   await supabase.from("cases").update({ status: "sent" }).eq("id", caseId);
+}
+
+export async function markCaseCompleted(caseId: string, note: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("cases")
+    .update({ status: "closed", completion_note: note || null, completed_by: "admin" })
+    .eq("id", caseId);
+  if (error) {
+    console.error("Failed to mark case completed:", error.message);
+    return false;
+  }
+  return true;
+}
+
+export async function markCaseNoDeal(caseId: string, note: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("cases")
+    .update({ status: "closed_no_deal", completion_note: note || null, completed_by: "admin" })
+    .eq("id", caseId);
+  if (error) {
+    console.error("Failed to mark case as no-deal:", error.message);
+    return false;
+  }
+  return true;
 }

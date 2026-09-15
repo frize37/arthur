@@ -1,4 +1,4 @@
-export type CaseStatus = "new" | "verifying" | "awaiting" | "ready" | "sent" | "closed";
+export type CaseStatus = "new" | "verifying" | "awaiting" | "ready" | "sent" | "closed" | "closed_no_deal";
 
 export interface Offer {
   advisorId: string;
@@ -54,6 +54,8 @@ export interface AdminCase {
   docTracks: LoanTrack[];
   docTotals: DocTotals;
   docSource: "ai" | "manual" | null;
+  completionNote: string | null;
+  completedBy: "advisor" | "admin" | null;
 }
 
 export interface Advisor {
@@ -63,6 +65,9 @@ export interface Advisor {
   rating: number;
   casesWon: number;
   avgResponseHours: number;
+  email: string | null;
+  commissionType: "percent" | "fixed" | null;
+  commissionValue: number | null;
 }
 
 export const LABELS = {
@@ -87,6 +92,7 @@ export const STATUS_META: Record<CaseStatus, { label: string; cls: string }> = {
   ready: { label: "מוכן לבחירת מנצח", cls: "pill-ready" },
   sent: { label: "נשלח ללקוח", cls: "pill-sent" },
   closed: { label: "נסגר בהצלחה", cls: "pill-closed" },
+  closed_no_deal: { label: "נסגר ללא ביצוע", cls: "pill-verifying" },
 };
 
 export const TABS: { key: CaseStatus | "all"; label: string }[] = [
@@ -96,6 +102,7 @@ export const TABS: { key: CaseStatus | "all"; label: string }[] = [
   { key: "awaiting", label: "ממתין להצעות" },
   { key: "ready", label: "לבחירת מנצח" },
   { key: "sent", label: "נשלח ללקוח" },
-  { key: "closed", label: "נסגר" },
+  { key: "closed", label: "נסגר בהצלחה" },
+  { key: "closed_no_deal", label: "נסגר ללא ביצוע" },
 ];
 

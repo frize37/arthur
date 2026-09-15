@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import "./advisor.css";
 import { AdvisorIcons } from "./components/AdvisorIcons";
 import { ArthurMascot } from "@/components/ArthurMascot";
-import { AdvisorCase, LABELS, STATUS_META, computeCase } from "./lib/data";
-import { fetchMyCases, submitOffer } from "./lib/fetchCases";
+import { AdvisorCase, LABELS, STATUS_META, computeCase, computeCommission } from "./lib/data";
+import { fetchMyCases, fetchMyCommission, submitCompletion, submitOffer } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -26,13 +26,18 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bellOpen, setBellOpen] = useState(false);
   const [bellSeen, setBellSeen] = useState(false);
+  const [commission, setCommission] = useState<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null }>({
+    commissionType: null,
+    commissionValue: null,
+  });
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const list = await fetchMyCases(advisorId);
+      const [list, myCommission] = await Promise.all([fetchMyCases(advisorId), fetchMyCommission(advisorId)]);
       if (cancelled) return;
       setCases(list);
+      setCommission(myCommission);
       setLoading(false);
     }
     load();
@@ -44,8 +49,10 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
   const stats = useMemo(() => {
     const open = cases.filter((c) => c.status === "pending" || c.status === "sent").length;
     const pending = cases.filter((c) => c.status === "pending").length;
-    const sent = cases.filter((c) => c.status === "sent" || c.status === "won" || c.status === "lost").length;
-    const savings = cases.filter((c) => c.status === "won" && c.offer).reduce((sum, c) => sum + (c.offer?.savings ?? 0), 0);
+    const sent = cases.filter((c) => c.status !== "pending").length;
+    const savings = cases
+      .filter((c) => (c.status === "won" || c.status === "closed") && c.offer)
+      .reduce((sum, c) => sum + (c.offer?.savings ?? 0), 0);
     return { open, pending, sent, savings };
   }, [cases]);
 
@@ -116,6 +123,7 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
             case_={selected}
             advisorId={advisorId}
             advisorName={advisorName}
+            commission={commission}
             onBack={() => setSelectedId(null)}
             onUpdate={(patch) => updateCase(selected.id, patch)}
           />
@@ -178,12 +186,14 @@ function DetailView({
   case_: c,
   advisorId,
   advisorName,
+  commission,
   onBack,
   onUpdate,
 }: {
   case_: AdvisorCase;
   advisorId: string;
   advisorName: string;
+  commission: { commissionType: "percent" | "fixed" | null; commissionValue: number | null };
   onBack: () => void;
   onUpdate: (patch: Partial<AdvisorCase>) => void;
 }) {
@@ -196,6 +206,7 @@ function DetailView({
   const [sending, setSending] = useState(false);
 
   const showOfferForm = c.status === "pending";
+  const commissionOnFee = computeCommission(offerFee, commission.commissionType, commission.commissionValue);
 
   async function sendOffer() {
     setSending(true);
@@ -391,8 +402,11 @@ function DetailView({
                   <div className="prefix-input"><span>₪</span><input type="number" step={500} value={offerSavings} onChange={(e) => setOfferSavings(Number(e.target.value) || 0)} /></div>
                 </div>
                 <div className="field">
-                  <label>הצעת מחיר לשכר טרחה</label>
+                  <label>הצעת מחיר לשכר טרחה (כולל מע״מ)</label>
                   <div className="prefix-input"><span>₪</span><input type="number" step={100} value={offerFee} onChange={(e) => setOfferFee(Number(e.target.value) || 0)} /></div>
+                  {commission.commissionType && (
+                    <small className="hint">עמלה לארתור מתוך הסכום הזה: {shekel(commissionOnFee)} ({commission.commissionType === "fixed" ? "סכום קבוע" : `${commission.commissionValue}%`})</small>
+                  )}
                 </div>
                 <div className="field">
                   <label>הערות ודגשים לתיק</label>
@@ -404,14 +418,28 @@ function DetailView({
                 </button>
               </div>
             ) : (
-              <div className="sent-note">
-                <svg><use href="#ic-check-circle" /></svg>
-                <p>
-                  {c.offer
-                    ? `נשלחה הצעה עם חיסכון משוער ${shekel(c.offer.savings)} ושכר טרחה ${shekel(c.offer.fee)}.` +
-                      (c.status === "won" ? " הלקוח אישר את ההצעה 🎉" : c.status === "lost" ? " הלקוח בחר יועץ אחר." : " ממתין לתשובת הלקוח.")
-                    : "ההצעה נשלחה ללקוח בהצלחה. תקבלו התראה כאן ברגע שתתקבל תשובה."}
-                </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div className="sent-note">
+                  <svg><use href="#ic-check-circle" /></svg>
+                  <p>
+                    {c.offer
+                      ? `נשלחה הצעה עם חיסכון משוער ${shekel(c.offer.savings)} ושכר טרחה ${shekel(c.offer.fee)}.` +
+                        (c.status === "won"
+                          ? " הלקוח אישר את ההצעה 🎉"
+                          : c.status === "closed"
+                          ? " העסקה בוצעה בהצלחה 🎉"
+                          : c.status === "closed_no_deal"
+                          ? " התיק נסגר ללא ביצוע."
+                          : c.status === "lost"
+                          ? " הלקוח בחר יועץ אחר."
+                          : " ממתין לתשובת הלקוח.")
+                      : "ההצעה נשלחה ללקוח בהצלחה. תקבלו התראה כאן ברגע שתתקבל תשובה."}
+                  </p>
+                </div>
+                {c.completionNote && (
+                  <div className="anon-note">הערת סגירה ({c.completedBy === "advisor" ? "שלך" : "מהצוות"}): {c.completionNote}</div>
+                )}
+                {c.status === "won" && <AdvisorCaseCompletion caseId={c.id} onUpdate={onUpdate} />}
               </div>
             )}
           </div>
@@ -423,5 +451,37 @@ function DetailView({
         </div>
       </div>
     </>
+  );
+}
+
+function AdvisorCaseCompletion({ caseId, onUpdate }: { caseId: string; onUpdate: (patch: Partial<AdvisorCase>) => void }) {
+  const [note, setNote] = useState("");
+  const [sending, setSending] = useState<"closed" | "closed_no_deal" | null>(null);
+
+  async function submit(outcome: "closed" | "closed_no_deal") {
+    setSending(outcome);
+    const ok = await submitCompletion(caseId, outcome, note);
+    setSending(null);
+    if (ok) {
+      onUpdate({ status: outcome, completionNote: note || null, completedBy: "advisor" });
+      if (outcome === "closed") confettiBurst();
+    }
+  }
+
+  return (
+    <div className="card" style={{ padding: 14 }}>
+      <div className="field">
+        <label>כמה מילים על התיק (אופציונלי)</label>
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="לדוגמה: הלקוח חתם, מסמכים הועברו לבנק..." />
+      </div>
+      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+        <button type="button" className="btn btn-primary" style={{ flex: 1 }} disabled={sending !== null} onClick={() => submit("closed")}>
+          {sending === "closed" ? "מעדכן…" : "העסקה בוצעה"}
+        </button>
+        <button type="button" className="btn btn-ghost" style={{ flex: 1 }} disabled={sending !== null} onClick={() => submit("closed_no_deal")}>
+          {sending === "closed_no_deal" ? "מעדכן…" : "לא בוצעה עסקה"}
+        </button>
+      </div>
+    </div>
   );
 }
