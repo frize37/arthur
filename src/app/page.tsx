@@ -111,29 +111,29 @@ export default async function Home() {
           className="relative overflow-hidden text-center"
           style={{ background: "linear-gradient(155deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%)" }}
         >
-          <div className="max-w-2xl mx-auto flex flex-col items-center px-5 pt-12 pb-14 md:pt-16 md:pb-20">
-            <span className="inline-flex font-display font-bold text-xs tracking-wide text-white bg-white/15 border border-white/30 rounded-full px-3.5 py-1.5">
-              🕵️ אני בודק לפניכם, לא מוכר לכם
-            </span>
-
-            <div className="relative mt-2">
-              <h1 className="comic-bubble absolute -top-8 sm:-top-10 left-1/2 -translate-x-1/2 z-10">
+          <div className="max-w-2xl mx-auto flex flex-col items-center px-5 pt-8 pb-14 md:pb-20">
+            <div className="hero-visual w-full">
+              <div className="bear-drop">
+                <ArthurMascot className="w-[340px] sm:w-[480px] md:w-[600px] h-auto drop-shadow-[0_24px_30px_rgba(0,0,0,0.32)]" />
+              </div>
+              <h1 className="comic-bubble">
                 אל תיקחו משכנתה
                 <br />
                 לפני ש<b>ארתור בודק</b>.
               </h1>
-              <ArthurMascot className="hero-bear-pop w-[220px] h-[220px] sm:w-[300px] sm:h-[300px] md:w-[380px] md:h-[380px] drop-shadow-[0_20px_26px_rgba(0,0,0,0.3)]" />
             </div>
 
-            <p className="text-white/85 pt-2 max-w-[40ch]">
-              כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר כמה יועצי משכנתאות מתחרים על התיק שלכם. תדעו בדיוק כמה תחסכו, ומה זה יעלה. בחינם, ובלי שום התחייבות.
-            </p>
-            <Link
-              href="/wizard"
-              className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-white text-[var(--hero-1)] px-6 py-3.5 shadow-lg transition hover:-translate-y-0.5"
-            >
-              תנו לי לבדוק ←
-            </Link>
+            <div className="hero-copy-fade flex flex-col items-center">
+              <p className="text-white/85 pt-1.5 max-w-[40ch]">
+                כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר כמה יועצי משכנתאות מתחרים על התיק שלכם. תדעו בדיוק כמה תחסכו, ומה זה יעלה. בחינם, ובלי שום התחייבות.
+              </p>
+              <Link
+                href="/wizard"
+                className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-white text-[var(--hero-1)] px-6 py-3.5 shadow-lg transition hover:-translate-y-0.5"
+              >
+                תנו לי לבדוק ←
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -180,7 +180,7 @@ export default async function Home() {
         </section>
 
         {/* FAQ */}
-        <section className="bg-surface-2/40 border-y border-line">
+        <section id="faq" className="bg-surface-2/40 border-y border-line">
           <div className="max-w-3xl mx-auto px-5 py-16">
             <div className="text-center mb-8">
               <span className="font-display font-bold text-xs text-accent-strong bg-accent-soft rounded-full px-3 py-1.5">שאלות ותשובות</span>
@@ -214,10 +214,18 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-line py-6">
-        <div className="max-w-5xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-faint">
-          <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-8 w-auto" />
-          <Link href="/login" className="hover:text-ink-soft transition">כניסה ליועצים</Link>
+      <footer className="border-t border-line py-8">
+        <div className="max-w-5xl mx-auto px-5 flex flex-col items-center gap-4 text-center">
+          <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-7 w-auto opacity-80" />
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs font-display font-semibold text-ink-soft">
+            <a href="#faq" className="hover:text-teal transition">שאלות נפוצות</a>
+            <Link href="/login" className="hover:text-teal transition">כניסה ליועצים</Link>
+            <span className="cursor-default opacity-60">אודות</span>
+            <span className="cursor-default opacity-60">תנאי שימוש</span>
+            <span className="cursor-default opacity-60">מדיניות פרטיות</span>
+            <span className="cursor-default opacity-60">הצהרת נגישות</span>
+          </nav>
+          <p className="text-[11px] text-ink-faint">© ארתור — כל הזכויות שמורות.</p>
         </div>
       </footer>
     </div>

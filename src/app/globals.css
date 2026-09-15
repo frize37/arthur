@@ -99,28 +99,55 @@ h1, h2, h3 {
   letter-spacing: -0.01em;
 }
 
-@keyframes heroBearPop {
-  0% { transform: scale(0.4); opacity: 0; }
-  65% { transform: scale(1.08); opacity: 1; }
-  100% { transform: scale(1); }
-}
-.hero-bear-pop {
-  animation: heroBearPop 0.7s cubic-bezier(0.24, 0.9, 0.4, 1) both;
+/* Landing-page hero: the bear starts as a tiny, invisible speck and
+   rockets toward the viewer inside a fixed-height cropping stage, so
+   only its head + upper body ever show, huge — then the speech bubble
+   pops in, then the supporting copy fades in below. */
+.hero-visual {
+  position: relative;
+  width: 100%;
+  height: clamp(260px, 42vw, 460px);
+  overflow: hidden;
 }
 
+@keyframes heroGrow {
+  0% { transform: translate(-50%, -30px) scale(0.04); opacity: 0; }
+  16% { opacity: 1; }
+  62% { transform: translate(-50%, 10px) scale(1.06); opacity: 1; }
+  80% { transform: translate(-50%, -6px) scale(0.98); }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+.bear-drop {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform-origin: top center;
+  animation: heroGrow 1.7s cubic-bezier(0.15, 0.75, 0.2, 1) both;
+}
+
+@keyframes bubblePop {
+  0% { transform: translateX(-50%) scale(0.3) translateY(14px); opacity: 0; }
+  72% { transform: translateX(-50%) scale(1.08) translateY(-2px); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
+}
 .comic-bubble {
   position: absolute;
+  top: 0;
+  left: 50%;
   background: #fff;
   color: var(--hero-1);
-  border-radius: 26px;
-  padding: 12px 20px;
+  border-radius: 22px;
+  padding: 13px 20px;
   font-family: var(--font-rubik), sans-serif;
   font-weight: 900;
-  font-size: clamp(15px, 3.6vw, 22px);
-  line-height: 1.35;
+  font-size: clamp(15px, 3.2vw, 20px);
+  line-height: 1.32;
   box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.4);
   width: max-content;
-  max-width: 26ch;
+  max-width: 21ch;
+  animation: bubblePop 0.5s cubic-bezier(0.24, 1.3, 0.4, 1) 1.6s both;
+  transform-origin: bottom center;
+  z-index: 2;
 }
 .comic-bubble::after {
   content: "";
@@ -131,5 +158,12 @@ h1, h2, h3 {
   height: 18px;
   background: #fff;
   transform: translateX(-50%) rotate(45deg);
-  box-shadow: 3px 3px 5px -3px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes heroCopyFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-copy-fade {
+  animation: heroCopyFade 0.5s ease 2.05s both;
 }
