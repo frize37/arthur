@@ -1,6 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArthurMascot } from "@/components/ArthurMascot";
+import { fetchPublicStats } from "./lib/publicStats";
+import { shekel } from "./wizard/lib/finance";
+
+// Stats are live data, not build-time content — refresh at most once a
+// minute instead of baking in whatever the counts were at deploy time.
+export const revalidate = 60;
 
 const STEPS = [
   {
@@ -64,17 +70,22 @@ const FAQ: { q: string; a: string }[] = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const stats = await fetchPublicStats();
+  const statTiles = [
+    { label: "תיקים שבדקנו", value: stats.casesChecked.toLocaleString("he-IL") },
+    { label: "תיקים שנסגרו בהצלחה", value: stats.casesClosed.toLocaleString("he-IL") },
+    { label: "חיסכון שסיפקנו ללקוחות", value: shekel(stats.totalSavings) },
+    { label: "היקף משכנתאות שבדקנו", value: shekel(stats.totalMortgageVolume) },
+  ];
+
   return (
     <div className="flex flex-col min-h-full">
       <header className="border-b border-line">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 px-5 py-3.5">
-          <div className="flex items-center gap-2">
-            <ArthurMascot className="w-14 h-14 -my-2" />
-            <div>
-              <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-6 w-auto" />
-              <small className="block text-[11px] text-ink-faint font-semibold">בדיקה ומחזור משכנתאות</small>
-            </div>
+          <div>
+            <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-8 w-auto" />
+            <small className="block text-[11px] text-ink-faint font-semibold">בדיקה ומחזור משכנתאות</small>
           </div>
           <Link
             href="/wizard"
@@ -117,12 +128,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* TRUST STRIP */}
+        {/* LIVE STATS */}
         <section className="max-w-4xl mx-auto -mt-7 relative z-10 px-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {["עד 50% חיסכון", "AI קורא מסמכים", "2 דקות בדיקה", "ליווי אישי צמוד"].map((label) => (
-              <div key={label} className="bg-surface border border-line rounded-2xl shadow-[var(--shadow)] px-3 py-4 text-center">
-                <p className="font-display font-bold text-xs text-ink-soft leading-snug">{label}</p>
+            {statTiles.map((tile) => (
+              <div key={tile.label} className="bg-surface border border-line rounded-2xl shadow-[var(--shadow)] px-3 py-4 text-center">
+                <p className="font-display font-black text-lg text-teal tabular-nums">{tile.value}</p>
+                <p className="font-display font-bold text-xs text-ink-soft leading-snug pt-1">{tile.label}</p>
               </div>
             ))}
           </div>

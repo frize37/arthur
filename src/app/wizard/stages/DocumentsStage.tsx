@@ -274,9 +274,9 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
 
             <div className="savings-meter">
               <div className="savings-meter__head">
-                <svg><use href="#ic-cash" /></svg>מה קורה עכשיו
+                <svg><use href="#ic-cash" /></svg>מה אני עושה עכשיו?
               </div>
-              <p>המערכת בודקת את הנתונים ושולחת אותם למספר יועצי משכנתאות, שיבחנו את הכדאיות ויגישו הצעת מחיר בהתאם לתיק שלכם.</p>
+              <p>אני בודק את הנתונים שלכם, משווה בין יועצי המשכנתאות המתאימים ומחפש את ההצעה שהכי מתאימה לתיק שלכם.</p>
             </div>
           </div>
         )}

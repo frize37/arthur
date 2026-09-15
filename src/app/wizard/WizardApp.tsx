@@ -5,7 +5,6 @@ import Image from "next/image";
 import "./wizard.css";
 import { IconSprite } from "./components/IconSprite";
 import { ProgressBar } from "./components/ui";
-import { ArthurMascot } from "@/components/ArthurMascot";
 import { STAGES, STAGE_CHAPTER, initialWizardState, WizardState } from "./lib/types";
 import { wizardReducer } from "./lib/reducer";
 import {
@@ -45,7 +44,6 @@ export function WizardApp() {
       <div className="topbar">
         <div className="topbar__inner">
           <div className="brand">
-            <ArthurMascot />
             <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="brand__wordmark" />
           </div>
         </div>

@@ -49,9 +49,8 @@ export default function LoginPage() {
     <div className="min-h-full flex flex-col">
       <header className="border-b border-line">
         <div className="max-w-5xl mx-auto flex items-center gap-2.5 px-5 py-3.5">
-          <Link href="/" className="flex items-center gap-2">
-            <ArthurMascot className="w-12 h-12 -my-2" />
-            <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-6 w-auto" />
+          <Link href="/">
+            <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-8 w-auto" />
           </Link>
         </div>
       </header>

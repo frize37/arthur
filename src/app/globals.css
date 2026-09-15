@@ -1,56 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #F4F8FA;
+  --paper: #F2F8FA;
   --surface: #FFFFFF;
-  --surface-2: #FBF3E2;
-  --ink: #12233F;
-  --ink-soft: #45566E;
-  --ink-faint: #7A8AA0;
-  --line: rgba(18, 35, 63, 0.14);
-  --line-strong: rgba(18, 35, 63, 0.28);
-  --accent: #F2B705;
-  --accent-strong: #C98F00;
-  --accent-soft: #FDEFC7;
-  --teal: #1596A9;
-  --teal-soft: #DDF4F7;
-  --good: #2F8F5B;
-  --watch: #C98A1B;
-  --risk: #C24B3E;
+  --surface-2: #FFF4D9;
+  --ink: #0E2038;
+  --ink-soft: #3D5170;
+  --ink-faint: #74869F;
+  --line: rgba(14, 32, 56, 0.13);
+  --line-strong: rgba(14, 32, 56, 0.26);
+  --accent: #FFB300;
+  --accent-strong: #E08900;
+  --accent-soft: #FFEDBD;
+  --teal: #06AABE;
+  --teal-soft: #D3F5F8;
+  --pop-warm: #FF6B4A;
+  --pop-warm-soft: #FFE1D6;
+  --good: #21A15E;
+  --watch: #E0960A;
+  --risk: #E14B3B;
   --pop: #3E8FD1;
   --pop-soft: #DDEBF7;
-  --hero-1: #0E2A4D;
-  --hero-2: #1596A9;
-  --hero-3: #F2B705;
-  --shadow: 0 20px 45px -30px rgba(18, 35, 63, 0.45);
+  --hero-1: #0B2647;
+  --hero-2: #06AABE;
+  --hero-3: #FFC93C;
+  --shadow: 0 20px 45px -30px rgba(14, 32, 56, 0.45);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #071624;
-    --surface: #0D2038;
-    --surface-2: #2A2008;
-    --ink: #EAF1F7;
-    --ink-soft: #A9BBD0;
-    --ink-faint: #6E8298;
-    --line: rgba(234, 241, 247, 0.14);
-    --line-strong: rgba(234, 241, 247, 0.28);
-    --accent: #F7D34C;
-    --accent-strong: #FBE28A;
-    --accent-soft: #3A2E0A;
-    --teal: #5FD3E3;
-    --teal-soft: #123239;
-    --good: #5CC98A;
-    --watch: #E8B84B;
-    --risk: #E2685B;
-    --pop: #6FB6EE;
-    --pop-soft: #132638;
-    --hero-1: #050E1A;
-    --hero-2: #123B49;
-    --hero-3: #F7D34C;
-    --shadow: 0 20px 45px -28px rgba(0, 0, 0, 0.6);
-  }
-}
+/*
+ * This site intentionally does NOT follow the visitor's OS dark-mode
+ * setting — the brand palette (bear colors, warm accent) is designed as
+ * one fixed light look, so no `prefers-color-scheme` block here. A real
+ * dark theme, if ever added, should be an explicit in-app toggle that
+ * sets data-theme="dark" below, not something that silently changes
+ * with the visitor's system settings.
+ */
 
 :root[data-theme="dark"] {
   --paper: #071624;
@@ -91,6 +75,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-teal: var(--teal);
   --color-teal-soft: var(--teal-soft);
+  --color-pop-warm: var(--pop-warm);
+  --color-pop-warm-soft: var(--pop-warm-soft);
   --color-good: var(--good);
   --color-watch: var(--watch);
   --color-risk: var(--risk);
