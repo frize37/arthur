@@ -13,8 +13,11 @@ type Mode = "upload" | "manual";
 
 const IDLE_BUBBLE = "העלו דוח יתרות או אישור עקרוני — אני אשלוף מתוכו את המספרים החשובים לבד, ואתם רק תאשרו.";
 const PARSED_BUBBLE = "איזה כיף! מצאתי את כל הנתונים במסמך 🎉 אפשר לבדוק ולתקן אם צריך.";
-const MANUAL_BUBBLE = "אין בעיה, נמלא את הפרטים ביחד. שימו לב: ההצעה שתתקבל תהיה מבוססת על מה שתצהירו כאן.";
-const MANUAL_CONFIRMED_BUBBLE = "קיבלתי את הפרטים 👍 שווה לוודא שהם מדויקים, כי לפיהם היועצים יגישו הצעה.";
+const MANUAL_BUBBLE =
+  "אין לכם את הדוח? לא נורא, תמלאו את הפרטים בעצמכם. רק שימו לב: אם יתברר שיש אי-דיוקים, היועץ יכול לבטל את ההצעה שהוגשה על בסיסם — אז כדאי שיהיו מדויקים ככל שאפשר.";
+const MANUAL_CONFIRMED_BUBBLE = "קיבלתי את הפרטים 👍 שווה לוודא שהם מדויקים, כי לפיהם היועצים יגישו הצעה — ואי-דיוקים עלולים לבטל אותה.";
+
+const ANCHOR_OPTIONS = ["אג\"ח ממשלתי", "פריים", "דולר"];
 
 const emptyManualTrack: LoanTrack = {
   bankName: null,
@@ -46,7 +49,19 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
   const [bubble, setBubble] = useState(
     state.docSource === "manual" ? MANUAL_CONFIRMED_BUBBLE : state.docConfirmed ? PARSED_BUBBLE : IDLE_BUBBLE
   );
-  const [manualTrack, setManualTrack] = useState<LoanTrack>(state.docTracks[0] ?? emptyManualTrack);
+  const [manualTracks, setManualTracks] = useState<LoanTrack[]>(
+    state.docSource === "manual" && state.docTracks.length > 0 ? state.docTracks : [emptyManualTrack]
+  );
+
+  function updateManualTrack(index: number, patch: Partial<LoanTrack>) {
+    setManualTracks((prev) => prev.map((t, i) => (i === index ? { ...t, ...patch } : t)));
+  }
+  function addManualTrack() {
+    setManualTracks((prev) => [...prev, emptyManualTrack]);
+  }
+  function removeManualTrack(index: number) {
+    setManualTracks((prev) => prev.filter((_, i) => i !== index));
+  }
 
   const matchDiffPct = state.mortgageAmount ? Math.abs(state.docBalance - state.mortgageAmount) / state.mortgageAmount : 0;
 
@@ -101,18 +116,23 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
     setBubble(MANUAL_BUBBLE);
   }
 
-  const manualValid = manualTrack.rateKind != null && (manualTrack.principalBalance ?? 0) > 0 && (manualTrack.annualRate ?? 0) > 0;
+  const manualValid = manualTracks.every(
+    (t) => t.rateKind != null && (t.principalBalance ?? 0) > 0 && (t.annualRate ?? 0) > 0
+  );
 
   function confirmManual() {
     if (!manualValid) return;
+    const totalPrincipal = manualTracks.reduce((sum, t) => sum + (t.principalBalance ?? 0), 0);
+    const feeTracks = manualTracks.filter((t) => t.earlyRepaymentFee != null);
+    const totalEarlyRepaymentFee = feeTracks.length > 0 ? feeTracks.reduce((sum, t) => sum + (t.earlyRepaymentFee ?? 0), 0) : null;
     dispatch({
       type: "DOC_PARSED",
       source: "manual",
-      tracks: [manualTrack],
+      tracks: manualTracks,
       totals: {
         quoteValidDate: null,
-        totalPrincipal: manualTrack.principalBalance,
-        totalEarlyRepaymentFee: null,
+        totalPrincipal,
+        totalEarlyRepaymentFee,
         totalPayoff: null,
         accountComparisonRate: null,
         accountForecastRate: null,
@@ -191,65 +211,108 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
         )}
 
         {mode === "manual" && !state.docConfirmed && (
-          <div className="parsed-grid">
-            <div className="parsed-field">
-              <label>שם הבנק</label>
-              <input type="text" value={manualTrack.bankName ?? ""} onChange={(e) => setManualTrack({ ...manualTrack, bankName: e.target.value })} />
-            </div>
-            <div className="parsed-field">
-              <label>סוג ריבית *</label>
-              <select
-                value={manualTrack.rateKind ?? ""}
-                onChange={(e) => setManualTrack({ ...manualTrack, rateKind: (e.target.value || null) as LoanTrack["rateKind"] })}
-              >
-                <option value="">בחרו</option>
-                <option value="fixed">קבועה</option>
-                <option value="variable">משתנה</option>
-              </select>
-            </div>
-            {manualTrack.rateKind === "variable" && (
-              <div className="parsed-field">
-                <label>בסיס הריבית (למשל פריים)</label>
-                <input type="text" value={manualTrack.anchorBasis ?? ""} onChange={(e) => setManualTrack({ ...manualTrack, anchorBasis: e.target.value })} />
-              </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {state.mortgageAmount > 0 && (
+              <div className="anon-note">גובה המשכנתה שציינתם קודם: <b className="num">{shekel(state.mortgageAmount)}</b> — פרטו כאן את המסלולים שמרכיבים אותה.</div>
             )}
-            <div className="parsed-field">
-              <label>צמודה למדד?</label>
-              <select
-                value={manualTrack.linkedToCpi ? "yes" : "no"}
-                onChange={(e) => setManualTrack({ ...manualTrack, linkedToCpi: e.target.value === "yes" })}
-              >
-                <option value="no">לא</option>
-                <option value="yes">כן</option>
-              </select>
-            </div>
-            <div className="parsed-field">
-              <label>ריבית שנתית % *</label>
-              <input
-                type="number"
-                step={0.01}
-                value={manualTrack.annualRate ?? ""}
-                onChange={(e) => setManualTrack({ ...manualTrack, annualRate: Number(e.target.value) || null })}
-              />
-            </div>
-            <div className="parsed-field">
-              <label>יתרת תקופה (חודשים)</label>
-              <input
-                type="number"
-                value={manualTrack.monthsRemaining ?? ""}
-                onChange={(e) => setManualTrack({ ...manualTrack, monthsRemaining: Number(e.target.value) || null })}
-              />
-            </div>
-            <div className="parsed-field">
-              <label>יתרת קרן * </label>
-              <input
-                type="number"
-                value={manualTrack.principalBalance ?? ""}
-                onChange={(e) => setManualTrack({ ...manualTrack, principalBalance: Number(e.target.value) || null })}
-              />
-            </div>
-            <div className="tracks-note">שדות עם * הם חובה. ההצעה שתתקבל תהיה מבוססת על מה שתצהירו כאן, אז כדאי שיהיה מדויק.</div>
-            <button type="button" className="btn btn-primary" style={{ gridColumn: "1/-1" }} disabled={!manualValid} onClick={confirmManual}>
+            {manualTracks.map((t, i) => (
+              <div className="card" key={i} style={{ padding: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <strong>מסלול {String.fromCharCode(0x5d0 + i)}׳</strong>
+                  {manualTracks.length > 1 && (
+                    <button type="button" className="btn-link" onClick={() => removeManualTrack(i)}>
+                      הסרה
+                    </button>
+                  )}
+                </div>
+                <div className="parsed-grid">
+                  <div className="parsed-field">
+                    <label>שם הבנק</label>
+                    <input type="text" value={t.bankName ?? ""} onChange={(e) => updateManualTrack(i, { bankName: e.target.value })} />
+                  </div>
+                  <div className="parsed-field">
+                    <label>סוג ריבית *</label>
+                    <select
+                      value={t.rateKind ?? ""}
+                      onChange={(e) => updateManualTrack(i, { rateKind: (e.target.value || null) as LoanTrack["rateKind"] })}
+                    >
+                      <option value="">בחרו</option>
+                      <option value="fixed">קבועה</option>
+                      <option value="variable">משתנה</option>
+                    </select>
+                  </div>
+                  {t.rateKind === "variable" && (
+                    <>
+                      <div className="parsed-field">
+                        <label>בסיס הריבית</label>
+                        <select value={t.anchorBasis ?? ""} onChange={(e) => updateManualTrack(i, { anchorBasis: e.target.value || null })}>
+                          <option value="">בחרו</option>
+                          {ANCHOR_OPTIONS.map((a) => (
+                            <option key={a} value={a}>{a}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="parsed-field">
+                        <label>מתי מתעדכנת הריבית / נקודת היציאה?</label>
+                        <input
+                          type="date"
+                          value={t.nextRateChangeDate ?? ""}
+                          onChange={(e) => updateManualTrack(i, { nextRateChangeDate: e.target.value || null })}
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className="parsed-field">
+                    <label>צמודה למדד?</label>
+                    <select
+                      value={t.linkedToCpi ? "yes" : "no"}
+                      onChange={(e) => updateManualTrack(i, { linkedToCpi: e.target.value === "yes" })}
+                    >
+                      <option value="no">לא</option>
+                      <option value="yes">כן</option>
+                    </select>
+                  </div>
+                  <div className="parsed-field">
+                    <label>ריבית שנתית % *</label>
+                    <input
+                      type="number"
+                      step={0.01}
+                      value={t.annualRate ?? ""}
+                      onChange={(e) => updateManualTrack(i, { annualRate: Number(e.target.value) || null })}
+                    />
+                  </div>
+                  <div className="parsed-field">
+                    <label>יתרת תקופה (חודשים)</label>
+                    <input
+                      type="number"
+                      value={t.monthsRemaining ?? ""}
+                      onChange={(e) => updateManualTrack(i, { monthsRemaining: Number(e.target.value) || null })}
+                    />
+                  </div>
+                  <div className="parsed-field">
+                    <label>יתרת קרן *</label>
+                    <input
+                      type="number"
+                      value={t.principalBalance ?? ""}
+                      onChange={(e) => updateManualTrack(i, { principalBalance: Number(e.target.value) || null })}
+                    />
+                  </div>
+                  <div className="parsed-field">
+                    <label>עמלת פרעון מוקדם</label>
+                    <input
+                      type="number"
+                      value={t.earlyRepaymentFee ?? ""}
+                      onChange={(e) => updateManualTrack(i, { earlyRepaymentFee: Number(e.target.value) || null })}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button type="button" className="btn btn-ghost" onClick={addManualTrack}>
+              + הוספת מסלול נוסף
+            </button>
+            <div className="tracks-note">שדות עם * הם חובה. ההצעה שתתקבל תהיה מבוססת על מה שתצהירו כאן — אי-דיוקים עלולים לגרום לביטול ההצעה.</div>
+            <button type="button" className="btn btn-primary" disabled={!manualValid} onClick={confirmManual}>
               אישור הפרטים
             </button>
           </div>
