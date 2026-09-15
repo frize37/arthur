@@ -49,6 +49,7 @@ export interface AdvisorCase {
   doc: { balance: number; rate: number; years: number; months: number };
   docTracks: LoanTrack[];
   docTotals: DocTotals;
+  docSource: "ai" | "manual" | null;
   offer?: { savings: number; fee: number };
   client?: { name: string; phone: string; email: string };
 }

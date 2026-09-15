@@ -53,6 +53,7 @@ export interface AdminCase {
   assignedAdvisorIds: string[];
   docTracks: LoanTrack[];
   docTotals: DocTotals;
+  docSource: "ai" | "manual" | null;
 }
 
 export interface Advisor {

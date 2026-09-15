@@ -50,7 +50,7 @@ export default function LoginPage() {
       <header className="border-b border-line">
         <div className="max-w-5xl mx-auto flex items-center gap-2.5 px-5 py-3.5">
           <Link href="/">
-            <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-8 w-auto" />
+            <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={220} height={110} className="h-10 w-auto" />
           </Link>
         </div>
       </header>

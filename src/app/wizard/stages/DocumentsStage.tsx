@@ -9,18 +9,44 @@ import { confettiBurst } from "../lib/effects";
 import type { LoanTrack } from "../lib/types";
 
 type Phase = "idle" | "parsing" | "error";
+type Mode = "upload" | "manual";
 
 const IDLE_BUBBLE = "העלו דוח יתרות או אישור עקרוני — אני אשלוף מתוכו את המספרים החשובים לבד, ואתם רק תאשרו.";
 const PARSED_BUBBLE = "איזה כיף! מצאתי את כל הנתונים במסמך 🎉 אפשר לבדוק ולתקן אם צריך.";
-const SKIPPED_BUBBLE = "אה, אין מסמך כרגע... 🥲 לא נורא, נמשיך עם הערכה כללית וניתן ליועץ להשלים את התמונה.";
+const MANUAL_BUBBLE = "אין בעיה, נמלא את הפרטים ביחד. שימו לב: ההצעה שתתקבל תהיה מבוססת על מה שתצהירו כאן.";
+const MANUAL_CONFIRMED_BUBBLE = "קיבלתי את הפרטים 👍 שווה לוודא שהם מדויקים, כי לפיהם היועצים יגישו הצעה.";
+
+const emptyManualTrack: LoanTrack = {
+  bankName: null,
+  rateKind: null,
+  anchorBasis: null,
+  linkedToCpi: false,
+  repaymentMethod: null,
+  annualRate: null,
+  anchorRate: null,
+  marginRate: null,
+  nextRateChangeDate: null,
+  monthsRemaining: null,
+  principalBalance: null,
+  accruedInterest: null,
+  arrearsBalance: null,
+  arrearsInterest: null,
+  payoffBalance: null,
+  earlyRepaymentFee: null,
+  comparisonRate: null,
+  forecastRate: null,
+};
 
 export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
   const [phase, setPhase] = useState<Phase>("idle");
+  const [mode, setMode] = useState<Mode>(state.docSource === "manual" ? "manual" : "upload");
   const [fileName, setFileName] = useState("מסמך שהועלה");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [mood, setMood] = useState<RigMood>(state.docSkipped ? "sad" : "idle");
-  const [bubble, setBubble] = useState(state.docSkipped ? SKIPPED_BUBBLE : state.docConfirmed ? PARSED_BUBBLE : IDLE_BUBBLE);
-  const [skipLabel, setSkipLabel] = useState(state.docSkipped ? "דילגתם על שלב זה — אפשר להמשיך" : "דלגו כרגע, אין לי מסמך זמין");
+  const [mood, setMood] = useState<RigMood>("idle");
+  const [bubble, setBubble] = useState(
+    state.docSource === "manual" ? MANUAL_CONFIRMED_BUBBLE : state.docConfirmed ? PARSED_BUBBLE : IDLE_BUBBLE
+  );
+  const [manualTrack, setManualTrack] = useState<LoanTrack>(state.docTracks[0] ?? emptyManualTrack);
 
   const matchDiffPct = state.mortgageAmount ? Math.abs(state.docBalance - state.mortgageAmount) / state.mortgageAmount : 0;
 
@@ -47,6 +73,7 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
       const result = json.result;
       dispatch({
         type: "DOC_PARSED",
+        source: "ai",
         tracks: result.tracks ?? [],
         totals: {
           quoteValidDate: result.quoteValidDate ?? null,
@@ -69,11 +96,32 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
     }
   }
 
-  function handleSkip() {
-    dispatch({ type: "DOC_SKIPPED" });
-    setSkipLabel("דילגתם על שלב זה — אפשר להמשיך");
-    setMood("sad");
-    setBubble(SKIPPED_BUBBLE);
+  function switchToManual() {
+    setMode("manual");
+    setBubble(MANUAL_BUBBLE);
+  }
+
+  const manualValid = manualTrack.rateKind != null && (manualTrack.principalBalance ?? 0) > 0 && (manualTrack.annualRate ?? 0) > 0;
+
+  function confirmManual() {
+    if (!manualValid) return;
+    dispatch({
+      type: "DOC_PARSED",
+      source: "manual",
+      tracks: [manualTrack],
+      totals: {
+        quoteValidDate: null,
+        totalPrincipal: manualTrack.principalBalance,
+        totalEarlyRepaymentFee: null,
+        totalPayoff: null,
+        accountComparisonRate: null,
+        accountForecastRate: null,
+      },
+    });
+    setMood("clap");
+    setBubble(MANUAL_CONFIRMED_BUBBLE);
+    confettiBurst();
+    setTimeout(() => setMood("idle"), 1550);
   }
 
   return (
@@ -84,6 +132,17 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
       </div>
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="card-badge">🤖 קריאה אוטומטית חכמה</div>
+        {!state.docConfirmed && (
+          <div className="mode-toggle">
+            <button type="button" className={mode === "upload" ? "active" : ""} onClick={() => setMode("upload")}>
+              יש לי דוח יתרות
+            </button>
+            <button type="button" className={mode === "manual" ? "active" : ""} onClick={switchToManual}>
+              אמלא את הפרטים בעצמי
+            </button>
+          </div>
+        )}
+        {mode === "upload" && (
         <div className="dropzone">
           <svg><use href="#ic-upload" /></svg>
           {!state.docConfirmed && phase === "idle" && (
@@ -127,8 +186,74 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
               </label>
             </div>
           )}
-          {state.docConfirmed && phase === "idle" && <div className="filechip">📎 {fileName}</div>}
+          {state.docConfirmed && state.docSource === "ai" && <div className="filechip">📎 {fileName}</div>}
         </div>
+        )}
+
+        {mode === "manual" && !state.docConfirmed && (
+          <div className="parsed-grid">
+            <div className="parsed-field">
+              <label>שם הבנק</label>
+              <input type="text" value={manualTrack.bankName ?? ""} onChange={(e) => setManualTrack({ ...manualTrack, bankName: e.target.value })} />
+            </div>
+            <div className="parsed-field">
+              <label>סוג ריבית *</label>
+              <select
+                value={manualTrack.rateKind ?? ""}
+                onChange={(e) => setManualTrack({ ...manualTrack, rateKind: (e.target.value || null) as LoanTrack["rateKind"] })}
+              >
+                <option value="">בחרו</option>
+                <option value="fixed">קבועה</option>
+                <option value="variable">משתנה</option>
+              </select>
+            </div>
+            {manualTrack.rateKind === "variable" && (
+              <div className="parsed-field">
+                <label>בסיס הריבית (למשל פריים)</label>
+                <input type="text" value={manualTrack.anchorBasis ?? ""} onChange={(e) => setManualTrack({ ...manualTrack, anchorBasis: e.target.value })} />
+              </div>
+            )}
+            <div className="parsed-field">
+              <label>צמודה למדד?</label>
+              <select
+                value={manualTrack.linkedToCpi ? "yes" : "no"}
+                onChange={(e) => setManualTrack({ ...manualTrack, linkedToCpi: e.target.value === "yes" })}
+              >
+                <option value="no">לא</option>
+                <option value="yes">כן</option>
+              </select>
+            </div>
+            <div className="parsed-field">
+              <label>ריבית שנתית % *</label>
+              <input
+                type="number"
+                step={0.01}
+                value={manualTrack.annualRate ?? ""}
+                onChange={(e) => setManualTrack({ ...manualTrack, annualRate: Number(e.target.value) || null })}
+              />
+            </div>
+            <div className="parsed-field">
+              <label>יתרת תקופה (חודשים)</label>
+              <input
+                type="number"
+                value={manualTrack.monthsRemaining ?? ""}
+                onChange={(e) => setManualTrack({ ...manualTrack, monthsRemaining: Number(e.target.value) || null })}
+              />
+            </div>
+            <div className="parsed-field">
+              <label>יתרת קרן * </label>
+              <input
+                type="number"
+                value={manualTrack.principalBalance ?? ""}
+                onChange={(e) => setManualTrack({ ...manualTrack, principalBalance: Number(e.target.value) || null })}
+              />
+            </div>
+            <div className="tracks-note">שדות עם * הם חובה. ההצעה שתתקבל תהיה מבוססת על מה שתצהירו כאן, אז כדאי שיהיה מדויק.</div>
+            <button type="button" className="btn btn-primary" style={{ gridColumn: "1/-1" }} disabled={!manualValid} onClick={confirmManual}>
+              אישור הפרטים
+            </button>
+          </div>
+        )}
 
         {state.docConfirmed && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -281,11 +406,18 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
           </div>
         )}
 
-        <button type="button" className="btn-link" style={{ alignSelf: "center" }} onClick={handleSkip}>
-          {skipLabel}
-        </button>
+        {state.docConfirmed && state.docSource === "manual" && (
+          <button
+            type="button"
+            className="btn-link"
+            style={{ alignSelf: "center" }}
+            onClick={() => set("docConfirmed", false)}
+          >
+            למלא מחדש את הפרטים
+          </button>
+        )}
       </div>
-      <NavRow onBack={back} onNext={() => go("summary")} nextDisabled={!(state.docConfirmed || state.docSkipped)} />
+      <NavRow onBack={back} onNext={() => go("summary")} nextDisabled={!state.docConfirmed} />
     </section>
   );
 }

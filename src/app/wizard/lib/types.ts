@@ -86,9 +86,9 @@ export interface WizardState {
   otherLoansMonthsLeft: "under6" | "6to12" | "13to18" | "over18" | null;
   creditIssues: "yes" | "no" | null;
 
-  docSkipped: boolean;
   docConfirmed: boolean;
   docParsedOnce: boolean;
+  docSource: "ai" | "manual" | null;
   docBalance: number;
   docRate: number;
   docYears: number;
@@ -145,9 +145,9 @@ export const initialWizardState: WizardState = {
   otherLoansMonthsLeft: null,
   creditIssues: null,
 
-  docSkipped: false,
   docConfirmed: false,
   docParsedOnce: false,
+  docSource: null,
   docBalance: 952400,
   docRate: 4.83,
   docYears: 22,

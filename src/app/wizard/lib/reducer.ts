@@ -16,8 +16,7 @@ export type Action =
   | { type: "BACK"; stages: readonly Stage[] }
   | { type: "RESET" }
   | { type: "HYDRATE"; state: Partial<WizardState> }
-  | { type: "DOC_PARSED"; tracks: LoanTrack[]; totals: ParsedDocumentTotals }
-  | { type: "DOC_SKIPPED" }
+  | { type: "DOC_PARSED"; tracks: LoanTrack[]; totals: ParsedDocumentTotals; source: "ai" | "manual" }
   | { type: "SUBMIT_CONTACT"; name: string; phone: string; email: string }
   | { type: "VERIFIED" }
   | { type: "CELEBRATE_SUMMARY" };
@@ -42,8 +41,8 @@ export function wizardReducer(state: WizardState, action: Action): WizardState {
       return {
         ...state,
         docConfirmed: true,
-        docSkipped: false,
         docParsedOnce: true,
+        docSource: action.source,
         docTracks: action.tracks,
         docQuoteValidDate: action.totals.quoteValidDate,
         docTotalPrincipal: action.totals.totalPrincipal,
@@ -57,8 +56,6 @@ export function wizardReducer(state: WizardState, action: Action): WizardState {
         docMonths: estimate.months,
       };
     }
-    case "DOC_SKIPPED":
-      return { ...state, docSkipped: true };
     case "SUBMIT_CONTACT":
       return { ...state, contactName: action.name, contactPhone: action.phone, contactEmail: action.email };
     case "VERIFIED":

@@ -250,7 +250,7 @@ function DetailView({
             </div>
           </div>
 
-          {c.docTracks.length > 0 && <LoanTracksCard tracks={c.docTracks} totals={c.docTotals} />}
+          {c.docTracks.length > 0 && <LoanTracksCard tracks={c.docTracks} totals={c.docTotals} source={c.docSource} />}
 
           {c.status === "new" ? (
             <div className="card">
@@ -417,13 +417,18 @@ function rateKindLabel(t: LoanTrack): string {
   return "לא ידוע";
 }
 
-function LoanTracksCard({ tracks, totals }: { tracks: LoanTrack[]; totals: DocTotals }) {
+function LoanTracksCard({ tracks, totals, source }: { tracks: LoanTrack[]; totals: DocTotals; source: "ai" | "manual" | null }) {
   const commonBank = tracks.every((t) => t.bankName && t.bankName === tracks[0].bankName) ? tracks[0].bankName : null;
   return (
     <div className="card">
       <h3>
-        <svg><use href="#ic-doc" /></svg>מסלולי המשכנתה (מהמסמך שהועלה){commonBank ? ` · ${commonBank}` : ""}
+        <svg><use href="#ic-doc" /></svg>מסלולי המשכנתה{commonBank ? ` · ${commonBank}` : ""}
       </h3>
+      {source === "manual" && (
+        <div className="match-note warn" style={{ marginBottom: 10 }}>
+          <svg><use href="#ic-alert" /></svg>הפרטים הוזנו ידנית על ידי הלקוח (לא נשלף ממסמך) — כדאי לוודא מולו שהם מדויקים.
+        </div>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {tracks.map((t, i) => (
           <div className="brief-grid" key={i} style={{ paddingBottom: 10, borderBottom: i < tracks.length - 1 ? "1px solid var(--line)" : undefined }}>

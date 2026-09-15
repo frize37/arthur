@@ -280,6 +280,11 @@ function DetailView({
             <h3><svg><use href="#ic-doc" /></svg>מסמכים שצורפו</h3>
             {c.docTracks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {c.docSource === "manual" && (
+                  <div className="match-note warn">
+                    <svg><use href="#ic-alert" /></svg>הפרטים הוזנו ידנית על ידי הלקוח (לא נשלף ממסמך) — כדאי לוודא מולו שהם מדויקים.
+                  </div>
+                )}
                 {(() => {
                   const commonBank = c.docTracks.every((t) => t.bankName && t.bankName === c.docTracks[0].bankName)
                     ? c.docTracks[0].bankName

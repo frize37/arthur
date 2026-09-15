@@ -1,0 +1,35 @@
+-- Track whether the mortgage figures came from the AI-read document or
+-- were typed in by the client themselves (the "no document" path no
+-- longer skips this data — it requires self-declared figures instead).
+alter table cases add column if not exists doc_source text;
+
+-- The advisor_cases view (migration 0007) lists columns explicitly, so a
+-- new column on `cases` doesn't appear there automatically.
+create or replace view advisor_cases
+  with (security_invoker = true) as
+select
+  c.id, c.status, c.complex, c.request_type, c.goal,
+  c.property_source, c.property_legal, c.property_value, c.mortgage_amount, c.equity,
+  c.comfort_payment, c.max_stress_payment,
+  c.future_release, c.future_release_amount, c.future_release_timing, c.upcoming_event, c.income_change,
+  c.has_second_applicant, c.employment1, c.seniority1, c.employment2, c.seniority2, c.income, c.extra,
+  c.other_loans, c.other_loans_payment, c.other_loans_ending_soon, c.other_loans_months_left, c.credit_issues,
+  c.doc_confirmed, c.doc_source, c.doc_balance, c.doc_rate, c.doc_years, c.doc_months,
+  c.doc_quote_valid_date, c.doc_total_principal, c.doc_total_early_repayment_fee, c.doc_total_payoff,
+  c.doc_account_comparison_rate, c.doc_account_forecast_rate,
+  c.created_at, c.updated_at,
+  case when exists (
+    select 1 from offers o join advisors a on a.id = o.advisor_id
+    where o.case_id = c.id and o.is_winner and a.auth_user_id = auth.uid()
+  ) then c.contact_name else null end as contact_name,
+  case when exists (
+    select 1 from offers o join advisors a on a.id = o.advisor_id
+    where o.case_id = c.id and o.is_winner and a.auth_user_id = auth.uid()
+  ) then c.contact_phone else null end as contact_phone,
+  case when exists (
+    select 1 from offers o join advisors a on a.id = o.advisor_id
+    where o.case_id = c.id and o.is_winner and a.auth_user_id = auth.uid()
+  ) then c.contact_email else null end as contact_email
+from cases c;
+
+grant select on advisor_cases to authenticated;

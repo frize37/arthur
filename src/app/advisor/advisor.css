@@ -18,7 +18,7 @@
 }
 .advisor-root p { margin: 0; }
 .advisor-root button, .advisor-root input, .advisor-root textarea { font-family: inherit; }
-.advisor-root .num { font-family: var(--font-rubik), sans-serif; font-variant-numeric: tabular-nums; }
+.advisor-root .num { font-family: var(--font-assistant), sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .advisor-root [hidden] { display: none !important; }
 
 @keyframes popIn { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
@@ -111,7 +111,7 @@
 .gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
 .gauge-wrap::before { content: ""; position: absolute; top: -10px; width: 200px; height: 170px; border-radius: 50%; background: radial-gradient(circle, var(--glow, transparent) 0%, transparent 72%); opacity: .4; z-index: -1; }
 .gauge { width: 200px; height: 102px; position: relative; overflow: hidden; }
-.gauge__arc { position: absolute; top: 0; left: 0; width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(from 180deg, var(--good) 0deg 90deg, var(--watch) 90deg 120deg, var(--risk) 120deg 180deg, transparent 180deg 360deg); }
+.gauge__arc { position: absolute; top: 0; left: 0; width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(from 180deg, var(--good) 0deg 105deg, var(--watch) 105deg 120deg, var(--risk) 120deg 180deg, transparent 180deg 360deg); }
 .gauge__hole { position: absolute; top: 22px; left: 22px; width: 156px; height: 156px; border-radius: 50%; background: var(--surface); }
 .gauge__needle { position: absolute; bottom: 0; left: 50%; width: 3px; height: 88px; background: var(--ink); border-radius: 3px; transform-origin: bottom center; }
 .gauge__hub { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); width: 11px; height: 11px; border-radius: 50%; background: var(--ink); }
@@ -142,4 +142,8 @@
 .sent-note p { font-size: 13.5px; }
 
 .anon-note { font-size: 11.5px; color: var(--ink-faint); line-height: 1.5; }
+.match-note { display: flex; align-items: center; gap: 8px; font-size: 12.5px; border-radius: 12px; padding: 9px 13px; }
+.match-note svg { width: 16px; height: 16px; flex-shrink: 0; }
+.match-note.ok { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
+.match-note.warn { background: color-mix(in srgb, var(--watch) 16%, transparent); color: var(--watch); }
 .empty { text-align: center; padding: 30px 10px; color: var(--ink-faint); font-size: 13.5px; }

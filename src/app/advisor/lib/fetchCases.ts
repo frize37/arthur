@@ -130,6 +130,7 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
         accountComparisonRate: row.doc_account_comparison_rate != null ? Number(row.doc_account_comparison_rate) : null,
         accountForecastRate: row.doc_account_forecast_rate != null ? Number(row.doc_account_forecast_rate) : null,
       },
+      docSource: row.doc_source ?? null,
       offer: myOffer ? { savings: Number(myOffer.savings ?? 0), fee: Number(myOffer.fee ?? 0) } : undefined,
       client:
         row.contact_name || row.contact_phone || row.contact_email

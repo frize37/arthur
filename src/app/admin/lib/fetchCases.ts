@@ -134,6 +134,7 @@ export async function fetchCases(): Promise<AdminCase[]> {
         accountComparisonRate: row.doc_account_comparison_rate != null ? Number(row.doc_account_comparison_rate) : null,
         accountForecastRate: row.doc_account_forecast_rate != null ? Number(row.doc_account_forecast_rate) : null,
       },
+      docSource: row.doc_source ?? null,
     };
   });
 }

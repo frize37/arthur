@@ -32,7 +32,7 @@ export function WelcomeStage({ go }: StageProps) {
                   <br />
                   לפני ש<span className="hl">ארתור בודק</span>.
                 </h1>
-                <p>כמה שאלות פשוטות, מסמך אחד, ותוך כמה דקות תדעו בדיוק איפה אתם עומדים — ואם כדאי למחזר.</p>
+                <p>כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר יועצי משכנתאות מתחרים על התיק שלכם. תדעו בדיוק כמה תחסכו ומה זה יעלה.</p>
               </div>
               <div
                 className="hero-band__stage"
@@ -60,14 +60,14 @@ export function WelcomeStage({ go }: StageProps) {
 
       <div className="trust-row">
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-down" /></svg></div><span>עד 50% חיסכון</span></div>
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-upload" /></svg></div><span>AI קורא מסמכים</span></div>
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-clock" /></svg></div><span>2 דקות בדיקה</span></div>
+        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-upload" /></svg></div><span>יועצים מתחרים על התיק</span></div>
+        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-clock" /></svg></div><span>2 דקות וההצעה בדרך</span></div>
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-cash" /></svg></div><span>ליווי אישי צמוד</span></div>
       </div>
 
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div className="card-badge">🔒 מאובטח ופרטי</div>
-        <BuddyRow bubble="התהליך נשמר אוטומטית בכל שלב, כך שאפשר לעצור ולהמשיך בכל מכשיר. אף פרט לא הולך לאיבוד." />
+        <BuddyRow bubble="כל תשובה כאן חשובה לדיוק ההצעה שתקבלו — אין תשובות מיותרות. ואת דוח היתרות אני לא שומר אצלי, רק שולף ממנו את המספרים." />
         <button type="button" className="btn btn-primary" style={{ width: "100%", fontSize: 16, padding: 15 }} onClick={() => go("requestType")}>
           בואו נתחיל
         </button>
@@ -267,7 +267,6 @@ export function PlanningStage({ state, set, go, back }: StageProps) {
 
 export function EmploymentStage({ state, set, go, back }: StageProps) {
   const complex = isComplexCase(state);
-  const showDocMini = state.docConfirmed || state.docSkipped;
   return (
     <section className="stage">
       <BuddyRow
@@ -278,11 +277,6 @@ export function EmploymentStage({ state, set, go, back }: StageProps) {
             : "עכשיו נבדוק את יכולת ההחזר, כדי לוודא שכל תוכנית שנציע תשאיר לכם ראש שקט בסוף החודש."
         }
       />
-      {showDocMini && (
-        <div className="savings-mini">
-          {state.docConfirmed ? "📎 מסמך המשכנתה נטען בהצלחה — הנתונים יועברו ליועצים" : "ממשיכים עם הערכה כללית, בלי מסמך"}
-        </div>
-      )}
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <Field label="יש מבקש/ת נוסף/ת למשכנתה?">
           <ChipRow
