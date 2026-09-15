@@ -152,15 +152,8 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
       </div>
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="card-badge">🤖 קריאה אוטומטית חכמה</div>
-        {!state.docConfirmed && (
-          <div className="mode-toggle">
-            <button type="button" className={mode === "upload" ? "active" : ""} onClick={() => setMode("upload")}>
-              יש לי דוח יתרות
-            </button>
-            <button type="button" className={mode === "manual" ? "active" : ""} onClick={switchToManual}>
-              אמלא את הפרטים בעצמי
-            </button>
-          </div>
+        {mode === "upload" && !state.docConfirmed && (
+          <div className="anon-note">תעלו את דוח היתרות שלכם — כך נוכל לדייק את ההצעה שתקבלו.</div>
         )}
         {mode === "upload" && (
         <div className="dropzone">
@@ -209,9 +202,17 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
           {state.docConfirmed && state.docSource === "ai" && <div className="filechip">📎 {fileName}</div>}
         </div>
         )}
+        {mode === "upload" && !state.docConfirmed && phase === "idle" && (
+          <button type="button" className="btn-link" style={{ alignSelf: "center", fontSize: 12 }} onClick={switchToManual}>
+            אין לי את הדוח איתי
+          </button>
+        )}
 
         {mode === "manual" && !state.docConfirmed && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <button type="button" className="btn-link" style={{ alignSelf: "center", fontSize: 12 }} onClick={() => setMode("upload")}>
+              בעצם יש לי את הדוח, אעלה אותו
+            </button>
             {state.mortgageAmount > 0 && (
               <div className="anon-note">גובה המשכנתה שציינתם קודם: <b className="num">{shekel(state.mortgageAmount)}</b> — פרטו כאן את המסלולים שמרכיבים אותה.</div>
             )}
