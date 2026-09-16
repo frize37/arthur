@@ -229,12 +229,18 @@ function DetailView({
   const [offerNotes, setOfferNotes] = useState("");
   const [sending, setSending] = useState(false);
   const [downloadingDoc, setDownloadingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
 
   async function downloadCleanDoc() {
     setDownloadingDoc(true);
+    setDocError(null);
     const url = await getCleanDocUrl(c.id);
     setDownloadingDoc(false);
-    if (url) window.open(url, "_blank");
+    if (!url) {
+      setDocError("לא הצלחנו ליצור קישור להורדה. נסו שוב, ואם זה חוזר ספרו לצוות התפעול.");
+      return;
+    }
+    window.open(url, "_blank");
   }
 
   const showOfferForm = c.status === "pending";
@@ -355,6 +361,11 @@ function DetailView({
               <button type="button" className="btn-link" style={{ alignSelf: "flex-start" }} disabled={downloadingDoc} onClick={downloadCleanDoc}>
                 {downloadingDoc ? "יוצר קישור…" : `הורדת דוח יתרות (ללא פרטים אישיים) — ${c.cleanDocName}`}
               </button>
+            )}
+            {docError && (
+              <div className="match-note warn">
+                <svg><use href="#ic-alert" /></svg>{docError}
+              </div>
             )}
             {c.docTracks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
