@@ -881,7 +881,7 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
       <div className="lead-row__stat"><span>זמן תגובה</span><b>{a.avgResponseHours} ש׳</b></div>
       {!canManage ? null : !editing ? (
         <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={openEdit}>
-          עמלה: {a.commissionType === "fixed" ? shekel(a.commissionValue ?? 0) : `${a.commissionValue ?? 0}%`} · לעריכת הפרטים
+          עריכת הפרטים
         </button>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", padding: "10px 0" }}>
