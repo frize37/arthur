@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   if (kind === "admin") {
     const { error: insertErr } = await supabaseAdmin
       .from("admins")
-      .insert({ auth_user_id: created.user.id, name, role: adminRole === "staff" ? "staff" : "admin" });
+      .insert({ auth_user_id: created.user.id, name, email, role: adminRole === "staff" ? "staff" : "admin" });
     if (insertErr) {
       return NextResponse.json({ ok: false, error: insertErr.message }, { status: 500 });
     }

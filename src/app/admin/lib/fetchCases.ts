@@ -113,6 +113,70 @@ export async function updateAdvisorCommission(advisorId: string, commissionType:
   return true;
 }
 
+export async function updateAdvisorProfile(
+  advisorId: string,
+  input: { name: string; specialty: string; commissionType: "percent" | "fixed"; commissionValue: number }
+): Promise<boolean> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("advisors")
+    .update({
+      name: input.name,
+      specialty: input.specialty,
+      commission_type: input.commissionType,
+      commission_value: input.commissionValue,
+    })
+    .eq("id", advisorId);
+  if (error) {
+    console.error("Failed to update advisor profile:", error.message);
+    return false;
+  }
+  return true;
+}
+
+export interface AdminMember {
+  id: string; // auth_user_id, also the admins table's primary key
+  name: string;
+  email: string | null;
+  role: "admin" | "staff";
+}
+
+export async function fetchAdmins(): Promise<AdminMember[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.from("admins").select("auth_user_id, name, email, role").order("name");
+  if (error || !data) {
+    console.error("Failed to fetch admins:", error?.message);
+    return [];
+  }
+  return data.map((row): AdminMember => ({
+    id: row.auth_user_id,
+    name: row.name,
+    email: row.email ?? null,
+    role: row.role === "staff" ? "staff" : "admin",
+  }));
+}
+
+export async function updateAdminName(adminId: string, name: string): Promise<boolean> {
+  const supabase = createClient();
+  const { error } = await supabase.from("admins").update({ name }).eq("auth_user_id", adminId);
+  if (error) {
+    console.error("Failed to update admin name:", error.message);
+    return false;
+  }
+  return true;
+}
+
+export async function resetPassword(kind: "advisor" | "admin", id: string): Promise<{ ok: true; password: string } | { ok: false; error: string }> {
+  const res = await fetch("/api/admin/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, id }),
+  });
+  const json = await res.json();
+  if (!json.ok) return { ok: false, error: json.error ?? "איפוס הסיסמה נכשל." };
+  return { ok: true, password: json.password };
+}
+
 export async function fetchCases(): Promise<AdminCase[]> {
   const supabase = createClient();
   const { data: caseRows, error: caseErr } = await supabase.from("cases").select("*").order("created_at", { ascending: false });
@@ -172,6 +236,30 @@ export async function fetchCases(): Promise<AdminCase[]> {
         mortgage: row.mortgage_amount ?? 0,
         income,
         ratioBand: band,
+        propertyLegal: row.property_legal ?? "tabu",
+        propertySource: row.property_source ?? null,
+        equity: row.equity ?? 0,
+      },
+      planning: {
+        futureRelease: row.future_release ?? "no",
+        futureReleaseAmount: row.future_release_amount ?? null,
+        futureReleaseTiming: row.future_release_timing ?? null,
+        upcomingEvent: row.upcoming_event ?? "none",
+        incomeChange: row.income_change ?? "no",
+      },
+      profile: {
+        hasSecond: row.has_second_applicant ?? "no",
+        employment1: row.employment1 ?? "salaried",
+        seniority1: row.seniority1 ?? "over3",
+        employment2: row.employment2 ?? undefined,
+        seniority2: row.seniority2 ?? undefined,
+      },
+      credit: {
+        otherLoans: row.other_loans ?? "no",
+        otherLoansPayment: row.other_loans_payment ?? null,
+        otherLoansEndingSoon: row.other_loans_ending_soon ?? undefined,
+        otherLoansMonthsLeft: row.other_loans_months_left ?? undefined,
+        creditIssues: row.credit_issues ?? "no",
       },
       offers,
       timeline: [

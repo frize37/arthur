@@ -74,10 +74,13 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
       requestType: row.request_type,
       goal: row.goal,
       complex: row.complex,
-      property: { value: row.property_value ?? 0, mortgage: row.mortgage_amount ?? 0, legal: row.property_legal ?? "tabu" },
+      property: { value: row.property_value ?? 0, mortgage: row.mortgage_amount ?? 0, legal: row.property_legal ?? "tabu", source: row.property_source ?? null },
+      equity: row.equity ?? 0,
       repayment: { comfort: row.comfort_payment ?? 0, max: row.max_stress_payment ?? 0 },
       planning: {
         futureRelease: row.future_release ?? "no",
+        futureReleaseAmount: row.future_release_amount ?? null,
+        futureReleaseTiming: row.future_release_timing ?? null,
         upcomingEvent: row.upcoming_event ?? "none",
         incomeChange: row.income_change ?? "no",
       },
@@ -91,6 +94,7 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
       income: { net: row.income ?? 0, extra: row.extra ?? 0 },
       credit: {
         otherLoans: row.other_loans ?? "no",
+        otherLoansPayment: row.other_loans_payment ?? null,
         otherLoansEndingSoon: row.other_loans_ending_soon ?? undefined,
         otherLoansMonthsLeft: row.other_loans_months_left ?? undefined,
         creditIssues: row.credit_issues ?? "no",

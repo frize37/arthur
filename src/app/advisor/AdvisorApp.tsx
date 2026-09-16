@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./advisor.css";
 import { AdvisorIcons } from "./components/AdvisorIcons";
 import { ArthurMascot } from "@/components/ArthurMascot";
-import { AdvisorCase, LABELS, STATUS_META, computeCase, computeCommission } from "./lib/data";
+import { AdvisorCase, LABELS, STATUS_META, computeCase, computeCommission, deriveKeyPoints } from "./lib/data";
 import { fetchMyCases, fetchMyCommission, getCleanDocUrl, submitCompletion, submitOffer } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
@@ -222,6 +222,7 @@ function DetailView({
 }) {
   const calc = computeCase(c);
   const needleDeg = -90 + Math.max(0, Math.min(1, calc.ratio / 0.6)) * 180;
+  const keyPoints = deriveKeyPoints(c);
 
   const [offerSavings, setOfferSavings] = useState(Math.round(calc.suggestedSavings / 500) * 500);
   const [offerFee, setOfferFee] = useState(2500);
@@ -288,6 +289,16 @@ function DetailView({
               </div>
             </div>
           )}
+          {keyPoints.length > 0 && (
+            <div className="card" style={{ borderColor: "var(--accent)" }}>
+              <h3><svg><use href="#ic-sparkle" /></svg>נקודות חשובות</h3>
+              <ul style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 6, fontSize: 13.5, color: "var(--ink-soft)" }}>
+                {keyPoints.map((point, i) => (
+                  <li key={i}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="card">
             <h3><svg><use href="#ic-target" /></svg>בקשה ומטרה</h3>
             <div className="brief-grid">
@@ -300,14 +311,21 @@ function DetailView({
             <div className="brief-grid">
               {briefRow("שווי נכס", shekel(c.property.value))}
               {briefRow("גובה משכנתה", shekel(c.property.mortgage))}
+              {briefRow("הון עצמי", shekel(c.equity))}
               {briefRow("סטטוס רישום", LABELS.legal[c.property.legal])}
+              {c.property.source && briefRow("אופן הרכישה", LABELS.propertySource[c.property.source] ?? c.property.source)}
             </div>
           </div>
           <div className="card">
             <h3><svg><use href="#ic-clock" /></svg>תכנון פיננסי</h3>
             <div className="brief-grid">
-              {briefRow("שחרור כספים עתידי", LABELS.yesno[c.planning.futureRelease])}
-              {briefRow("הוצאה גדולה מתוכננת", c.planning.upcomingEvent === "none" ? "אין" : c.planning.upcomingEvent)}
+              {briefRow(
+                "שחרור כספים עתידי",
+                c.planning.futureRelease === "yes"
+                  ? `כן, ${shekel(c.planning.futureReleaseAmount ?? 0)}${c.planning.futureReleaseTiming ? ` · ${LABELS.futureReleaseTiming[c.planning.futureReleaseTiming]}` : ""}`
+                  : LABELS.yesno[c.planning.futureRelease]
+              )}
+              {briefRow("הוצאה גדולה מתוכננת", LABELS.upcomingEvent[c.planning.upcomingEvent] ?? c.planning.upcomingEvent)}
               {briefRow("שינוי צפוי בהכנסה", LABELS.yesno[c.planning.incomeChange])}
             </div>
           </div>
@@ -321,9 +339,11 @@ function DetailView({
               {briefRow(
                 "הלוואות נוספות",
                 c.credit.otherLoans === "yes"
-                  ? c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft
-                    ? `כן — מסתיימת בעוד ${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft]}`
-                    : "כן, נמשכות"
+                  ? `כן, ${shekel(c.credit.otherLoansPayment ?? 0)}/חודש${
+                      c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft
+                        ? ` · מסתיימות בעוד ${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft]}`
+                        : ""
+                    }`
                   : "אין"
               )}
               {briefRow("חיווי אשראי", c.credit.creditIssues === "yes" ? "דורש תשומת לב" : "תקין")}

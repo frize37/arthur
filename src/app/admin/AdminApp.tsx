@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./admin.css";
 import { AdminIcons } from "./components/AdminIcons";
-import { Advisor, AdminCase, CaseStatus, DocTotals, LABELS, LoanTrack, Offer, STATUS_META, TABS } from "./lib/data";
+import { Advisor, AdminCase, CaseStatus, DocTotals, LABELS, LoanTrack, Offer, STATUS_META, TABS, deriveKeyPoints } from "./lib/data";
 import {
+  AdminMember,
   assignAdvisorsToCase,
   createAdminAccount,
   createAdvisorAccount,
   deleteAdvisorAccount,
+  fetchAdmins,
   fetchAdvisors,
   fetchCases,
   markCaseCompleted,
   markCaseNoDeal,
   getCaseDocUrl,
   persistWinner,
-  updateAdvisorCommission,
+  resetPassword,
+  updateAdminName,
+  updateAdvisorProfile,
   uploadAdvisorLogo,
   uploadCleanDoc,
   uploadOriginalDoc,
@@ -283,13 +287,60 @@ function DetailView({
             </div>
           </div>
 
+          {(() => {
+            const points = deriveKeyPoints(c);
+            return (
+              points.length > 0 && (
+                <div className="card" style={{ borderColor: "var(--accent)" }}>
+                  <h3><svg><use href="#ic-alert" /></svg>נקודות חשובות</h3>
+                  <ul style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 6, fontSize: 13.5, color: "var(--ink-soft)" }}>
+                    {points.map((point, i) => (
+                      <li key={i}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            );
+          })()}
+
           <div className="card">
             <h3><svg><use href="#ic-home" /></svg>תקציר התיק</h3>
             <div className="brief-grid">
               {briefRow("שווי נכס", shekel(c.brief.propertyValue))}
               {briefRow("גובה משכנתה", shekel(c.brief.mortgage))}
+              {briefRow("הון עצמי", shekel(c.brief.equity))}
+              {briefRow("סטטוס רישום", LABELS.legal[c.brief.propertyLegal] ?? c.brief.propertyLegal)}
+              {c.brief.propertySource && briefRow("אופן הרכישה", LABELS.propertySource[c.brief.propertySource] ?? c.brief.propertySource)}
               {briefRow("הכנסה נטו", shekel(c.brief.income))}
               {briefRow("יחס החזר", c.brief.ratioBand === "good" ? "בתוך הנוח" : c.brief.ratioBand === "watch" ? "לשים לב" : "מעל הסף")}
+            </div>
+          </div>
+
+          <div className="card">
+            <h3><svg><use href="#ic-clock" /></svg>תכנון פיננסי ופרופיל</h3>
+            <div className="brief-grid">
+              {briefRow(
+                "שחרור כספים עתידי",
+                c.planning.futureRelease === "yes"
+                  ? `כן, ${shekel(c.planning.futureReleaseAmount ?? 0)}${c.planning.futureReleaseTiming ? ` · ${LABELS.futureReleaseTiming[c.planning.futureReleaseTiming]}` : ""}`
+                  : LABELS.yesno[c.planning.futureRelease] ?? c.planning.futureRelease
+              )}
+              {briefRow("הוצאה גדולה מתוכננת", LABELS.upcomingEvent[c.planning.upcomingEvent] ?? c.planning.upcomingEvent)}
+              {briefRow("שינוי צפוי בהכנסה", LABELS.yesno[c.planning.incomeChange] ?? c.planning.incomeChange)}
+              {briefRow("מבקש 1", `${LABELS.employment[c.profile.employment1]} · ותק ${LABELS.seniority[c.profile.seniority1]}`)}
+              {c.profile.hasSecond === "yes" && c.profile.employment2 && c.profile.seniority2 &&
+                briefRow("מבקש 2", `${LABELS.employment[c.profile.employment2]} · ותק ${LABELS.seniority[c.profile.seniority2]}`)}
+              {briefRow(
+                "הלוואות נוספות",
+                c.credit.otherLoans === "yes"
+                  ? `כן, ${shekel(c.credit.otherLoansPayment ?? 0)}/חודש${
+                      c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft
+                        ? ` · מסתיימות בעוד ${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft]}`
+                        : ""
+                    }`
+                  : "אין"
+              )}
+              {briefRow("חיווי אשראי", c.credit.creditIssues === "yes" ? "דורש תשומת לב" : "תקין")}
             </div>
           </div>
 
@@ -741,12 +792,16 @@ function CaseCompletion({ caseId, onUpdate }: { caseId: string; onUpdate: (patch
 
 function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSaved: () => void; canManage: boolean }) {
   const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(a.name);
+  const [specialty, setSpecialty] = useState(a.specialty);
   const [commissionType, setCommissionType] = useState<"percent" | "fixed">(a.commissionType ?? "percent");
   const [commissionValue, setCommissionValue] = useState(a.commissionValue ?? 10);
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
   const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -758,14 +813,30 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
     if (res.ok) onSaved();
   }
 
+  function openEdit() {
+    setName(a.name);
+    setSpecialty(a.specialty);
+    setCommissionType(a.commissionType ?? "percent");
+    setCommissionValue(a.commissionValue ?? 10);
+    setNewPassword(null);
+    setEditing(true);
+  }
+
   async function save() {
     setSaving(true);
-    const ok = await updateAdvisorCommission(a.id, commissionType, commissionValue);
+    const ok = await updateAdvisorProfile(a.id, { name, specialty, commissionType, commissionValue });
     setSaving(false);
     if (ok) {
       setEditing(false);
       onSaved();
     }
+  }
+
+  async function handleResetPassword() {
+    setResetting(true);
+    const res = await resetPassword("advisor", a.id);
+    setResetting(false);
+    if (res.ok) setNewPassword(res.password);
   }
 
   async function confirmDelete() {
@@ -776,7 +847,7 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
   }
 
   return (
-    <div className="lead-row" key={a.id}>
+    <div className="lead-row" key={a.id} style={{ flexWrap: "wrap" }}>
       {canManage ? (
         <label className="lead-row__avatar" style={{ cursor: "pointer", overflow: "hidden", padding: 0 }} title="להעלאת לוגו">
           {uploadingLogo ? <span className="spinner" /> : a.logoUrl ? <img src={a.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials}
@@ -791,26 +862,45 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
       <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
       <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
       <div className="lead-row__stat"><span>זמן תגובה</span><b>{a.avgResponseHours} ש׳</b></div>
-      {!canManage ? null : editing ? (
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <select value={commissionType} onChange={(e) => setCommissionType(e.target.value as "percent" | "fixed")} style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}>
-            <option value="percent">אחוז</option>
-            <option value="fixed">סכום קבוע</option>
-          </select>
-          <input
-            type="number"
-            value={commissionValue}
-            onChange={(e) => setCommissionValue(Number(e.target.value) || 0)}
-            style={{ width: 70, fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}
-          />
-          <button type="button" className="btn btn-primary" style={{ padding: "5px 10px", fontSize: 12 }} disabled={saving} onClick={save}>
-            {saving ? "שומר…" : "שמירה"}
-          </button>
-        </div>
-      ) : (
-        <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={() => setEditing(true)}>
-          עמלה: {a.commissionType === "fixed" ? shekel(a.commissionValue ?? 0) : `${a.commissionValue ?? 0}%`} · לעריכה
+      {!canManage ? null : !editing ? (
+        <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={openEdit}>
+          עמלה: {a.commissionType === "fixed" ? shekel(a.commissionValue ?? 0) : `${a.commissionValue ?? 0}%`} · לעריכת הפרטים
         </button>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", padding: "10px 0" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="שם מלא" style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 140px" }} />
+            <input type="text" value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="התמחות" style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 140px" }} />
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <select value={commissionType} onChange={(e) => setCommissionType(e.target.value as "percent" | "fixed")} style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}>
+              <option value="percent">אחוז</option>
+              <option value="fixed">סכום קבוע</option>
+            </select>
+            <input
+              type="number"
+              value={commissionValue}
+              onChange={(e) => setCommissionValue(Number(e.target.value) || 0)}
+              style={{ width: 70, fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}
+            />
+            <button type="button" className="btn btn-primary" style={{ padding: "5px 10px", fontSize: 12 }} disabled={saving} onClick={save}>
+              {saving ? "שומר…" : "שמירה"}
+            </button>
+            <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={() => setEditing(false)}>
+              ביטול
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" className="btn btn-ghost" style={{ padding: "5px 10px", fontSize: 12 }} disabled={resetting} onClick={handleResetPassword}>
+              {resetting ? "מאפס…" : "איפוס סיסמה"}
+            </button>
+            {newPassword && (
+              <span style={{ fontSize: 12 }}>
+                סיסמה חדשה: <b className="num">{newPassword}</b> (תעבירו אותה ליועץ, זו הפעם היחידה שהיא מוצגת)
+              </span>
+            )}
+          </div>
+        </div>
       )}
       {!canManage ? null : confirmingDelete ? (
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -826,6 +916,75 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
         <button type="button" className="btn-link" style={{ fontSize: 12, color: "var(--risk)" }} onClick={() => setConfirmingDelete(true)}>
           מחיקת יועץ
         </button>
+      )}
+    </div>
+  );
+}
+
+function AdminMemberRow({ member: m, onSaved }: { member: AdminMember; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(m.name);
+  const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const initials = m.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+
+  function openEdit() {
+    setName(m.name);
+    setNewPassword(null);
+    setEditing(true);
+  }
+
+  async function save() {
+    setSaving(true);
+    const ok = await updateAdminName(m.id, name);
+    setSaving(false);
+    if (ok) {
+      setEditing(false);
+      onSaved();
+    }
+  }
+
+  async function handleResetPassword() {
+    setResetting(true);
+    const res = await resetPassword("admin", m.id);
+    setResetting(false);
+    if (res.ok) setNewPassword(res.password);
+  }
+
+  return (
+    <div className="lead-row" style={{ flexWrap: "wrap" }}>
+      <div className="lead-row__avatar">{initials}</div>
+      <div className="lead-row__info">
+        <strong>{m.name}</strong>
+        <small>{m.role === "admin" ? "מנהל מלא" : "צוות"}{m.email ? ` · ${m.email}` : ""}</small>
+      </div>
+      {!editing ? (
+        <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={openEdit}>
+          עריכת פרטים
+        </button>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", padding: "10px 0" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="שם מלא" style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 140px" }} />
+            <button type="button" className="btn btn-primary" style={{ padding: "5px 10px", fontSize: 12 }} disabled={saving} onClick={save}>
+              {saving ? "שומר…" : "שמירה"}
+            </button>
+            <button type="button" className="btn-link" style={{ fontSize: 12 }} onClick={() => setEditing(false)}>
+              ביטול
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" className="btn btn-ghost" style={{ padding: "5px 10px", fontSize: 12 }} disabled={resetting} onClick={handleResetPassword}>
+              {resetting ? "מאפס…" : "איפוס סיסמה"}
+            </button>
+            {newPassword && (
+              <span style={{ fontSize: 12 }}>
+                סיסמה חדשה: <b className="num">{newPassword}</b> (תעבירו אותה אליו/אליה, זו הפעם היחידה שהיא מוצגת)
+              </span>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -852,6 +1011,15 @@ function TeamPage({
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ email: string; password: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [members, setMembers] = useState<AdminMember[]>([]);
+
+  const loadMembers = useCallback(() => {
+    if (canManage) fetchAdmins().then(setMembers);
+  }, [canManage]);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
 
   function resetForm() {
     setName("");
@@ -887,6 +1055,7 @@ function TeamPage({
       setResult({ email, password: res.password });
       resetForm();
       setAddingAdmin(false);
+      loadMembers();
     } else {
       setError(res.error);
     }
@@ -914,6 +1083,20 @@ function TeamPage({
         <div className="anon-note">עמלות, הוספה והסרה של יועצים ואנשי צוות זמינים רק למנהל מלא.</div>
       ) : (
       <>
+      <div className="section-head" style={{ marginTop: 8 }}>
+        <h2>מנהלים וצוות</h2>
+        <span>{members.length} חשבונות — עריכת שם ואיפוס סיסמה</span>
+      </div>
+      <div className="card">
+        <div className="lead-table">
+          {members.length === 0 ? (
+            <div className="empty">טוען…</div>
+          ) : (
+            members.map((m) => <AdminMemberRow key={m.id} member={m} onSaved={loadMembers} />)
+          )}
+        </div>
+      </div>
+
       <div className="section-head" style={{ marginTop: 8 }}>
         <h2>ניהול צוות</h2>
         <span>הוספת יועצים ואנשי צוות למערכת</span>
