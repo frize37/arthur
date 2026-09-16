@@ -43,19 +43,19 @@ function shell(previewText: string, bodyHtml: string, opts: { showBear?: boolean
   return `<!doctype html>
 <html dir="rtl" lang="he">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F2F8FA;font-family:Arial,Helvetica,sans-serif;color:#0E2038;">
+<body dir="rtl" style="margin:0;padding:0;background:#F2F8FA;font-family:Arial,Helvetica,sans-serif;color:#0E2038;text-align:right;">
 <div style="display:none;max-height:0;overflow:hidden;">${previewText}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F2F8FA;padding:24px 0;">
+<table role="presentation" dir="rtl" width="100%" cellpadding="0" cellspacing="0" style="background:#F2F8FA;padding:24px 0;">
 <tr><td align="center">
-<table role="presentation" width="100%" style="max-width:520px;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid rgba(14,32,56,0.12);">
-<tr><td style="background:#0B2647;padding:20px 28px;">
+<table role="presentation" dir="rtl" width="100%" style="max-width:520px;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid rgba(14,32,56,0.12);">
+<tr><td dir="rtl" align="right" style="background:#0B2647;padding:20px 28px;text-align:right;">
 ${logoHtml}
 </td></tr>
 ${bearHtml}
-<tr><td style="padding:28px;">
+<tr><td dir="rtl" align="right" style="padding:28px;text-align:right;">
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:16px 28px;border-top:1px solid rgba(14,32,56,0.1);font-size:11px;color:#74869F;">
+<tr><td dir="rtl" align="right" style="padding:16px 28px;border-top:1px solid rgba(14,32,56,0.1);font-size:11px;color:#74869F;text-align:right;">
 ארתור — מכרז יועצי משכנתא. הודעה זו נשלחה אוטומטית, אין להשיב למייל זה.
 </td></tr>
 </table>
@@ -79,9 +79,9 @@ export async function sendCaseSubmittedEmails(input: {
 }) {
   const clientHtml = shell(
     "קיבלנו את הבקשה שלך",
-    `<h1 style="font-size:18px;margin:0 0 14px;">היי ${input.contactName},</h1>
-<p style="font-size:14px;line-height:1.7;margin:0 0 8px;">קיבלנו את הפרטים שלך בהצלחה. אנחנו עכשיו שולחים אותם למספר יועצי משכנתא, כדי שיציעו לך את התנאים הכי טובים שהם יכולים.</p>
-<p style="font-size:14px;line-height:1.7;margin:0;">נחזור אליך ברגע שיהיו הצעות מרוכזות — בדרך כלל תוך יום עסקים.</p>`,
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${input.contactName},</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 8px;">קיבלנו את הפרטים שלך בהצלחה. אנחנו עכשיו שולחים אותם למספר יועצי משכנתא, כדי שיציעו לך את התנאים הכי טובים שהם יכולים.</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">נחזור אליך ברגע שיהיו הצעות מרוכזות — בדרך כלל תוך יום עסקים.</p>`,
     { showBear: true }
   );
   const results = [await send(input.contactEmail, "ארתור — קיבלנו את הבקשה שלך", clientHtml)];
@@ -90,10 +90,10 @@ export async function sendCaseSubmittedEmails(input: {
     const link = APP_URL ? button(`${APP_URL}/admin`, "לצפייה בתיק") : "";
     const adminHtml = shell(
       "תיק חדש התקבל",
-      `<h1 style="font-size:18px;margin:0 0 14px;">תיק חדש: ${input.contactName}</h1>
-<p style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${input.requestType}</p>
-<p style="font-size:14px;line-height:1.7;margin:0 0 4px;">שווי נכס: ${shekel(input.propertyValue)}</p>
-<p style="font-size:14px;line-height:1.7;margin:0;">סכום משכנתא מבוקש: ${shekel(input.mortgageAmount)}</p>
+      `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">תיק חדש: ${input.contactName}</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${input.requestType}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">שווי נכס: ${shekel(input.propertyValue)}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">סכום משכנתא מבוקש: ${shekel(input.mortgageAmount)}</p>
 ${link}`
     );
     results.push(await send(ADMIN_EMAIL, `תיק חדש התקבל — ${input.contactName}`, adminHtml));
@@ -113,11 +113,11 @@ export async function sendAdvisorAssignedEmail(input: {
   const link = APP_URL ? button(`${APP_URL}/advisor`, "לצפייה בתיק") : "";
   const html = shell(
     "תיק חדש ממתין להצעה שלך",
-    `<h1 style="font-size:18px;margin:0 0 14px;">היי ${input.advisorName},</h1>
-<p style="font-size:14px;line-height:1.7;margin:0 0 8px;">שויכת לתיק חדש בארתור.</p>
-<p style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${input.requestType}</p>
-<p style="font-size:14px;line-height:1.7;margin:0 0 4px;">שווי נכס: ${shekel(input.propertyValue)}</p>
-<p style="font-size:14px;line-height:1.7;margin:0;">סכום משכנתא מבוקש: ${shekel(input.mortgageAmount)}</p>
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${input.advisorName},</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 8px;">שויכת לתיק חדש בארתור.</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${input.requestType}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">שווי נכס: ${shekel(input.propertyValue)}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">סכום משכנתא מבוקש: ${shekel(input.mortgageAmount)}</p>
 ${link}`
   );
   return send(input.advisorEmail, "ארתור — תיק חדש ממתין להצעה שלך", html);
@@ -138,11 +138,11 @@ export async function sendWinnerChosenEmails(input: {
     : "";
   const clientHtml = shell(
     "יש לך הצעה",
-    `<h1 style="font-size:18px;margin:0 0 14px;">היי ${input.contactName},</h1>
-<p style="font-size:14px;line-height:1.7;margin:0 0 8px;">נבחרה עבורך ההצעה הטובה ביותר מבין היועצים שבדקו את התיק — של <b>${input.advisorName}</b>${advisorLogoHtml}.</p>
-<p style="font-size:14px;line-height:1.7;margin:0 0 4px;">חיסכון משוער: ${shekel(input.savings)}</p>
-<p style="font-size:14px;line-height:1.7;margin:0;">עלות שירות היועץ: ${shekel(input.fee)}</p>
-<p style="font-size:14px;line-height:1.7;margin:16px 0 0;">היועץ ייצור איתך קשר בקרוב להמשך התהליך.</p>`,
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${input.contactName},</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 8px;">נבחרה עבורך ההצעה הטובה ביותר מבין היועצים שבדקו את התיק — של <b>${input.advisorName}</b>${advisorLogoHtml}.</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">חיסכון משוער: ${shekel(input.savings)}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">עלות שירות היועץ: ${shekel(input.fee)}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:16px 0 0;">היועץ ייצור איתך קשר בקרוב להמשך התהליך.</p>`,
     { showBear: true }
   );
   const results = [await send(input.contactEmail, "ארתור — יש לך הצעה", clientHtml)];
@@ -150,8 +150,8 @@ export async function sendWinnerChosenEmails(input: {
   if (input.advisorEmail) {
     const advisorHtml = shell(
       "זכית בתיק",
-      `<h1 style="font-size:18px;margin:0 0 14px;">מזל טוב ${input.advisorName},</h1>
-<p style="font-size:14px;line-height:1.7;margin:0;">ההצעה שלך נבחרה עבור ${input.contactName}. אפשר ליצור קשר ולהתקדם.</p>`
+      `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">מזל טוב ${input.advisorName},</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">ההצעה שלך נבחרה עבור ${input.contactName}. אפשר ליצור קשר ולהתקדם.</p>`
     );
     results.push(await send(input.advisorEmail, "ארתור — זכית בתיק", advisorHtml));
   }
@@ -162,10 +162,10 @@ export async function sendWinnerChosenEmails(input: {
 export async function sendVerificationCodeEmail(email: string, code: string) {
   const html = shell(
     "קוד האימות שלך",
-    `<h1 style="font-size:18px;margin:0 0 14px;">קוד האימות שלך</h1>
-<p style="font-size:14px;line-height:1.7;margin:0 0 14px;">הזינו את הקוד הבא כדי לאמת את כתובת המייל ולנעול את התיק:</p>
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">קוד האימות שלך</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 14px;">הזינו את הקוד הבא כדי לאמת את כתובת המייל ולנעול את התיק:</p>
 <div style="font-family:Arial,sans-serif;font-size:32px;font-weight:900;letter-spacing:10px;color:#0B2647;background:#F2F8FA;border-radius:10px;padding:16px;text-align:center;">${code}</div>
-<p style="font-size:12px;line-height:1.6;margin:14px 0 0;color:#74869F;">הקוד תקף ל-10 דקות. אם לא ביקשתם קוד זה, אפשר להתעלם מהמייל.</p>`
+<p dir="rtl" style="font-size:12px;line-height:1.6;margin:14px 0 0;color:#74869F;">הקוד תקף ל-10 דקות. אם לא ביקשתם קוד זה, אפשר להתעלם מהמייל.</p>`
   );
   return send(email, "ארתור — קוד האימות שלך", html);
 }
@@ -180,9 +180,9 @@ export async function sendOfferSubmittedEmail(input: {
   const link = APP_URL ? button(`${APP_URL}/admin`, "לצפייה בתיק") : "";
   const html = shell(
     "התקבלה הצעה חדשה",
-    `<h1 style="font-size:18px;margin:0 0 14px;">הצעה חדשה מ-${input.advisorName}</h1>
-<p style="font-size:14px;line-height:1.7;margin:0 0 4px;">חיסכון משוער: ${shekel(input.savings)}</p>
-<p style="font-size:14px;line-height:1.7;margin:0;">עלות שירות: ${shekel(input.fee)}</p>
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">הצעה חדשה מ-${input.advisorName}</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">חיסכון משוער: ${shekel(input.savings)}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">עלות שירות: ${shekel(input.fee)}</p>
 ${link}`
   );
   return send(ADMIN_EMAIL, `הצעה חדשה מ-${input.advisorName}`, html);
