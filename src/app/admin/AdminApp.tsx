@@ -18,6 +18,7 @@ import {
   updateAdvisorCommission,
   uploadAdvisorLogo,
   uploadCleanDoc,
+  uploadOriginalDoc,
 } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
@@ -540,7 +541,7 @@ function LoanTracksCard({ tracks, totals, source }: { tracks: LoanTrack[]; total
 
 function CaseDocuments({ case_: c, onUpdate }: { case_: AdminCase; onUpdate: (patch: Partial<AdminCase>) => void }) {
   const [downloading, setDownloading] = useState<"original" | "clean" | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<"original" | "clean" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function download(kind: "original" | "clean") {
@@ -554,21 +555,33 @@ function CaseDocuments({ case_: c, onUpdate }: { case_: AdminCase; onUpdate: (pa
     window.open(url, "_blank");
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUploadOriginal(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    setUploading("original");
+    setError(null);
+    const res = await uploadOriginalDoc(c.id, file);
+    setUploading(null);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    onUpdate({ originalDocName: file.name, originalDocType: file.type });
+  }
+
+  async function handleUploadClean(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading("clean");
     setError(null);
     const res = await uploadCleanDoc(c.id, file);
-    setUploading(false);
+    setUploading(null);
     if (!res.ok) {
       setError(res.error);
       return;
     }
     onUpdate({ cleanDocName: file.name, cleanDocType: file.type });
   }
-
-  if (!c.originalDocName && !c.cleanDocName) return null;
 
   return (
     <div className="card">
@@ -583,7 +596,11 @@ function CaseDocuments({ case_: c, onUpdate }: { case_: AdminCase; onUpdate: (pa
           <span style={{ color: "var(--ink-faint)" }}>לא הועלה</span>
         )}
       </div>
-      <div className="identity-row">
+      <label className="btn btn-ghost" style={{ alignSelf: "flex-start", cursor: "pointer" }}>
+        {uploading === "original" ? "מעלה…" : c.originalDocName ? "החלפת המסמך המקורי" : "העלאת המסמך המקורי (אם הלקוח שלח אותו בנפרד)"}
+        <input type="file" accept="application/pdf,image/*" onChange={handleUploadOriginal} disabled={uploading === "original"} style={{ display: "none" }} />
+      </label>
+      <div className="identity-row" style={{ marginTop: 6 }}>
         <span>הגרסה הנקייה (תוצג ליועצים)</span>
         {c.cleanDocName ? (
           <button type="button" className="btn-link" disabled={downloading === "clean"} onClick={() => download("clean")}>
@@ -594,8 +611,8 @@ function CaseDocuments({ case_: c, onUpdate }: { case_: AdminCase; onUpdate: (pa
         )}
       </div>
       <label className="btn btn-ghost" style={{ alignSelf: "flex-start", cursor: "pointer" }}>
-        {uploading ? "מעלה…" : c.cleanDocName ? "החלפת הגרסה הנקייה" : "העלאת גרסה נקייה (אחרי הסרת פרטים אישיים)"}
-        <input type="file" accept="application/pdf,image/*" onChange={handleUpload} disabled={uploading} style={{ display: "none" }} />
+        {uploading === "clean" ? "מעלה…" : c.cleanDocName ? "החלפת הגרסה הנקייה" : "העלאת גרסה נקייה (אחרי הסרת פרטים אישיים)"}
+        <input type="file" accept="application/pdf,image/*" onChange={handleUploadClean} disabled={uploading === "clean"} style={{ display: "none" }} />
       </label>
       {error && (
         <div className="match-note warn">
@@ -603,7 +620,7 @@ function CaseDocuments({ case_: c, onUpdate }: { case_: AdminCase; onUpdate: (pa
         </div>
       )}
       <div className="anon-note">
-        הורידו את המסמך המקורי, מחקו ממנו שם, ת״ז, כתובת ומספר חשבון, ואז העלו כאן את הקובץ הנקי — רק הוא יוצג ליועצים המשויכים לתיק.
+        אם הלקוח לא העלה דוח יתרות באשף, אפשר לצרף כאן ידנית מסמך שהוא שלח בנפרד. אחר כך: הורידו את המקור, מחקו ממנו שם, ת״ז, כתובת ומספר חשבון, והעלו את הקובץ הנקי — רק הוא יוצג ליועצים המשויכים לתיק.
       </div>
     </div>
   );

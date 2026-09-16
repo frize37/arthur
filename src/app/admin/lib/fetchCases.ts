@@ -302,3 +302,20 @@ export async function uploadCleanDoc(caseId: string, file: File): Promise<{ ok: 
   if (updateErr) return { ok: false, error: updateErr.message };
   return { ok: true };
 }
+
+// For cases where the client didn't upload a document through the wizard
+// (manual entry) but sent one separately (email, WhatsApp) — lets the admin
+// attach it to the case by hand, same as the wizard's own upload would have.
+export async function uploadOriginalDoc(caseId: string, file: File): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = createClient();
+  const { error: uploadErr } = await supabase.storage
+    .from("case-documents")
+    .upload(`original/${caseId}`, file, { upsert: true, contentType: file.type });
+  if (uploadErr) return { ok: false, error: uploadErr.message };
+  const { error: updateErr } = await supabase
+    .from("cases")
+    .update({ original_doc_name: file.name, original_doc_type: file.type })
+    .eq("id", caseId);
+  if (updateErr) return { ok: false, error: updateErr.message };
+  return { ok: true };
+}
