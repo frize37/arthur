@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArthurMascot } from "@/components/ArthurMascot";
+import { SiteFooter } from "@/components/SiteFooter";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -105,6 +106,8 @@ export default function LoginPage() {
           </button>
         </form>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }

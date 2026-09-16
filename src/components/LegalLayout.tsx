@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SiteFooter } from "./SiteFooter";
 
 export function LegalLayout({ title, updated, children }: { title: string; updated: string; children: React.ReactNode }) {
   return (
@@ -25,11 +26,7 @@ export function LegalLayout({ title, updated, children }: { title: string; updat
         </div>
       </main>
 
-      <footer className="border-t border-line py-8">
-        <div className="max-w-5xl mx-auto px-5 flex flex-col items-center gap-2 text-center">
-          <p className="text-[11px] text-ink-faint">© ארתור — כל הזכויות שמורות.</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

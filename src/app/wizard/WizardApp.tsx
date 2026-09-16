@@ -20,6 +20,7 @@ import {
 } from "./stages/formStages";
 import { DocumentsStage } from "./stages/DocumentsStage";
 import { SummaryStage } from "./stages/SummaryStage";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export function WizardApp() {
   const [state, dispatch] = useReducer(wizardReducer, initialWizardState, (init) => ({ ...init, caseId: crypto.randomUUID() }));
@@ -64,6 +65,8 @@ export function WizardApp() {
         {state.stage === "documents" && <DocumentsStage {...stageProps} />}
         {state.stage === "summary" && <SummaryStage {...stageProps} />}
       </div>
+
+      <SiteFooter />
     </div>
   );
 }
