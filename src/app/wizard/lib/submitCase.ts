@@ -70,7 +70,12 @@ export async function submitCaseToDatabase(state: WizardState) {
     // Postgres to return the inserted row via RETURNING fails RLS even
     // though the insert itself succeeds.
     const { error } = await supabase.from("cases").insert(row);
-    if (error) {
+    // 23505 = unique-violation on the id we generated once at wizard start.
+    // If the first attempt actually committed but the client never saw the
+    // response (dropped connection, timeout), a retry would otherwise show
+    // a raw duplicate-key error even though the case was saved — treat it
+    // as the success it already is instead.
+    if (error && error.code !== "23505") {
       console.error("Failed to submit case to database:", error.message);
       return { ok: false as const, error: error.message };
     }

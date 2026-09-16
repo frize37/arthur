@@ -327,9 +327,9 @@ export async function assignAdvisorsToCase(caseId: string, advisorIds: string[])
   return true;
 }
 
-export async function persistWinner(caseId: string, offers: Offer[]) {
+export async function persistWinner(caseId: string, offers: Offer[]): Promise<boolean> {
   const supabase = createClient();
-  await Promise.all(
+  const offerResults = await Promise.all(
     offers.map((o) =>
       supabase
         .from("offers")
@@ -338,7 +338,17 @@ export async function persistWinner(caseId: string, offers: Offer[]) {
         .eq("advisor_id", o.advisorId)
     )
   );
-  await supabase.from("cases").update({ status: "sent" }).eq("id", caseId);
+  const offerErr = offerResults.find((r) => r.error)?.error;
+  if (offerErr) {
+    console.error("Failed to persist winning offer:", offerErr.message);
+    return false;
+  }
+  const { error: caseErr } = await supabase.from("cases").update({ status: "sent" }).eq("id", caseId);
+  if (caseErr) {
+    console.error("Failed to update case status to sent:", caseErr.message);
+    return false;
+  }
+  return true;
 }
 
 export async function markCaseCompleted(caseId: string, note: string) {

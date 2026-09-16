@@ -16,14 +16,24 @@ function safeEqual(a: string, b: string): boolean {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-// Stateless one-time code: the code itself never leaves the server except
-// inside the email. The browser only ever holds a signed token carrying
-// {email, code, exp} — it can't be read or forged without SECRET, so there's
-// no server-side store to keep, expire, or clean up.
+// A keyed hash of the code, not the code itself — codeHash alone can't be
+// reversed back to the 4-digit code without SECRET, unlike the code being
+// stored directly. (An earlier version of this file put the raw code inside
+// the token — since HMAC only proves the token wasn't tampered with, not
+// that its contents are private, that let anyone read the code straight out
+// of the token the client legitimately holds, skipping email delivery
+// entirely. Never do that again.)
+function hashCode(code: string): string {
+  return crypto.createHmac("sha256", SECRET).update(`code:${code}`).digest("hex");
+}
+
+// Stateless one-time code: the browser only ever holds a signed token
+// carrying {email, codeHash, exp} — it can't be read or forged without
+// SECRET, so there's no server-side store to keep, expire, or clean up.
 export async function createEmailVerification(email: string): Promise<string> {
   const code = String(Math.floor(1000 + Math.random() * 9000));
   const exp = Date.now() + TTL_MS;
-  const payloadB64 = Buffer.from(JSON.stringify({ email, code, exp }), "utf8").toString("base64url");
+  const payloadB64 = Buffer.from(JSON.stringify({ email, codeHash: hashCode(code), exp }), "utf8").toString("base64url");
   const token = `${payloadB64}.${sign(payloadB64)}`;
   const result = await sendVerificationCodeEmail(email, code);
   if (!result.ok) {
@@ -39,7 +49,7 @@ export function checkEmailVerification(token: string, email: string, code: strin
     const parsed = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
     if (Date.now() > parsed.exp) return false;
     if (parsed.email !== email) return false;
-    return safeEqual(String(parsed.code), code);
+    return safeEqual(String(parsed.codeHash), hashCode(code));
   } catch {
     return false;
   }

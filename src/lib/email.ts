@@ -30,6 +30,19 @@ function shekel(n: number | null | undefined) {
   return `₪${Math.round(n).toLocaleString("he-IL")}`;
 }
 
+// Every value interpolated into an email body originates from user input
+// (the public wizard's contactName, or names entered when creating an
+// advisor account) — escape it before it lands in HTML sent to someone
+// else's inbox.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function shell(previewText: string, bodyHtml: string, opts: { showBear?: boolean } = {}) {
   const logoHtml = APP_URL
     ? `<img src="${APP_URL}/brand/arthur-wordmark-email.png" alt="ארתור" width="110" style="display:block;height:auto;">`
@@ -79,7 +92,7 @@ export async function sendCaseSubmittedEmails(input: {
 }) {
   const clientHtml = shell(
     "קיבלנו את הבקשה שלך",
-    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${input.contactName},</h1>
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${escapeHtml(input.contactName)},</h1>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 8px;">קיבלנו את הפרטים שלך בהצלחה. אנחנו עכשיו שולחים אותם למספר יועצי משכנתא, כדי שיציעו לך את התנאים הכי טובים שהם יכולים.</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">נחזור אליך ברגע שיהיו הצעות מרוכזות — בדרך כלל תוך יום עסקים.</p>`,
     { showBear: true }
@@ -90,8 +103,8 @@ export async function sendCaseSubmittedEmails(input: {
     const link = APP_URL ? button(`${APP_URL}/admin`, "לצפייה בתיק") : "";
     const adminHtml = shell(
       "תיק חדש התקבל",
-      `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">תיק חדש: ${input.contactName}</h1>
-<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${input.requestType}</p>
+      `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">תיק חדש: ${escapeHtml(input.contactName)}</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${escapeHtml(input.requestType)}</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">שווי נכס: ${shekel(input.propertyValue)}</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">סכום משכנתא מבוקש: ${shekel(input.mortgageAmount)}</p>
 ${link}`
@@ -113,9 +126,9 @@ export async function sendAdvisorAssignedEmail(input: {
   const link = APP_URL ? button(`${APP_URL}/advisor`, "לצפייה בתיק") : "";
   const html = shell(
     "תיק חדש ממתין להצעה שלך",
-    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${input.advisorName},</h1>
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${escapeHtml(input.advisorName)},</h1>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 8px;">שויכת לתיק חדש בארתור.</p>
-<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${input.requestType}</p>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">סוג בקשה: ${escapeHtml(input.requestType)}</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">שווי נכס: ${shekel(input.propertyValue)}</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">סכום משכנתא מבוקש: ${shekel(input.mortgageAmount)}</p>
 ${link}`
@@ -134,12 +147,12 @@ export async function sendWinnerChosenEmails(input: {
   fee: number;
 }) {
   const advisorLogoHtml = input.advisorLogoUrl
-    ? `<img src="${input.advisorLogoUrl}" alt="${input.advisorName}" width="40" height="40" style="display:inline-block;vertical-align:middle;border-radius:8px;object-fit:cover;margin-inline-start:8px;">`
+    ? `<img src="${input.advisorLogoUrl}" alt="${escapeHtml(input.advisorName)}" width="40" height="40" style="display:inline-block;vertical-align:middle;border-radius:8px;object-fit:cover;margin-inline-start:8px;">`
     : "";
   const clientHtml = shell(
     "יש לך הצעה",
-    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${input.contactName},</h1>
-<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 8px;">נבחרה עבורך ההצעה הטובה ביותר מבין היועצים שבדקו את התיק — של <b>${input.advisorName}</b>${advisorLogoHtml}.</p>
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">היי ${escapeHtml(input.contactName)},</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 8px;">נבחרה עבורך ההצעה הטובה ביותר מבין היועצים שבדקו את התיק — של <b>${escapeHtml(input.advisorName)}</b>${advisorLogoHtml}.</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">חיסכון משוער: ${shekel(input.savings)}</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">עלות שירות היועץ: ${shekel(input.fee)}</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:16px 0 0;">היועץ ייצור איתך קשר בקרוב להמשך התהליך.</p>`,
@@ -150,8 +163,8 @@ export async function sendWinnerChosenEmails(input: {
   if (input.advisorEmail) {
     const advisorHtml = shell(
       "זכית בתיק",
-      `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">מזל טוב ${input.advisorName},</h1>
-<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">ההצעה שלך נבחרה עבור ${input.contactName}. אפשר ליצור קשר ולהתקדם.</p>`
+      `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">מזל טוב ${escapeHtml(input.advisorName)},</h1>
+<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">ההצעה שלך נבחרה עבור ${escapeHtml(input.contactName)}. אפשר ליצור קשר ולהתקדם.</p>`
     );
     results.push(await send(input.advisorEmail, "ארתור — זכית בתיק", advisorHtml));
   }
@@ -180,7 +193,7 @@ export async function sendOfferSubmittedEmail(input: {
   const link = APP_URL ? button(`${APP_URL}/admin`, "לצפייה בתיק") : "";
   const html = shell(
     "התקבלה הצעה חדשה",
-    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">הצעה חדשה מ-${input.advisorName}</h1>
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">הצעה חדשה מ-${escapeHtml(input.advisorName)}</h1>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;">חיסכון משוער: ${shekel(input.savings)}</p>
 <p dir="rtl" style="font-size:14px;line-height:1.7;margin:0;">עלות שירות: ${shekel(input.fee)}</p>
 ${link}`

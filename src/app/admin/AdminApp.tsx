@@ -226,14 +226,21 @@ function DetailView({
 }) {
   const [selectedOfferIdx, setSelectedOfferIdx] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const keyPoints = deriveKeyPoints(c);
 
   async function confirmWinner() {
     if (selectedOfferIdx === null) return;
     const winnerAdvisor = advisors[c.offers[selectedOfferIdx].advisorId];
     const offers: Offer[] = c.offers.map((o, i) => ({ ...o, winner: i === selectedOfferIdx }));
     setConfirming(true);
-    await persistWinner(c.id, offers);
+    setConfirmError(null);
+    const ok = await persistWinner(c.id, offers);
     setConfirming(false);
+    if (!ok) {
+      setConfirmError("לא הצלחנו לשמור את הבחירה. נסו שוב בעוד רגע.");
+      return;
+    }
     onUpdate({
       status: "sent",
       offers,
@@ -287,21 +294,16 @@ function DetailView({
             </div>
           </div>
 
-          {(() => {
-            const points = deriveKeyPoints(c);
-            return (
-              points.length > 0 && (
-                <div className="card" style={{ borderColor: "var(--accent)" }}>
-                  <h3><svg><use href="#ic-alert" /></svg>נקודות חשובות</h3>
-                  <ul style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 6, fontSize: 13.5, color: "var(--ink-soft)" }}>
-                    {points.map((point, i) => (
-                      <li key={i}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              )
-            );
-          })()}
+          {keyPoints.length > 0 && (
+            <div className="card" style={{ borderColor: "var(--accent)" }}>
+              <h3><svg><use href="#ic-alert" /></svg>נקודות חשובות</h3>
+              <ul style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 6, fontSize: 13.5, color: "var(--ink-soft)" }}>
+                {keyPoints.map((point, i) => (
+                  <li key={i}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="card">
             <h3><svg><use href="#ic-home" /></svg>תקציר התיק</h3>
@@ -375,6 +377,11 @@ function DetailView({
                 <button className="btn btn-primary" type="button" style={{ width: "100%" }} disabled={selectedOfferIdx === null || confirming} onClick={confirmWinner}>
                   {confirming ? "שולח…" : "אשרו את ההצעה שנבחרה ושלחו ללקוח"}
                 </button>
+                {confirmError && (
+                  <div className="match-note warn">
+                    <svg><use href="#ic-alert" /></svg>{confirmError}
+                  </div>
+                )}
                 <div className="anon-note">הבחירה כאן היא שלכם — המערכת רק מציגה את הנתונים לצד הצעת פתיחה חכמה, ההחלטה הסופית תמיד אנושית.</div>
               </div>
             )}
