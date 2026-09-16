@@ -77,6 +77,7 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
     try {
       const form = new FormData();
       form.append("file", file);
+      form.append("caseId", state.caseId);
       const res = await fetch("/api/parse-mortgage-document", { method: "POST", body: form });
       const json = await res.json();
       if (!json.ok) {
@@ -85,6 +86,8 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
         setMood("sad");
         return;
       }
+      set("originalDocName", file.name);
+      set("originalDocType", file.type);
       const result = json.result;
       dispatch({
         type: "DOC_PARSED",

@@ -22,7 +22,7 @@ import { DocumentsStage } from "./stages/DocumentsStage";
 import { SummaryStage } from "./stages/SummaryStage";
 
 export function WizardApp() {
-  const [state, dispatch] = useReducer(wizardReducer, initialWizardState);
+  const [state, dispatch] = useReducer(wizardReducer, initialWizardState, (init) => ({ ...init, caseId: crypto.randomUUID() }));
 
   function set<K extends keyof WizardState>(field: K, value: WizardState[K]) {
     dispatch({ type: "SET", field, value });

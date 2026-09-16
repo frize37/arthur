@@ -33,7 +33,7 @@ export function wizardReducer(state: WizardState, action: Action): WizardState {
       return { ...state, stage: action.stages[i - 1] };
     }
     case "RESET":
-      return { ...initialWizardState };
+      return { ...initialWizardState, caseId: crypto.randomUUID() };
     case "HYDRATE":
       return { ...state, ...action.state };
     case "DOC_PARSED": {

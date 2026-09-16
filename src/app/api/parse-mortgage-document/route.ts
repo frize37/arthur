@@ -1,5 +1,6 @@
 import "server-only";
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
 
   const form = await req.formData();
   const file = form.get("file");
+  const caseId = form.get("caseId");
   if (!(file instanceof File)) {
     return NextResponse.json({ ok: false, error: "לא צורף קובץ." }, { status: 400 });
   }
@@ -77,6 +79,22 @@ export async function POST(req: NextRequest) {
 
   const bytes = Buffer.from(await file.arrayBuffer());
   const base64 = bytes.toString("base64");
+
+  // The wizard runs as the anonymous role with no Storage access at all —
+  // stashing the original document here, via the service-role client, is
+  // what lets the admin later download it without opening up any anon
+  // write policy on the bucket. Best-effort: a storage hiccup shouldn't
+  // block the AI parse the user is actually waiting on.
+  if (typeof caseId === "string" && caseId) {
+    try {
+      await supabaseAdmin.storage.from("case-documents").upload(`original/${caseId}`, bytes, {
+        contentType: file.type,
+        upsert: true,
+      });
+    } catch (err) {
+      console.error("Failed to store original document:", err instanceof Error ? err.message : String(err));
+    }
+  }
 
   try {
     const res = await fetch(

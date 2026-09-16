@@ -129,6 +129,7 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
         accountForecastRate: row.doc_account_forecast_rate != null ? Number(row.doc_account_forecast_rate) : null,
       },
       docSource: row.doc_source ?? null,
+      cleanDocName: row.clean_doc_name ?? null,
       offer: myOffer ? { savings: Number(myOffer.savings ?? 0), fee: Number(myOffer.fee ?? 0) } : undefined,
       client:
         row.contact_name || row.contact_phone || row.contact_email
@@ -140,20 +141,23 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
   });
 }
 
-export async function fetchMyCommission(advisorId: string): Promise<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null }> {
+export async function fetchMyCommission(
+  advisorId: string
+): Promise<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null; logoUrl: string | null }> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("advisors_directory")
-    .select("commission_type, commission_value")
+    .select("commission_type, commission_value, logo_url")
     .eq("id", advisorId)
     .maybeSingle();
   if (error || !data) {
     if (error) console.error("Failed to fetch commission:", error.message);
-    return { commissionType: null, commissionValue: null };
+    return { commissionType: null, commissionValue: null, logoUrl: null };
   }
   return {
     commissionType: data.commission_type ?? null,
     commissionValue: data.commission_value != null ? Number(data.commission_value) : null,
+    logoUrl: data.logo_url ?? null,
   };
 }
 
@@ -188,4 +192,14 @@ export async function submitOffer(
     return false;
   }
   return true;
+}
+
+export async function getCleanDocUrl(caseId: string): Promise<string | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase.storage.from("case-documents").createSignedUrl(`clean/${caseId}`, 60);
+  if (error || !data) {
+    console.error("Failed to create signed URL for clean doc:", error?.message);
+    return null;
+  }
+  return data.signedUrl;
 }

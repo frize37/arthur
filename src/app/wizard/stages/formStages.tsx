@@ -32,7 +32,7 @@ export function WelcomeStage({ go }: StageProps) {
                   <br />
                   לפני ש<span className="hl">ארתור בודק</span>.
                 </h1>
-                <p>כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר יועצי משכנתאות מתחרים על התיק שלכם. תדעו בדיוק כמה תחסכו ומה זה יעלה.</p>
+                <p>כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר יועצי משכנתאות מתחרים על התיק שלכם ומציעים לכם את התנאים הכי טובים שהם יכולים.</p>
               </div>
               <div
                 className="hero-band__stage"
@@ -59,7 +59,7 @@ export function WelcomeStage({ go }: StageProps) {
       </div>
 
       <div className="trust-row">
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-down" /></svg></div><span>עד 50% חיסכון</span></div>
+        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-down" /></svg></div><span>חיסכון ענק אפשרי</span></div>
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-upload" /></svg></div><span>יועצים מתחרים על התיק</span></div>
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-clock" /></svg></div><span>2 דקות וההצעה בדרך</span></div>
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-cash" /></svg></div><span>ליווי אישי צמוד</span></div>

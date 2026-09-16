@@ -34,9 +34,27 @@ export async function fetchAdvisors(): Promise<Record<string, Advisor>> {
       email: row.email ?? null,
       commissionType: row.commission_type ?? null,
       commissionValue: row.commission_value != null ? Number(row.commission_value) : null,
+      logoUrl: row.logo_url ?? null,
     };
   }
   return map;
+}
+
+export async function uploadAdvisorLogo(advisorId: string, file: File): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const supabase = createClient();
+  const path = `${advisorId}/${Date.now()}-${file.name}`;
+  const { error: uploadErr } = await supabase.storage.from("advisor-logos").upload(path, file, { upsert: true });
+  if (uploadErr) {
+    console.error("Failed to upload advisor logo:", uploadErr.message);
+    return { ok: false, error: uploadErr.message };
+  }
+  const { data } = supabase.storage.from("advisor-logos").getPublicUrl(path);
+  const { error: updateErr } = await supabase.from("advisors").update({ logo_url: data.publicUrl }).eq("id", advisorId);
+  if (updateErr) {
+    console.error("Failed to save advisor logo url:", updateErr.message);
+    return { ok: false, error: updateErr.message };
+  }
+  return { ok: true, url: data.publicUrl };
 }
 
 export async function createAdvisorAccount(input: {
@@ -158,7 +176,7 @@ export async function fetchCases(): Promise<AdminCase[]> {
       offers,
       timeline: [
         { label: "התיק נקלט מהאשף", time: relativeTime(row.created_at) },
-        ...(row.phone_verified && row.email_verified ? [{ label: "זהות אומתה (טלפון+מייל)", time: relativeTime(row.created_at) }] : []),
+        ...(row.email_verified ? [{ label: "זהות אומתה (מייל)", time: relativeTime(row.created_at) }] : []),
       ],
       assignedAdvisorIds: (assignmentRows ?? []).filter((a) => a.case_id === row.id).map((a) => a.advisor_id),
       docTracks: (trackRows ?? [])
@@ -194,6 +212,10 @@ export async function fetchCases(): Promise<AdminCase[]> {
         accountForecastRate: row.doc_account_forecast_rate != null ? Number(row.doc_account_forecast_rate) : null,
       },
       docSource: row.doc_source ?? null,
+      originalDocName: row.original_doc_name ?? null,
+      originalDocType: row.original_doc_type ?? null,
+      cleanDocName: row.clean_doc_name ?? null,
+      cleanDocType: row.clean_doc_type ?? null,
       completionNote: row.completion_note ?? null,
       completedBy: row.completed_by ?? null,
     };
@@ -255,4 +277,28 @@ export async function markCaseNoDeal(caseId: string, note: string) {
     return false;
   }
   return true;
+}
+
+export async function getCaseDocUrl(caseId: string, kind: "original" | "clean"): Promise<string | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase.storage.from("case-documents").createSignedUrl(`${kind}/${caseId}`, 60);
+  if (error || !data) {
+    console.error(`Failed to create signed URL for ${kind} doc:`, error?.message);
+    return null;
+  }
+  return data.signedUrl;
+}
+
+export async function uploadCleanDoc(caseId: string, file: File): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = createClient();
+  const { error: uploadErr } = await supabase.storage
+    .from("case-documents")
+    .upload(`clean/${caseId}`, file, { upsert: true, contentType: file.type });
+  if (uploadErr) return { ok: false, error: uploadErr.message };
+  const { error: updateErr } = await supabase
+    .from("cases")
+    .update({ clean_doc_name: file.name, clean_doc_type: file.type })
+    .eq("id", caseId);
+  if (updateErr) return { ok: false, error: updateErr.message };
+  return { ok: true };
 }

@@ -15,6 +15,7 @@ export function AdminIcons() {
         <symbol id="ic-send" viewBox="0 0 24 24"><path d="M21 3 3 10.5l7 2.5 2 7L21 3Z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" /><path d="M12 13 21 3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /></symbol>
         <symbol id="ic-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2" fill="none" /><path d="M4 6.5 12 13l8-6.5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></symbol>
         <symbol id="ic-phone" viewBox="0 0 24 24"><path d="M5 4h3.5l1.5 5-2 1.5c1 2.2 2.8 4 5 5l1.5-2 5 1.5V19a2 2 0 0 1-2 2C10.6 21 3 13.4 3 6a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" /></symbol>
+        <symbol id="ic-doc" viewBox="0 0 24 24"><path d="M6 2.5h8l4 4V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" /><path d="M14 2.5V7h4M8 12h8M8 16h8" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /></symbol>
       </defs>
     </svg>
   );

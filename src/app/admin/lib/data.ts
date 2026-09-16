@@ -54,6 +54,10 @@ export interface AdminCase {
   docTracks: LoanTrack[];
   docTotals: DocTotals;
   docSource: "ai" | "manual" | null;
+  originalDocName: string | null;
+  originalDocType: string | null;
+  cleanDocName: string | null;
+  cleanDocType: string | null;
   completionNote: string | null;
   completedBy: "advisor" | "admin" | null;
 }
@@ -68,6 +72,7 @@ export interface Advisor {
   email: string | null;
   commissionType: "percent" | "fixed" | null;
   commissionValue: number | null;
+  logoUrl: string | null;
 }
 
 export const LABELS = {

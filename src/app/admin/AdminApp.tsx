@@ -13,8 +13,11 @@ import {
   fetchCases,
   markCaseCompleted,
   markCaseNoDeal,
+  getCaseDocUrl,
   persistWinner,
   updateAdvisorCommission,
+  uploadAdvisorLogo,
+  uploadCleanDoc,
 } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
@@ -232,6 +235,23 @@ function DetailView({
       timeline: [...c.timeline, { label: `נבחרה הצעת ${winnerAdvisor.name} ונשלחה ללקוח`, time: "עכשיו" }],
     });
     confettiBurst();
+
+    const winningOffer = offers[selectedOfferIdx];
+    fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "winner-chosen",
+        caseId: c.id,
+        contactName: c.client.name,
+        contactEmail: c.client.email,
+        advisorName: winnerAdvisor.name,
+        advisorEmail: winnerAdvisor.email,
+        advisorLogoUrl: winnerAdvisor.logoUrl,
+        savings: winningOffer.savings,
+        fee: winningOffer.fee,
+      }),
+    }).catch((err) => console.error("Failed to trigger winner-chosen email:", err));
   }
 
   return (
@@ -274,12 +294,17 @@ function DetailView({
 
           {c.docTracks.length > 0 && <LoanTracksCard tracks={c.docTracks} totals={c.docTotals} source={c.docSource} />}
 
+          <CaseDocuments case_={c} onUpdate={onUpdate} />
+
           {c.status === "new" ? (
             <div className="card">
               <h3><svg><use href="#ic-send" /></svg>הקצאת התיק ליועצים</h3>
               <AssignAdvisors
                 caseId={c.id}
                 advisors={advisors}
+                requestType={c.requestType}
+                mortgageAmount={c.brief.mortgage}
+                propertyValue={c.brief.propertyValue}
                 onAssigned={(ids) =>
                   onUpdate({
                     status: "awaiting",
@@ -513,13 +538,90 @@ function LoanTracksCard({ tracks, totals, source }: { tracks: LoanTrack[]; total
   );
 }
 
+function CaseDocuments({ case_: c, onUpdate }: { case_: AdminCase; onUpdate: (patch: Partial<AdminCase>) => void }) {
+  const [downloading, setDownloading] = useState<"original" | "clean" | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function download(kind: "original" | "clean") {
+    setDownloading(kind);
+    const url = await getCaseDocUrl(c.id, kind);
+    setDownloading(null);
+    if (!url) {
+      setError("לא הצלחנו ליצור קישור להורדה. נסו שוב.");
+      return;
+    }
+    window.open(url, "_blank");
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    const res = await uploadCleanDoc(c.id, file);
+    setUploading(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    onUpdate({ cleanDocName: file.name, cleanDocType: file.type });
+  }
+
+  if (!c.originalDocName && !c.cleanDocName) return null;
+
+  return (
+    <div className="card">
+      <h3><svg><use href="#ic-doc" /></svg>מסמכי הלקוח</h3>
+      <div className="identity-row">
+        <span>המסמך המקורי (עם פרטים אישיים — לעיניך בלבד)</span>
+        {c.originalDocName ? (
+          <button type="button" className="btn-link" disabled={downloading === "original"} onClick={() => download("original")}>
+            {downloading === "original" ? "יוצר קישור…" : `הורדה — ${c.originalDocName}`}
+          </button>
+        ) : (
+          <span style={{ color: "var(--ink-faint)" }}>לא הועלה</span>
+        )}
+      </div>
+      <div className="identity-row">
+        <span>הגרסה הנקייה (תוצג ליועצים)</span>
+        {c.cleanDocName ? (
+          <button type="button" className="btn-link" disabled={downloading === "clean"} onClick={() => download("clean")}>
+            {downloading === "clean" ? "יוצר קישור…" : `הורדה — ${c.cleanDocName}`}
+          </button>
+        ) : (
+          <span style={{ color: "var(--ink-faint)" }}>עדיין לא הועלתה</span>
+        )}
+      </div>
+      <label className="btn btn-ghost" style={{ alignSelf: "flex-start", cursor: "pointer" }}>
+        {uploading ? "מעלה…" : c.cleanDocName ? "החלפת הגרסה הנקייה" : "העלאת גרסה נקייה (אחרי הסרת פרטים אישיים)"}
+        <input type="file" accept="application/pdf,image/*" onChange={handleUpload} disabled={uploading} style={{ display: "none" }} />
+      </label>
+      {error && (
+        <div className="match-note warn">
+          <svg><use href="#ic-alert" /></svg>{error}
+        </div>
+      )}
+      <div className="anon-note">
+        הורידו את המסמך המקורי, מחקו ממנו שם, ת״ז, כתובת ומספר חשבון, ואז העלו כאן את הקובץ הנקי — רק הוא יוצג ליועצים המשויכים לתיק.
+      </div>
+    </div>
+  );
+}
+
 function AssignAdvisors({
   caseId,
   advisors,
+  requestType,
+  mortgageAmount,
+  propertyValue,
   onAssigned,
 }: {
   caseId: string;
   advisors: Record<string, Advisor>;
+  requestType: string;
+  mortgageAmount: number | null;
+  propertyValue: number | null;
   onAssigned: (advisorIds: string[]) => void;
 }) {
   const [selected, setSelected] = useState<string[]>([]);
@@ -537,6 +639,23 @@ function AssignAdvisors({
     if (ok) {
       onAssigned(selected);
       confettiBurst();
+      for (const id of selected) {
+        const advisor = advisors[id];
+        if (!advisor?.email) continue;
+        fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "advisor-assigned",
+            caseId,
+            advisorEmail: advisor.email,
+            advisorName: advisor.name,
+            requestType,
+            mortgageAmount,
+            propertyValue,
+          }),
+        }).catch((err) => console.error("Failed to trigger advisor-assigned email:", err));
+      }
     }
   }
 
@@ -610,7 +729,17 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    const res = await uploadAdvisorLogo(a.id, file);
+    setUploadingLogo(false);
+    if (res.ok) onSaved();
+  }
 
   async function save() {
     setSaving(true);
@@ -631,7 +760,16 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
 
   return (
     <div className="lead-row" key={a.id}>
-      <div className="lead-row__avatar">{initials}</div>
+      {canManage ? (
+        <label className="lead-row__avatar" style={{ cursor: "pointer", overflow: "hidden", padding: 0 }} title="להעלאת לוגו">
+          {uploadingLogo ? <span className="spinner" /> : a.logoUrl ? <img src={a.logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials}
+          <input type="file" accept="image/*" onChange={handleLogoChange} style={{ display: "none" }} />
+        </label>
+      ) : a.logoUrl ? (
+        <img className="lead-row__avatar" src={a.logoUrl} alt="" style={{ objectFit: "cover" }} />
+      ) : (
+        <div className="lead-row__avatar">{initials}</div>
+      )}
       <div className="lead-row__info"><strong>{a.name}</strong><small>{a.specialty}{a.email ? ` · ${a.email}` : ""}</small></div>
       <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
       <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>

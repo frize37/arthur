@@ -5,7 +5,7 @@ import "./advisor.css";
 import { AdvisorIcons } from "./components/AdvisorIcons";
 import { ArthurMascot } from "@/components/ArthurMascot";
 import { AdvisorCase, LABELS, STATUS_META, computeCase, computeCommission } from "./lib/data";
-import { fetchMyCases, fetchMyCommission, submitCompletion, submitOffer } from "./lib/fetchCases";
+import { fetchMyCases, fetchMyCommission, getCleanDocUrl, submitCompletion, submitOffer } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -26,9 +26,10 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bellOpen, setBellOpen] = useState(false);
   const [bellSeen, setBellSeen] = useState(false);
-  const [commission, setCommission] = useState<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null }>({
+  const [commission, setCommission] = useState<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null; logoUrl: string | null }>({
     commissionType: null,
     commissionValue: null,
+    logoUrl: null,
   });
 
   useEffect(() => {
@@ -54,6 +55,20 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
       .filter((c) => (c.status === "won" || c.status === "closed") && c.offer)
       .reduce((sum, c) => sum + (c.offer?.savings ?? 0), 0);
     return { open, pending, sent, savings };
+  }, [cases]);
+
+  const notifications = useMemo(() => {
+    const items: { icon: string; text: string; time: string }[] = [];
+    for (const c of cases) {
+      if (c.status === "pending") {
+        items.push({ icon: "ic-sparkle", text: `תיק חדש ממתין להצעה שלך — ${c.id}`, time: c.receivedAt });
+      } else if (c.status === "won") {
+        items.push({ icon: "ic-check-circle", text: `זכית בתיק ${c.id} — אפשר ליצור קשר עם הלקוח`, time: c.receivedAt });
+      } else if (c.status === "closed") {
+        items.push({ icon: "ic-check-circle", text: `עסקה הושלמה בתיק ${c.id}`, time: c.receivedAt });
+      }
+    }
+    return items;
   }, [cases]);
 
   const selected = cases.find((c) => c.id === selectedId) ?? null;
@@ -90,19 +105,27 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
                 }}
               >
                 <svg><use href="#ic-bell" /></svg>
-                {!bellSeen && <span className="bell-dot" />}
+                {notifications.length > 0 && !bellSeen && <span className="bell-dot" />}
               </button>
               {bellOpen && (
                 <div className="bell-panel">
                   <div className="bell-panel__head">התראות אחרונות</div>
-                  <div className="notif"><svg><use href="#ic-sparkle" /></svg><div><p>תיק חדש הותאם להתמחות שלך — #C-1042</p><time>לפני 20 דקות</time></div></div>
-                  <div className="notif"><svg><use href="#ic-check-circle" /></svg><div><p>הלקוח אישר את ההצעה בתיק #C-1039</p><time>אתמול, 18:42</time></div></div>
-                  <div className="notif"><svg><use href="#ic-clock" /></svg><div><p>תזכורת: תיק #C-1035 ממתין להצעה כבר יומיים</p><time>אתמול, 09:10</time></div></div>
+                  {notifications.length === 0 ? (
+                    <div className="notif"><svg><use href="#ic-clock" /></svg><div><p>אין התראות חדשות כרגע</p></div></div>
+                  ) : (
+                    notifications.map((n, i) => (
+                      <div className="notif" key={i}><svg><use href={`#${n.icon}`} /></svg><div><p>{n.text}</p><time>{n.time}</time></div></div>
+                    ))
+                  )}
                 </div>
               )}
             </div>
             <div className="advisor-chip">
-              <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
+              {commission.logoUrl ? (
+                <img className="advisor-chip__avatar" src={commission.logoUrl} alt="" style={{ objectFit: "cover" }} />
+              ) : (
+                <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
+              )}
               <div className="advisor-chip__info">
                 <strong>{advisorName}</strong>
                 <small>יועץ/ת משכנתאות</small>
@@ -204,6 +227,14 @@ function DetailView({
   const [offerFee, setOfferFee] = useState(2500);
   const [offerNotes, setOfferNotes] = useState("");
   const [sending, setSending] = useState(false);
+  const [downloadingDoc, setDownloadingDoc] = useState(false);
+
+  async function downloadCleanDoc() {
+    setDownloadingDoc(true);
+    const url = await getCleanDocUrl(c.id);
+    setDownloadingDoc(false);
+    if (url) window.open(url, "_blank");
+  }
 
   const showOfferForm = c.status === "pending";
   const commissionOnFee = computeCommission(offerFee, commission.commissionType, commission.commissionValue);
@@ -215,6 +246,17 @@ function DetailView({
     if (ok) {
       onUpdate({ status: "sent", offer: { savings: offerSavings, fee: offerFee } });
       confettiBurst();
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "offer-submitted",
+          caseId: c.id,
+          advisorName,
+          savings: offerSavings,
+          fee: offerFee,
+        }),
+      }).catch((err) => console.error("Failed to trigger offer-submitted email:", err));
     }
   }
 
@@ -289,6 +331,11 @@ function DetailView({
           </div>
           <div className="card">
             <h3><svg><use href="#ic-doc" /></svg>מסמכים שצורפו</h3>
+            {c.cleanDocName && (
+              <button type="button" className="btn-link" style={{ alignSelf: "flex-start" }} disabled={downloadingDoc} onClick={downloadCleanDoc}>
+                {downloadingDoc ? "יוצר קישור…" : `הורדת דוח יתרות (ללא פרטים אישיים) — ${c.cleanDocName}`}
+              </button>
+            )}
             {c.docTracks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {c.docSource === "manual" && (

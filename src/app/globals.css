@@ -93,6 +93,12 @@ body {
   background-size: 24px 24px;
 }
 
+:focus-visible {
+  outline: 2.5px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 h1, h2, h3 {
   font-family: var(--font-rubik), var(--font-assistant), sans-serif;
   font-weight: 900;

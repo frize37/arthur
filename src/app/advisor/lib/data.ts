@@ -50,6 +50,7 @@ export interface AdvisorCase {
   docTracks: LoanTrack[];
   docTotals: DocTotals;
   docSource: "ai" | "manual" | null;
+  cleanDocName: string | null;
   offer?: { savings: number; fee: number };
   client?: { name: string; phone: string; email: string };
   completionNote: string | null;

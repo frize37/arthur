@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import { WizardState, isComplexCase } from "./types";
 
 export async function submitCaseToDatabase(state: WizardState) {
-  const caseId = crypto.randomUUID();
+  const caseId = state.caseId;
   const row = {
     id: caseId,
     status: "new",
@@ -42,6 +42,8 @@ export async function submitCaseToDatabase(state: WizardState) {
 
     doc_confirmed: state.docConfirmed,
     doc_source: state.docSource,
+    original_doc_name: state.originalDocName,
+    original_doc_type: state.originalDocType,
     doc_balance: state.docBalance,
     doc_rate: state.docRate,
     doc_years: state.docYears,
@@ -57,7 +59,7 @@ export async function submitCaseToDatabase(state: WizardState) {
     contact_phone: state.contactPhone,
     contact_email: state.contactEmail,
     contact_time: state.contactTime,
-    phone_verified: true,
+    phone_verified: false,
     email_verified: true,
   };
 
@@ -103,6 +105,22 @@ export async function submitCaseToDatabase(state: WizardState) {
         console.error("Failed to submit loan tracks:", tracksError.message);
       }
     }
+
+    // Fire-and-forget: a broken mail relay must never block the client's
+    // submission from succeeding.
+    fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "case-submitted",
+        caseId,
+        contactName: state.contactName,
+        contactEmail: state.contactEmail,
+        requestType: state.requestType,
+        mortgageAmount: state.mortgageAmount,
+        propertyValue: state.propertyValue,
+      }),
+    }).catch((err) => console.error("Failed to trigger case-submitted email:", err));
 
     return { ok: true as const };
   } catch (err) {

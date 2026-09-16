@@ -110,8 +110,22 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
   );
 }
 
-function genCode() {
-  return String(Math.floor(1000 + Math.random() * 9000));
+async function sendVerificationEmail(email: string) {
+  const res = await fetch("/api/verify-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode: "send", email }),
+  });
+  return res.json() as Promise<{ ok: boolean; token?: string; error?: string }>;
+}
+
+async function checkVerificationEmail(token: string, email: string, code: string) {
+  const res = await fetch("/api/verify-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode: "check", token, email, code }),
+  });
+  return res.json() as Promise<{ ok: boolean }>;
 }
 
 function ContactAndVerify({
@@ -123,18 +137,24 @@ function ContactAndVerify({
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
-  const [codes, setCodes] = useState({ phone: "", email: "" });
-  const [phoneCodeInput, setPhoneCodeInput] = useState("");
+  const [token, setToken] = useState<string | null>(null);
   const [emailCodeInput, setEmailCodeInput] = useState("");
-  const [phoneError, setPhoneError] = useState(false);
   const [emailError, setEmailError] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
-  function startVerification() {
-    setCodes({ phone: genCode(), email: genCode() });
-    setPhoneCodeInput("");
+  async function startVerification() {
     setEmailCodeInput("");
-    setPhoneError(false);
     setEmailError(false);
+    setSendError(null);
+    setSendingCode(true);
+    const result = await sendVerificationEmail(state.contactEmail);
+    setSendingCode(false);
+    if (!result.ok || !result.token) {
+      setSendError(result.error ?? "שליחת קוד האימות נכשלה. נסו שוב.");
+      return;
+    }
+    setToken(result.token);
     setShowVerify(true);
   }
 
@@ -150,28 +170,30 @@ function ContactAndVerify({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function handleVerify() {
-    const okPhone = phoneCodeInput === codes.phone;
-    const okEmail = emailCodeInput === codes.email;
-    setPhoneError(!okPhone);
-    setEmailError(!okEmail);
-    if (okPhone && okEmail) {
-      setSubmitting(true);
-      setSubmitError(null);
-      let result: Awaited<ReturnType<typeof submitCaseToDatabase>>;
-      try {
-        result = await submitCaseToDatabase(state);
-      } catch (err) {
-        setSubmitting(false);
-        setSubmitError("קרתה תקלה לא צפויה. נסו שוב: " + (err instanceof Error ? err.message : String(err)));
-        return;
-      }
+    if (!token) return;
+    setSubmitting(true);
+    const check = await checkVerificationEmail(token, state.contactEmail, emailCodeInput);
+    if (!check.ok) {
       setSubmitting(false);
-      if (!result.ok) {
-        setSubmitError("לא הצלחנו לשמור את התיק. נסו שוב בעוד רגע — אם זה חוזר, ספרו לנו: " + result.error);
-        return;
-      }
-      dispatch({ type: "VERIFIED" });
+      setEmailError(true);
+      return;
     }
+    setEmailError(false);
+    setSubmitError(null);
+    let result: Awaited<ReturnType<typeof submitCaseToDatabase>>;
+    try {
+      result = await submitCaseToDatabase(state);
+    } catch (err) {
+      setSubmitting(false);
+      setSubmitError("קרתה תקלה לא צפויה. נסו שוב: " + (err instanceof Error ? err.message : String(err)));
+      return;
+    }
+    setSubmitting(false);
+    if (!result.ok) {
+      setSubmitError("לא הצלחנו לשמור את התיק. נסו שוב בעוד רגע — אם זה חוזר, ספרו לנו: " + result.error);
+      return;
+    }
+    dispatch({ type: "VERIFIED" });
   }
 
   if (!showVerify) {
@@ -191,8 +213,13 @@ function ContactAndVerify({
               { value: "evening", label: "ערב" },
             ]}
           />
-          <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: 14 }}>
-            המשך לאימות זהות
+          {sendError && (
+            <div className="match-note warn">
+              <svg><use href="#ic-alert" /></svg>{sendError}
+            </div>
+          )}
+          <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: 14 }} disabled={sendingCode}>
+            {sendingCode ? "שולח קוד אימות…" : "המשך לאימות זהות"}
           </button>
         </form>
       </div>
@@ -202,23 +229,7 @@ function ContactAndVerify({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="bubble" style={{ background: "var(--surface-2)" }}>
-        <svg style={{ width: 15, height: 15, verticalAlign: -2, color: "var(--teal)" }}><use href="#ic-lock" /></svg> לפני שהתיק ננעל ויוצא ליועצים, שלחנו קוד אימות בן 4 ספרות ל-<b>{state.contactPhone}</b> ולכתובת <b>{state.contactEmail}</b>.
-      </div>
-      <div className="field">
-        <label>קוד מהטלפון (SMS)</label>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <input
-            type="text"
-            inputMode="numeric"
-            maxLength={4}
-            placeholder="0000"
-            value={phoneCodeInput}
-            onChange={(e) => setPhoneCodeInput(e.target.value)}
-            style={{ width: 96, textAlign: "center", fontFamily: "var(--font-rubik)", fontSize: 19, letterSpacing: 5, border: "1.5px solid var(--line)", borderRadius: 10, padding: 9, background: "var(--surface)", color: "var(--ink)" }}
-          />
-          <button type="button" className="btn-link" onClick={() => setCodes((c) => ({ ...c, phone: genCode() }))}>שליחה חוזרת</button>
-        </div>
-        {phoneError && <small className="hint" style={{ color: "var(--risk)" }}>קוד שגוי — נסו שוב.</small>}
+        <svg style={{ width: 15, height: 15, verticalAlign: -2, color: "var(--teal)" }}><use href="#ic-lock" /></svg> לפני שהתיק ננעל ויוצא ליועצים, שלחנו קוד אימות בן 4 ספרות לכתובת <b>{state.contactEmail}</b>.
       </div>
       <div className="field">
         <label>קוד מהמייל</label>
@@ -232,12 +243,9 @@ function ContactAndVerify({
             onChange={(e) => setEmailCodeInput(e.target.value)}
             style={{ width: 96, textAlign: "center", fontFamily: "var(--font-rubik)", fontSize: 19, letterSpacing: 5, border: "1.5px solid var(--line)", borderRadius: 10, padding: 9, background: "var(--surface)", color: "var(--ink)" }}
           />
-          <button type="button" className="btn-link" onClick={() => setCodes((c) => ({ ...c, email: genCode() }))}>שליחה חוזרת</button>
+          <button type="button" className="btn-link" onClick={startVerification} disabled={sendingCode}>שליחה חוזרת</button>
         </div>
         {emailError && <small className="hint" style={{ color: "var(--risk)" }}>קוד שגוי — נסו שוב.</small>}
-      </div>
-      <div className="savings-mini" style={{ alignSelf: "stretch" }}>
-        🧪 לצורך ההדגמה בלבד (עדיין אין חיבור אמיתי ל-SMS/מייל): קוד הטלפון <b className="num">{codes.phone}</b>, קוד המייל <b className="num">{codes.email}</b>.
       </div>
       {submitError && (
         <div className="match-note warn">
