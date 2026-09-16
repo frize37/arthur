@@ -138,17 +138,24 @@ function ContactAndVerify({
   const phoneRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState(state.contactEmail);
   const [emailCodeInput, setEmailCodeInput] = useState("");
   const [emailError, setEmailError] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [justResent, setJustResent] = useState(false);
 
-  async function startVerification() {
+  // Takes the email explicitly instead of reading state.contactEmail — the
+  // SET dispatched in handleSubmit hasn't been applied to `state` yet in
+  // this same tick, so reading it here would send to the previous value
+  // (empty on the very first submit).
+  async function startVerification(email: string) {
     setEmailCodeInput("");
     setEmailError(false);
     setSendError(null);
     setSendingCode(true);
-    const result = await sendVerificationEmail(state.contactEmail);
+    setJustResent(false);
+    const result = await sendVerificationEmail(email);
     setSendingCode(false);
     if (!result.ok || !result.token) {
       setSendError(result.error ?? "שליחת קוד האימות נכשלה. נסו שוב.");
@@ -156,14 +163,18 @@ function ContactAndVerify({
     }
     setToken(result.token);
     setShowVerify(true);
+    setJustResent(true);
+    setTimeout(() => setJustResent(false), 4000);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const email = emailRef.current?.value.trim() ?? "";
     set("contactName", nameRef.current?.value.trim() ?? "");
     set("contactPhone", phoneRef.current?.value.trim() ?? "");
-    set("contactEmail", emailRef.current?.value.trim() ?? "");
-    startVerification();
+    set("contactEmail", email);
+    setPendingEmail(email);
+    startVerification(email);
   }
 
   const [submitting, setSubmitting] = useState(false);
@@ -172,7 +183,7 @@ function ContactAndVerify({
   async function handleVerify() {
     if (!token) return;
     setSubmitting(true);
-    const check = await checkVerificationEmail(token, state.contactEmail, emailCodeInput);
+    const check = await checkVerificationEmail(token, pendingEmail, emailCodeInput);
     if (!check.ok) {
       setSubmitting(false);
       setEmailError(true);
@@ -229,7 +240,7 @@ function ContactAndVerify({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="bubble" style={{ background: "var(--surface-2)" }}>
-        <svg style={{ width: 15, height: 15, verticalAlign: -2, color: "var(--teal)" }}><use href="#ic-lock" /></svg> לפני שהתיק ננעל ויוצא ליועצים, שלחנו קוד אימות בן 4 ספרות לכתובת <b>{state.contactEmail}</b>.
+        <svg style={{ width: 15, height: 15, verticalAlign: -2, color: "var(--teal)" }}><use href="#ic-lock" /></svg> לפני שהתיק ננעל ויוצא ליועצים, שלחנו קוד אימות בן 4 ספרות לכתובת <b>{pendingEmail}</b>.
       </div>
       <div className="field">
         <label>קוד מהמייל</label>
@@ -243,7 +254,9 @@ function ContactAndVerify({
             onChange={(e) => setEmailCodeInput(e.target.value)}
             style={{ width: 96, textAlign: "center", fontFamily: "var(--font-rubik)", fontSize: 19, letterSpacing: 5, border: "1.5px solid var(--line)", borderRadius: 10, padding: 9, background: "var(--surface)", color: "var(--ink)" }}
           />
-          <button type="button" className="btn-link" onClick={startVerification} disabled={sendingCode}>שליחה חוזרת</button>
+          <button type="button" className="btn-link" onClick={() => startVerification(pendingEmail)} disabled={sendingCode}>
+            {sendingCode ? "שולח…" : justResent ? "✓ קוד חדש נשלח" : "שליחה חוזרת"}
+          </button>
         </div>
         {emailError && <small className="hint" style={{ color: "var(--risk)" }}>קוד שגוי — נסו שוב.</small>}
       </div>
