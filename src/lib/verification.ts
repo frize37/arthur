@@ -25,7 +25,10 @@ export async function createEmailVerification(email: string): Promise<string> {
   const exp = Date.now() + TTL_MS;
   const payloadB64 = Buffer.from(JSON.stringify({ email, code, exp }), "utf8").toString("base64url");
   const token = `${payloadB64}.${sign(payloadB64)}`;
-  await sendVerificationCodeEmail(email, code);
+  const result = await sendVerificationCodeEmail(email, code);
+  if (!result.ok) {
+    throw new Error(result.error ?? "שליחת המייל נכשלה.");
+  }
   return token;
 }
 
