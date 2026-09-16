@@ -14,9 +14,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "רק מנהל מלא יכול לבצע פעולה זו." }, { status: 403 });
   }
 
-  const { kind, id } = (await req.json()) as { kind?: "advisor" | "admin"; id?: string };
+  const { kind, id, newPassword } = (await req.json()) as { kind?: "advisor" | "admin"; id?: string; newPassword?: string };
   if ((kind !== "advisor" && kind !== "admin") || !id) {
     return NextResponse.json({ ok: false, error: "חסרים פרטים." }, { status: 400 });
+  }
+  if (newPassword && newPassword.length < 6) {
+    return NextResponse.json({ ok: false, error: "הסיסמה חייבת להיות באורך 6 תווים לפחות." }, { status: 400 });
   }
 
   let authUserId: string;
@@ -31,7 +34,7 @@ export async function POST(req: NextRequest) {
     authUserId = advisor.auth_user_id;
   }
 
-  const password = generatePassword();
+  const password = newPassword || generatePassword();
   const { error: updateErr } = await supabaseAdmin.auth.admin.updateUserById(authUserId, { password });
   if (updateErr) {
     return NextResponse.json({ ok: false, error: updateErr.message }, { status: 500 });

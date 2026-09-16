@@ -166,11 +166,15 @@ export async function updateAdminName(adminId: string, name: string): Promise<bo
   return true;
 }
 
-export async function resetPassword(kind: "advisor" | "admin", id: string): Promise<{ ok: true; password: string } | { ok: false; error: string }> {
+export async function resetPassword(
+  kind: "advisor" | "admin",
+  id: string,
+  newPassword?: string
+): Promise<{ ok: true; password: string } | { ok: false; error: string }> {
   const res = await fetch("/api/admin/reset-password", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ kind, id }),
+    body: JSON.stringify({ kind, id, newPassword }),
   });
   const json = await res.json();
   if (!json.ok) return { ok: false, error: json.error ?? "איפוס הסיסמה נכשל." };

@@ -808,7 +808,9 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
   const [deleting, setDeleting] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [customPassword, setCustomPassword] = useState("");
+  const [passwordResult, setPasswordResult] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -825,7 +827,9 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
     setSpecialty(a.specialty);
     setCommissionType(a.commissionType ?? "percent");
     setCommissionValue(a.commissionValue ?? 10);
-    setNewPassword(null);
+    setCustomPassword("");
+    setPasswordResult(null);
+    setPasswordError(null);
     setEditing(true);
   }
 
@@ -841,9 +845,15 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
 
   async function handleResetPassword() {
     setResetting(true);
-    const res = await resetPassword("advisor", a.id);
+    setPasswordError(null);
+    const res = await resetPassword("advisor", a.id, customPassword || undefined);
     setResetting(false);
-    if (res.ok) setNewPassword(res.password);
+    if (res.ok) {
+      setPasswordResult(res.password);
+      setCustomPassword("");
+    } else {
+      setPasswordError(res.error);
+    }
   }
 
   async function confirmDelete() {
@@ -898,15 +908,27 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
             </button>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <input
+              type="text"
+              value={customPassword}
+              onChange={(e) => setCustomPassword(e.target.value)}
+              placeholder="סיסמה מותאמת (או השאירו ריק ליצירה אוטומטית)"
+              style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 220px" }}
+            />
             <button type="button" className="btn btn-ghost" style={{ padding: "5px 10px", fontSize: 12 }} disabled={resetting} onClick={handleResetPassword}>
               {resetting ? "מאפס…" : "איפוס סיסמה"}
             </button>
-            {newPassword && (
-              <span style={{ fontSize: 12 }}>
-                סיסמה חדשה: <b className="num">{newPassword}</b> (תעבירו אותה ליועץ, זו הפעם היחידה שהיא מוצגת)
-              </span>
-            )}
           </div>
+          {passwordResult && (
+            <span style={{ fontSize: 12 }}>
+              סיסמה חדשה: <b className="num">{passwordResult}</b> (תעבירו אותה ליועץ, זו הפעם היחידה שהיא מוצגת)
+            </span>
+          )}
+          {passwordError && (
+            <div className="match-note warn">
+              <svg><use href="#ic-alert" /></svg>{passwordError}
+            </div>
+          )}
         </div>
       )}
       {!canManage ? null : confirmingDelete ? (
@@ -933,12 +955,16 @@ function AdminMemberRow({ member: m, onSaved }: { member: AdminMember; onSaved: 
   const [name, setName] = useState(m.name);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [customPassword, setCustomPassword] = useState("");
+  const [passwordResult, setPasswordResult] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const initials = m.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
 
   function openEdit() {
     setName(m.name);
-    setNewPassword(null);
+    setCustomPassword("");
+    setPasswordResult(null);
+    setPasswordError(null);
     setEditing(true);
   }
 
@@ -954,9 +980,15 @@ function AdminMemberRow({ member: m, onSaved }: { member: AdminMember; onSaved: 
 
   async function handleResetPassword() {
     setResetting(true);
-    const res = await resetPassword("admin", m.id);
+    setPasswordError(null);
+    const res = await resetPassword("admin", m.id, customPassword || undefined);
     setResetting(false);
-    if (res.ok) setNewPassword(res.password);
+    if (res.ok) {
+      setPasswordResult(res.password);
+      setCustomPassword("");
+    } else {
+      setPasswordError(res.error);
+    }
   }
 
   return (
@@ -982,15 +1014,27 @@ function AdminMemberRow({ member: m, onSaved }: { member: AdminMember; onSaved: 
             </button>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <input
+              type="text"
+              value={customPassword}
+              onChange={(e) => setCustomPassword(e.target.value)}
+              placeholder="סיסמה מותאמת (או השאירו ריק ליצירה אוטומטית)"
+              style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 220px" }}
+            />
             <button type="button" className="btn btn-ghost" style={{ padding: "5px 10px", fontSize: 12 }} disabled={resetting} onClick={handleResetPassword}>
               {resetting ? "מאפס…" : "איפוס סיסמה"}
             </button>
-            {newPassword && (
-              <span style={{ fontSize: 12 }}>
-                סיסמה חדשה: <b className="num">{newPassword}</b> (תעבירו אותה אליו/אליה, זו הפעם היחידה שהיא מוצגת)
-              </span>
-            )}
           </div>
+          {passwordResult && (
+            <span style={{ fontSize: 12 }}>
+              סיסמה חדשה: <b className="num">{passwordResult}</b> (תעבירו אותה אליו/אליה, זו הפעם היחידה שהיא מוצגת)
+            </span>
+          )}
+          {passwordError && (
+            <div className="match-note warn">
+              <svg><use href="#ic-alert" /></svg>{passwordError}
+            </div>
+          )}
         </div>
       )}
     </div>
