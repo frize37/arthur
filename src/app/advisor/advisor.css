@@ -147,3 +147,55 @@
 .match-note.ok { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
 .match-note.warn { background: color-mix(in srgb, var(--watch) 16%, transparent); color: var(--watch); }
 .empty { text-align: center; padding: 30px 10px; color: var(--ink-faint); font-size: 13.5px; }
+
+/* ── דוח תיק להדפסה ──────────────────────────────────────────────
+   הדוח קיים ב-DOM תמיד אבל מוסתר על המסך, ובהדפסה הוא הדבר היחיד
+   שנשאר גלוי. כך "הפקת דוח" היא window.print() בלבד, בלי ניווט
+   לעמוד נפרד ובלי לשלוף את התיק פעם שנייה. */
+.case-report { display: none; }
+
+@media print {
+  body * { visibility: hidden !important; }
+  #case-report, #case-report * { visibility: visible !important; }
+  #case-report {
+    display: block;
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    background: #fff;
+    color: #0E2038;
+    font-family: var(--font-assistant), Arial, sans-serif;
+  }
+  @page { margin: 14mm; }
+}
+
+.case-report__head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding-bottom: 12px; border-bottom: 2px solid #0B2647; margin-bottom: 18px;
+}
+.case-report__logo { height: 46px; width: auto; }
+.case-report__meta { text-align: left; font-size: 12px; color: #3D5170; }
+.case-report__meta strong { display: block; font-size: 16px; color: #0E2038; }
+
+.case-report__section { margin-bottom: 16px; break-inside: avoid; }
+.case-report__section h2 {
+  font-size: 13.5px; font-weight: 800; color: #0B2647; margin: 0 0 6px;
+  padding-bottom: 4px; border-bottom: 1px solid rgba(14,32,56,.18);
+}
+.case-report__rows { display: flex; flex-direction: column; }
+.case-report__row {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 4px 0; font-size: 12.5px; border-bottom: 1px dotted rgba(14,32,56,.12);
+}
+.case-report__row span { color: #3D5170; }
+.case-report__row b { font-variant-numeric: tabular-nums; }
+
+.case-report__bullet { display: flex; gap: 7px; align-items: flex-start; padding: 4px 0; font-size: 12.5px; }
+.case-report__dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+
+.case-report__foot {
+  margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(14,32,56,.18);
+  font-size: 10.5px; color: #74869F; line-height: 1.5;
+}

@@ -1,4 +1,4 @@
-import { ltvCapFor, maxTermYears, shekel } from "../../wizard/lib/finance";
+import { MARKET, dtiBandFor, freeIncomeFor, ltvCapFor, maxTermYears, monthlyPayment, shekel } from "../../wizard/lib/finance";
 
 export type CaseStatus = "new" | "verifying" | "awaiting" | "ready" | "sent" | "closed" | "closed_no_deal";
 
@@ -57,7 +57,6 @@ export interface AdminCase {
     propertyLegal: string;
     propertySource: string | null;
     equity: number;
-    ownedProperties: string | null;
     sellingExisting: string | null;
     appraisalValue: number | null;
   };
@@ -74,6 +73,7 @@ export interface AdminCase {
   offers: Offer[];
   timeline: { label: string; time: string }[];
   assignedAdvisorIds: string[];
+  doc: { balance: number; rate: number; years: number; months: number };
   docTracks: LoanTrack[];
   docTotals: DocTotals;
   docSource: "ai" | "manual" | null;
@@ -150,22 +150,40 @@ export const TABS: { key: CaseStatus | "all"; label: string }[] = [
 // Same idea as the advisor dashboard's key-points list — a distilled "so
 // what" summary of the wizard answers, for a quick read before assigning
 // or reviewing offers, instead of hunting through several data grids.
-export type KeyPoint = { kind: "red" | "green" | "info"; text: string };
+export type KeyPoint = { kind: "red" | "green" | "info" | "tip"; text: string };
+
+/** אומדן יחס ההחזר — ראו הערה מקבילה בצד היועץ. */
+function estimateDti(c: AdminCase) {
+  const endsWithin18 = c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft !== "over18";
+  const freeIncome = freeIncomeFor(c.brief.income, 0, c.credit.otherLoansPayment ?? 0, endsWithin18);
+  const termYears = maxTermYears(c.profile.oldestAge);
+  const payment =
+    c.requestType === "new"
+      ? monthlyPayment(c.brief.mortgage, MARKET.assumedMixRate, termYears * 12)
+      : monthlyPayment(c.doc.balance, c.doc.rate, c.doc.years * 12 + c.doc.months);
+
+  if (freeIncome <= 0 || payment <= 0) return null;
+  const ratio = payment / freeIncome;
+  const { band, label } = dtiBandFor(ratio);
+  const basis = c.requestType === "new" ? ` (אומדן לפי ריבית ${MARKET.assumedMixRate}% ו-${termYears} שנים)` : "";
+  return { ratio, band, label, basis, payment, freeIncome, termYears };
+}
 
 export function deriveKeyPoints(c: AdminCase): KeyPoint[] {
   const points: KeyPoint[] = [];
   const red = (text: string) => points.push({ kind: "red", text });
   const green = (text: string) => points.push({ kind: "green", text });
   const info = (text: string) => points.push({ kind: "info", text });
+  const tip = (text: string) => points.push({ kind: "tip", text });
 
   /* --- שומר סף 1: שיעור מימון --- */
-  const { cap, label } = ltvCapFor(c.brief.ownedProperties, c.brief.sellingExisting);
+  const { cap, label } = ltvCapFor(c.goal, c.brief.sellingExisting);
   const bankValue = c.brief.appraisalValue && c.brief.appraisalValue > 0
     ? Math.min(c.brief.propertyValue, c.brief.appraisalValue)
     : c.brief.propertyValue;
   const actualLtv = bankValue > 0 ? c.brief.mortgage / bankValue : 0;
 
-  if (c.brief.ownedProperties) {
+  if (c.requestType === "new") {
     if (actualLtv > cap + 0.001) {
       const maxLoan = cap * bankValue;
       red(
@@ -192,6 +210,25 @@ export function deriveKeyPoints(c: AdminCase): KeyPoint[] {
     if (maxYears < 30) {
       const kind = maxYears <= 15 ? red : info;
       kind(`גיל הלווה המבוגר ${c.profile.oldestAge} — תקופה מקסימלית ${maxYears} שנים (סיום עד גיל 75).`);
+    }
+  }
+
+  /* --- שומר סף 3: יחס החזר מההכנסה --- */
+  const dti = estimateDti(c);
+  if (dti) {
+    const pct = (dti.ratio * 100).toFixed(1);
+    if (dti.band === "good") green(`יחס החזר כ-${pct}% — ${dti.label}${dti.basis}.`);
+    else if (dti.band === "watch")
+      red(`יחס החזר כ-${pct}% — ${dti.label}${dti.basis}. מ-40% הבנק נדרש ל-100% הקצאת הון והתיק מתומחר יקר יותר.`);
+    else red(`יחס החזר כ-${pct}% — ${dti.label}${dti.basis}. בלי שינוי במבנה העסקה קשה יהיה לקבל אישור.`);
+
+    if (dti.band !== "good") {
+      const gap = dti.payment - dti.freeIncome * 0.35;
+      tip(
+        `כדי לרדת מתחת ל-35% צריך להוריד כ-${shekel(gap)} מההחזר החודשי — רכיב צמוד מדד (החזר התחלתי נמוך יותר) ` +
+          `או הארכת תקופה` + (dti.termYears < 30 ? `, אם כי הגיל מגביל ל-${dti.termYears} שנים` : "") +
+          ". שימו לב שרכיב צמוד לא כדאי למתוח מעבר ל-15 שנה — ההחזר בו עולה עם המדד."
+      );
     }
   }
 
@@ -235,6 +272,22 @@ export function deriveKeyPoints(c: AdminCase): KeyPoint[] {
   if (c.profile.hasSecond === "yes") info("יש לווה/ת נוסף/ת בתיק.");
 
   if (c.brief.propertySource) info(`אופן הרכישה: ${LABELS.propertySource[c.brief.propertySource] ?? c.brief.propertySource}.`);
+
+  /* --- המלצות --- */
+  if (c.planning.futureRelease === "yes") {
+    tip("צפויה משיכת כספים — כדאי לכוון את היועצים לרכיב קבוע קצר יותר, כדי שעמלת הפירעון ביציאה תהיה נמוכה.");
+  }
+  if (c.brief.propertySource === "contractor") {
+    tip("רכישה מקבלן: התשלומים צמודים למדד תשומות הבנייה, כך שמחיר החוזה אינו סופי. שווה לבדוק הקדמת תשלומים.");
+  }
+  if (
+    c.profile.employment1 === "selfemployed" ||
+    c.profile.employment1 === "controlling" ||
+    c.profile.employment2 === "selfemployed" ||
+    c.profile.employment2 === "controlling"
+  ) {
+    tip("עצמאי/בעל שליטה בתיק — הבנק בוחן רווח נקי בשומה, וכל בנק מחשב דיבידנד אחרת. שווה יועץ שמתמחה בזה.");
+  }
 
   return points;
 }

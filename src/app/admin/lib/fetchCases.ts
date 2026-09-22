@@ -243,7 +243,6 @@ export async function fetchCases(): Promise<AdminCase[]> {
         propertyLegal: row.property_legal ?? "tabu",
         propertySource: row.property_source ?? null,
         equity: row.equity ?? 0,
-        ownedProperties: row.owned_properties ?? null,
         sellingExisting: row.selling_existing ?? null,
         appraisalValue: row.appraisal_value != null ? Number(row.appraisal_value) : null,
       },
@@ -275,6 +274,7 @@ export async function fetchCases(): Promise<AdminCase[]> {
         { label: "התיק נקלט מהאשף", time: relativeTime(row.created_at) },
         ...(row.email_verified ? [{ label: "זהות אומתה (מייל)", time: relativeTime(row.created_at) }] : []),
       ],
+      doc: { balance: row.doc_balance ?? 0, rate: row.doc_rate ?? 0, years: row.doc_years ?? 0, months: row.doc_months ?? 0 },
       assignedAdvisorIds: (assignmentRows ?? []).filter((a) => a.case_id === row.id).map((a) => a.advisor_id),
       docTracks: (trackRows ?? [])
         .filter((t) => t.case_id === row.id)

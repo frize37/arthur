@@ -63,8 +63,8 @@ export interface WizardState {
   mortgageAmount: number;
   equity: number;
 
-  // קובע את תקרת שיעור המימון: מחוסר דיור 75%, משפר דיור 70%, משקיע 50%.
-  ownedProperties: "none" | "one" | "twoPlus" | null;
+  // תקרת המימון נגזרת ממטרת הרכישה; מה שנשאר לשאול הוא רק התזמון אצל
+  // משפרי דיור — מכירה לפני הרכישה נחשבת מחוסר דיור, ואחריה משפר דיור.
   sellingExisting: "before" | "after" | "no" | null;
   // סיום התשלומים עד גיל 75 — קובע את התקופה המקסימלית האפשרית.
   oldestAge: number;
@@ -136,7 +136,6 @@ export const initialWizardState: WizardState = {
   mortgageAmount: 950000,
   equity: 400000,
 
-  ownedProperties: null,
   sellingExisting: null,
   oldestAge: 35,
   hasZakaut: null,

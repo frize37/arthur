@@ -140,32 +140,24 @@ export function PropertyStage({ state, set, go, back }: StageProps) {
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {isNew && (
           <>
-            <Field label="כמה דירות יש בבעלותכם היום?">
-              <ChipRow
-                value={state.ownedProperties}
-                onSelect={(v) => set("ownedProperties", v as typeof state.ownedProperties)}
-                options={[
-                  { value: "none", label: "אף אחת" },
-                  { value: "one", label: "דירה אחת" },
-                  { value: "twoPlus", label: "שתיים או יותר" },
-                ]}
-              />
-              <small className="hint">זו השאלה שקובעת את תקרת המימון שהבנק רשאי לתת לכם.</small>
-            </Field>
-            {state.ownedProperties === "one" && (
-              <Reveal>
-                <Field label="מה תעשו עם הדירה הקיימת?">
-                  <ChipRow
-                    value={state.sellingExisting}
-                    onSelect={(v) => set("sellingExisting", v as typeof state.sellingExisting)}
-                    options={[
-                      { value: "before", label: "נמכור לפני הרכישה" },
-                      { value: "after", label: "נמכור אחרי הרכישה" },
-                      { value: "no", label: "נשאיר אותה" },
-                    ]}
-                  />
-                </Field>
-              </Reveal>
+            {/* מטרת הרכישה כבר אומרת כמה דירות יש בבעלות — "שדרוג" פירושו שיש
+                אחת, "יחידה" שאין, "להשקעה" שיש לפחות אחת. השאלה היחידה שנשארת
+                פתוחה היא התזמון אצל משפרי דיור, והיא זו שקובעת 75% מול 70%. */}
+            {state.goal === "upgrade" && (
+              <Field label="מתי תמכרו את הדירה הקיימת?">
+                <ChipRow
+                  value={state.sellingExisting}
+                  onSelect={(v) => set("sellingExisting", v as typeof state.sellingExisting)}
+                  options={[
+                    { value: "before", label: "לפני הרכישה" },
+                    { value: "after", label: "אחרי הרכישה" },
+                    { value: "no", label: "לא מוכרים" },
+                  ]}
+                />
+                <small className="hint">
+                  מי שמוכר לפני נחשב מחוסר דיור ומקבל תקרת מימון גבוהה יותר — זה ההבדל בין 75% ל-70%.
+                </small>
+              </Field>
             )}
             <Field label="ממי קונים את הנכס?">
               <ChipRow

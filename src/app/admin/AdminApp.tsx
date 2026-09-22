@@ -309,10 +309,19 @@ function DetailView({
                         marginTop: 6,
                         flexShrink: 0,
                         background:
-                          point.kind === "red" ? "var(--risk)" : point.kind === "green" ? "var(--good)" : "var(--ink-faint)",
+                          point.kind === "red"
+                            ? "var(--risk)"
+                            : point.kind === "green"
+                            ? "var(--good)"
+                            : point.kind === "tip"
+                            ? "var(--accent)"
+                            : "var(--ink-faint)",
                       }}
                     />
-                    <span>{point.text}</span>
+                    <span>
+                      {point.kind === "tip" && <b style={{ color: "var(--accent-strong)" }}>המלצה: </b>}
+                      {point.text}
+                    </span>
                   </div>
                 ))}
               </div>

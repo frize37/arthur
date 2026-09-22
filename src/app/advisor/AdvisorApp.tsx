@@ -10,6 +10,7 @@ import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
 import { CaseChat } from "@/components/CaseChat";
+import { CaseReport } from "./components/CaseReport";
 
 function briefRow(label: string, value: string) {
   return (
@@ -277,8 +278,13 @@ function DetailView({
           <h2>{c.id}</h2>
           <small>{LABELS.requestType[c.requestType]} · התקבל {c.receivedAt}{c.complex ? " · תיק מורכב 🕵️" : ""}</small>
         </div>
+        <button type="button" className="btn btn-ghost" onClick={() => window.print()} style={{ marginInlineStart: "auto" }}>
+          <svg><use href="#ic-doc" /></svg>הפקת דוח תיק
+        </button>
         <span className={`pill ${STATUS_META[c.status].cls}`}>{STATUS_META[c.status].label}</span>
       </div>
+
+      <CaseReport case_={c} keyPoints={keyPoints} />
 
       <div className="detail-layout">
         <div className="detail-layout__main">
@@ -310,10 +316,19 @@ function DetailView({
                         marginTop: 6,
                         flexShrink: 0,
                         background:
-                          point.kind === "red" ? "var(--risk)" : point.kind === "green" ? "var(--good)" : "var(--ink-faint)",
+                          point.kind === "red"
+                            ? "var(--risk)"
+                            : point.kind === "green"
+                            ? "var(--good)"
+                            : point.kind === "tip"
+                            ? "var(--accent)"
+                            : "var(--ink-faint)",
                       }}
                     />
-                    <span>{point.text}</span>
+                    <span>
+                      {point.kind === "tip" && <b style={{ color: "var(--accent-strong)" }}>המלצה: </b>}
+                      {point.text}
+                    </span>
                   </div>
                 ))}
               </div>

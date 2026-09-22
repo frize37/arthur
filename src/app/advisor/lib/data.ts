@@ -1,4 +1,4 @@
-import { ltvCapFor, maxTermYears, monthlyPayment, shekel } from "../../wizard/lib/finance";
+import { MARKET, dtiBandFor, freeIncomeFor, ltvCapFor, maxTermYears, monthlyPayment, shekel } from "../../wizard/lib/finance";
 
 export type CaseStatus = "pending" | "sent" | "won" | "closed" | "closed_no_deal" | "lost";
 export type Band = "good" | "watch" | "risk";
@@ -45,7 +45,6 @@ export interface AdvisorCase {
     mortgage: number;
     legal: string;
     source: string | null;
-    ownedProperties: string | null;
     sellingExisting: string | null;
     appraisalValue: number | null;
   };
@@ -128,28 +127,50 @@ export function computeCase(c: AdvisorCase) {
   return { payment, totalIncome, ratio, band, suggestedSavings };
 }
 
-export type KeyPoint = { kind: "red" | "green" | "info"; text: string };
+export type KeyPoint = { kind: "red" | "green" | "info" | "tip"; text: string };
 
 // Distills the wizard fields that matter for giving actual advice — the raw
 // data grids below already show everything, but an advisor scanning a new
 // case needs the "so what" version first, not a form to re-read. Red points
 // are things that block or price the file badly; green points are what
 // strengthens it.
+/**
+ * אומדן יחס ההחזר. במיחזור יש לנו את ההחזר האמיתי מדוח היתרות; ברכישה
+ * חדשה עוד אין ריבית, אז מעריכים לפי ריבית שוק משוערת והתקופה המקסימלית
+ * שהגיל מאפשר — ומסמנים במפורש שזה אומדן.
+ */
+function estimateDti(c: AdvisorCase) {
+  const endsWithin18 = c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft !== "over18";
+  const freeIncome = freeIncomeFor(c.income.net, c.income.extra, c.credit.otherLoansPayment ?? 0, endsWithin18);
+  const termYears = maxTermYears(c.profile.oldestAge);
+  const payment =
+    c.requestType === "new"
+      ? monthlyPayment(c.property.mortgage, MARKET.assumedMixRate, termYears * 12)
+      : monthlyPayment(c.doc.balance, c.doc.rate, c.doc.years * 12 + c.doc.months);
+
+  if (freeIncome <= 0 || payment <= 0) return null;
+  const ratio = payment / freeIncome;
+  const { band, label } = dtiBandFor(ratio);
+  const basis = c.requestType === "new" ? ` (אומדן לפי ריבית ${MARKET.assumedMixRate}% ו-${termYears} שנים)` : "";
+  return { ratio, band, label, basis, payment, freeIncome, termYears };
+}
+
 export function deriveKeyPoints(c: AdvisorCase): KeyPoint[] {
   const points: KeyPoint[] = [];
   const red = (text: string) => points.push({ kind: "red", text });
   const green = (text: string) => points.push({ kind: "green", text });
   const info = (text: string) => points.push({ kind: "info", text });
+  const tip = (text: string) => points.push({ kind: "tip", text });
 
   /* --- שומר סף 1: שיעור מימון --- */
-  const { cap, label } = ltvCapFor(c.property.ownedProperties, c.property.sellingExisting);
+  const { cap, label } = ltvCapFor(c.goal, c.property.sellingExisting);
   // הבנק מחשב לפי הנמוך מבין מחיר החוזה לשמאות
   const bankValue = c.property.appraisalValue && c.property.appraisalValue > 0
     ? Math.min(c.property.value, c.property.appraisalValue)
     : c.property.value;
   const actualLtv = bankValue > 0 ? c.property.mortgage / bankValue : 0;
 
-  if (c.property.ownedProperties) {
+  if (c.requestType === "new") {
     if (actualLtv > cap + 0.001) {
       const maxLoan = cap * bankValue;
       red(
@@ -178,6 +199,29 @@ export function deriveKeyPoints(c: AdvisorCase): KeyPoint[] {
       kind(
         `גיל הלווה המבוגר ${c.profile.oldestAge} — המשכנתה חייבת להסתיים עד גיל 75, כלומר תקופה מקסימלית של ${maxYears} שנים` +
           (maxYears <= 15 ? ". זה מעלה משמעותית את ההחזר החודשי, ושווה לבדוק צירוף לווה נוסף או ערב." : ".")
+      );
+    }
+  }
+
+  /* --- שומר סף 3: יחס החזר מההכנסה --- */
+  const dti = estimateDti(c);
+  if (dti) {
+    const { ratio, band, label, basis, freeIncome } = dti;
+    const pct = (ratio * 100).toFixed(1);
+    if (band === "good") green(`יחס החזר כ-${pct}% — ${label}${basis}.`);
+    else if (band === "watch")
+      red(`יחס החזר כ-${pct}% — ${label}${basis}. מ-40% הבנק נדרש ל-100% הקצאת הון והתיק מתומחר יקר יותר.`);
+    else red(`יחס החזר כ-${pct}% — ${label}${basis}. בלי שינוי במבנה העסקה קשה יהיה לקבל אישור.`);
+
+    if (band !== "good") {
+      const gap = dti.payment - freeIncome * 0.35;
+      tip(
+        `כדי לרדת מתחת ל-35% צריך להוריד כ-${shekel(gap)} מההחזר החודשי. שתי הדרכים המקובלות: ` +
+          `רכיב צמוד מדד (ההחזר ההתחלתי נמוך יותר) והארכת תקופה` +
+          (dti.termYears < 30 ? ` — אבל כאן הגיל מגביל ל-${dti.termYears} שנים` : "") +
+          `. אזהרה חשובה: צמוד מדד מוזיל את ההחזר היום אבל ההחזר עולה עם המדד לאורך השנים, ולכן מקובל ` +
+          `לא למתוח רכיב צמוד מעבר ל-15 שנה. אם ההחזר ההתחלתי כבר יושב על התקרה שהלקוח הצהיר עליה ` +
+          `(${shekel(c.repayment.max)}), צמוד ארוך יוציא אותו מהתקציב תוך כמה שנים — זה פתרון לכושר ההחזר על הנייר, לא לסיכון האמיתי.`
       );
     }
   }
@@ -225,6 +269,49 @@ export function deriveKeyPoints(c: AdvisorCase): KeyPoint[] {
   if (c.profile.hasSecond === "yes") info("יש לווה/ת נוסף/ת בתיק — ראו פרטי תעסוקה בכרטיס הפרופיל.");
 
   if (c.property.source) info(`אופן הרכישה: ${LABELS.propertySource[c.property.source] ?? c.property.source}.`);
+
+  /* ================================================================
+   * המלצות — נגזרות מהתשובות, לא כללי אצבע גנריים.
+   * ================================================================ */
+
+  // כוונת פירעון מוקדם קובעת את אופי הרכיב הקבוע: קל״צ ארוך גובה עמלת
+  // היוון כבדה ביציאה, בעוד פריים ומשתנה יוצאים בזול.
+  if (c.planning.futureRelease === "yes") {
+    tip(
+      "הלקוח צופה משיכת כספים — כלומר סביר שיפרע חלק מוקדם. כדאי לקצר את הרכיב הקבוע " +
+        "ולהגדיל פריים/משתנה, ששם עמלת הפירעון נמוכה או אפסית. קל״צ ארוך הוא בדיוק הרכיב שגובה עמלת היוון כבדה ביציאה."
+    );
+  }
+
+  // רכישה מקבלן — הצמדה למדד תשומות הבנייה מייקרת את העסקה אחרי החתימה.
+  if (c.property.source === "contractor") {
+    tip(
+      "רכישה מקבלן: התשלומים צמודים למדד תשומות הבנייה, כך שמחיר החוזה אינו המחיר הסופי. " +
+        "שווה לבדוק מול הלקוח אפשרות להקדים תשלומים — זה פוטר מההצמדה על מה ששולם בפועל."
+    );
+  }
+
+  // עצמאי/בעל שליטה — הרווח הנקי בשומה הוא מה שקובע, ולא המחזור.
+  if (
+    c.profile.employment1 === "selfemployed" ||
+    c.profile.employment1 === "controlling" ||
+    c.profile.employment2 === "selfemployed" ||
+    c.profile.employment2 === "controlling"
+  ) {
+    tip(
+      "יש כאן עצמאי/בעל שליטה: הבנק מסתכל על הרווח הנקי בשומה, לא על המחזור. " +
+        "כדאי לוודא מול הלקוח מה מציגה השומה האחרונה לפני הגשה — וגם שכל בנק מחשב הכנסה מדיבידנד אחרת, כך שבחירת הבנק משנה את כושר ההחזר."
+    );
+  }
+
+  // ההפרש בין ההחזר הנוח למקסימלי הוא תקציב הסיכון של הלקוח.
+  if (c.repayment.comfort > 0 && c.repayment.max > c.repayment.comfort) {
+    const headroom = c.repayment.max - c.repayment.comfort;
+    tip(
+      `הלקוח הצהיר על החזר נוח של ${shekel(c.repayment.comfort)} ומקסימלי של ${shekel(c.repayment.max)} — ` +
+        `כלומר תקציב סיכון של ${shekel(headroom)} לחודש. זה הגבול שבתוכו אפשר לקחת חשיפה למשתנה בלי להפחיד אותו.`
+    );
+  }
 
   return points;
 }

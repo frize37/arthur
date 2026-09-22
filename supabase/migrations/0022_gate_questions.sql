@@ -1,14 +1,14 @@
 -- The wizard now collects the answers that actually move the regulatory
 -- gates, rather than leaving the advisor to ask them all over again:
---   owned_properties/selling_existing — set the LTV ceiling (75% for a
---     first home, 70% for a replacement home, 50% for an investment)
+--   selling_existing — for a replacement home, selling before the purchase
+--     counts as first-home (75%) and after it as replacement (70%); the rest
+--     of the LTV ceiling follows from the purchase goal already collected
 --   oldest_age — payments must end by 75, so this caps the term
 --   has_zakaut — cheaper rate, no early-repayment fee, and it doesn't
 --     count toward the bank's capital allocation
 --   appraisal_value — the bank finances off the LOWER of contract price
 --     and appraisal, so a gap here shows up as missing equity
 
-alter table cases add column if not exists owned_properties text;
 alter table cases add column if not exists selling_existing text;
 alter table cases add column if not exists oldest_age integer;
 alter table cases add column if not exists has_zakaut text;
@@ -22,7 +22,7 @@ create view advisor_cases
 select
   c.id, c.status, c.complex, c.request_type, c.goal,
   c.property_source, c.property_legal, c.property_value, c.mortgage_amount, c.equity,
-  c.owned_properties, c.selling_existing, c.oldest_age, c.has_zakaut, c.appraisal_value,
+  c.selling_existing, c.oldest_age, c.has_zakaut, c.appraisal_value,
   c.comfort_payment, c.max_stress_payment,
   c.future_release, c.future_release_amount, c.future_release_timing, c.upcoming_event, c.income_change,
   c.has_second_applicant, c.employment1, c.seniority1, c.employment2, c.seniority2, c.income, c.extra,

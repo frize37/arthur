@@ -79,7 +79,6 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
         mortgage: row.mortgage_amount ?? 0,
         legal: row.property_legal ?? "tabu",
         source: row.property_source ?? null,
-        ownedProperties: row.owned_properties ?? null,
         sellingExisting: row.selling_existing ?? null,
         appraisalValue: row.appraisal_value != null ? Number(row.appraisal_value) : null,
       },
