@@ -1,0 +1,213 @@
+<title>מסמך תיק ארתור</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --paper: #F2F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #FFF4D9;
+    --ink: #0E2038;
+    --ink-soft: #3D5170;
+    --ink-faint: #74869F;
+    --line: rgba(14, 32, 56, 0.14);
+    --line-strong: rgba(14, 32, 56, 0.26);
+    --accent: #FFB300;
+    --accent-strong: #C98F00;
+    --accent-soft: #FFEDBD;
+    --teal: #06AABE;
+    --good: #21A15E;
+    --good-soft: #DEF3E7;
+    --hero-1: #0B2647;
+  }
+  * { box-sizing: border-box; }
+  html { direction: rtl; }
+  body {
+    margin: 0;
+    direction: rtl;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Assistant", -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  h1, h2, h3 { font-family: "Rubik", sans-serif; font-weight: 900; letter-spacing: -0.01em; margin: 0; }
+  .wrap { max-width: 700px; margin: 0 auto; padding: 28px 18px 60px; }
+
+  .doc {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 24px 50px -34px rgba(14, 32, 56, 0.4);
+    overflow: hidden;
+  }
+
+  header.doc-head { background: var(--hero-1); color: #fff; padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .mark { width: 32px; height: 32px; border-radius: 8px; background: var(--accent); color: var(--hero-1); display: flex; align-items: center; justify-content: center; font-family: "Rubik", sans-serif; font-weight: 900; font-size: 15px; flex-shrink: 0; }
+  .brand strong { font-family: "Rubik", sans-serif; font-size: 16px; }
+  .brand small { display: block; color: rgba(255,255,255,0.7); font-size: 11px; }
+  .doc-head .meta { font-size: 11.5px; color: rgba(255,255,255,0.75); }
+  .doc-head .meta b { display: block; color: #fff; font-family: "Rubik", sans-serif; font-size: 12.5px; }
+
+  .redaction-note { margin: 18px 28px 0; background: var(--good-soft); color: var(--good); border-radius: 10px; padding: 10px 14px; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .redaction-note svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  .doc-title { padding: 20px 28px 4px; }
+  .doc-title h1 { font-size: 19px; }
+  .doc-title p { color: var(--ink-soft); font-size: 13px; padding-top: 5px; }
+
+  .loan { margin: 18px 28px 0; }
+  .loan-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; background: var(--paper); border-radius: 8px; padding: 8px 12px; margin-bottom: 2px; }
+  .loan-head strong { font-family: "Rubik", sans-serif; font-size: 14.5px; }
+  .loan-head span { font-size: 11.5px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  .row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 7px 12px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .row:last-child { border-bottom: none; }
+  .row span { color: var(--ink-soft); }
+  .row b { font-family: "Rubik", sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+  .row b.flag { color: #C24B3E; }
+  .row.total { background: var(--surface-2); border-radius: 8px; margin-top: 4px; }
+  .row.total b { color: var(--accent-strong); }
+
+  .account-summary { margin: 22px 28px 0; border: 1.5px solid var(--line-strong); border-radius: 12px; overflow: hidden; }
+  .account-summary .loan-head { background: var(--hero-1); border-radius: 0; }
+  .account-summary .loan-head strong, .account-summary .loan-head span { color: #fff; }
+
+  footer.doc-foot { padding: 18px 28px 24px; margin-top: 16px; border-top: 1px solid var(--line); font-size: 11px; color: var(--ink-faint); }
+
+  @media (max-width: 480px) {
+    .row { flex-wrap: wrap; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="doc">
+    <header class="doc-head">
+      <div class="brand">
+        <div class="mark">א</div>
+        <div>
+          <strong>ארתור</strong>
+          <small>מסמך תיק לעיון היועץ</small>
+        </div>
+      </div>
+      <div class="meta">מסמך מס'<b>ARC-58231</b></div>
+    </header>
+
+    <div class="redaction-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+      נוצר על ידי ארתור מתוך דוח היתרות המקורי. שם, ת״ז, כתובת ומספרי חשבון הוסרו — כל שאר הנתונים כפי שהופיעו במקור.
+    </div>
+
+    <div class="doc-title">
+      <h1>תדפיס נתוני הלוואות — משכנתא</h1>
+      <p>בנק דיסקונט לישראל · תאריך הדפסת המסמך המקורי: 21/07/2025</p>
+    </div>
+
+    <div class="loan">
+      <div class="loan-head"><strong>מסלול א׳</strong><span>הלוואה 0-042-0502-00-103930</span></div>
+      <div class="row"><span>סוג הלוואה</span><b>כספי בנק</b></div>
+      <div class="row"><span>סוג ריבית</span><b>משתנה, לא צמוד</b></div>
+      <div class="row"><span>שיטת פרעון</span><b>שפיצר</b></div>
+      <div class="row"><span>תאריך מתן ההלוואה</span><b>27/06/2023</b></div>
+      <div class="row"><span>סכום מקורי</span><b>₪700,000.00</b></div>
+      <div class="row"><span>מועד תשלום ראשון</span><b>01/08/2023</b></div>
+      <div class="row"><span>מועד תשלום אחרון</span><b>01/07/2053</b></div>
+      <div class="row"><span>שיעור ריבית שנתית</span><b>5.2800%</b></div>
+      <div class="row"><span>בסיס לקביעת ריבית</span><b>ריבית עוגן בנק ישראל</b></div>
+      <div class="row"><span>ריבית בסיס (עוגן) עדכנית</span><b>3.8000%</b></div>
+      <div class="row"><span>שיעור תוספת/הפחתה</span><b>1.4800%</b></div>
+      <div class="row"><span>ריבית מתואמת עדכנית</span><b>5.4097%</b></div>
+      <div class="row"><span>תדירות שינוי ריבית</span><b>60 חודשים</b></div>
+      <div class="row"><span>תאריך שינוי קרוב</span><b>01/07/2028</b></div>
+      <div class="row"><span>מטרת הלוואה</span><b>דיור</b></div>
+      <div class="row"><span>ביטוח EMI</span><b>לא מבוטח</b></div>
+      <div class="row"><span>יתרת תקופה בחודשים</span><b>336</b></div>
+      <div class="row"><span>חיוב אחרון בהלוואה</span><b>₪3,943.72</b></div>
+      <div class="row"><span>יתרת קרן</span><b>₪691,278.29</b></div>
+      <div class="row"><span>ריבית צבורה</span><b>₪2,129.14</b></div>
+      <div class="row"><span>יתרת פיגור</span><b>₪0.00</b></div>
+      <div class="row"><span>עמלת מדד ממוצע</span><b>₪0.00</b></div>
+      <div class="row"><span>עמלת פערי ריבית</span><b>₪3,880.72</b></div>
+      <div class="row"><span>עמלת העדר הודעה מוקדמת</span><b>₪693.41</b></div>
+      <div class="row total"><span>סה״כ עמלת פרעון מוקדם</span><b>₪4,574.13</b></div>
+      <div class="row"><span>שיעור ריבית כוללת חזויה</span><b>6.0691%</b></div>
+      <div class="row"><span>שיעור ריבית לצרכי השוואה</span><b>6.0025%</b></div>
+      <div class="row total"><span>סה״כ יתרה לסילוק (מסלול)</span><b>₪697,981.56</b></div>
+    </div>
+
+    <div class="loan">
+      <div class="loan-head"><strong>מסלול ב׳</strong><span>הלוואה 0-042-0502-00-104139</span></div>
+      <div class="row"><span>סוג הלוואה</span><b>כספי בנק</b></div>
+      <div class="row"><span>סוג ריבית</span><b>משתנה, לא צמוד</b></div>
+      <div class="row"><span>שיטת פרעון</span><b>שפיצר</b></div>
+      <div class="row"><span>תאריך מתן ההלוואה</span><b>13/09/2023</b></div>
+      <div class="row"><span>סכום מקורי</span><b>₪100,000.00</b></div>
+      <div class="row"><span>מועד תשלום ראשון</span><b>01/10/2023</b></div>
+      <div class="row"><span>מועד תשלום אחרון</span><b>01/09/2053</b></div>
+      <div class="row"><span>שיעור ריבית שנתית</span><b>5.3500%</b></div>
+      <div class="row"><span>בסיס לקביעת ריבית</span><b>ריבית עוגן בנק ישראל</b></div>
+      <div class="row"><span>ריבית בסיס (עוגן) עדכנית</span><b>3.8700%</b></div>
+      <div class="row"><span>שיעור תוספת/הפחתה</span><b>1.4800%</b></div>
+      <div class="row"><span>ריבית מתואמת עדכנית</span><b>5.4832%</b></div>
+      <div class="row"><span>תדירות שינוי ריבית</span><b>60 חודשים</b></div>
+      <div class="row"><span>תאריך שינוי קרוב</span><b>01/09/2028</b></div>
+      <div class="row"><span>מטרת הלוואה</span><b>דיור</b></div>
+      <div class="row"><span>ביטוח EMI</span><b>לא מבוטח</b></div>
+      <div class="row"><span>יתרת תקופה בחודשים</span><b>338</b></div>
+      <div class="row"><span>חיוב אחרון בהלוואה</span><b>₪567.86</b></div>
+      <div class="row"><span>יתרת קרן</span><b>₪99,052.22</b></div>
+      <div class="row"><span>ריבית צבורה</span><b>₪309.13</b></div>
+      <div class="row"><span>יתרת פיגור</span><b>₪0.00</b></div>
+      <div class="row"><span>עמלת מדד ממוצע</span><b>₪0.00</b></div>
+      <div class="row"><span>עמלת פערי ריבית</span><b>₪334.95</b></div>
+      <div class="row"><span>עמלת העדר הודעה מוקדמת</span><b>₪99.36</b></div>
+      <div class="row total"><span>סה״כ עמלת פרעון מוקדם</span><b>₪434.31</b></div>
+      <div class="row"><span>שיעור ריבית כוללת חזויה</span><b>6.0885%</b></div>
+      <div class="row"><span>שיעור ריבית לצרכי השוואה</span><b>6.0450%</b></div>
+      <div class="row total"><span>סה״כ יתרה לסילוק (מסלול)</span><b>₪99,795.66</b></div>
+    </div>
+
+    <div class="loan">
+      <div class="loan-head"><strong>מסלול ג׳</strong><span>הלוואה 0-042-0690-00-122934</span></div>
+      <div class="row"><span>סוג הלוואה</span><b>כספי בנק</b></div>
+      <div class="row"><span>סוג ריבית</span><b>קבועה, צמוד מדד</b></div>
+      <div class="row"><span>שיטת פרעון</span><b>שפיצר</b></div>
+      <div class="row"><span>תאריך מתן ההלוואה</span><b>23/05/2023</b></div>
+      <div class="row"><span>סכום מקורי</span><b>₪800,000.00</b></div>
+      <div class="row"><span>מועד תשלום ראשון</span><b>01/07/2023</b></div>
+      <div class="row"><span>מועד תשלום אחרון</span><b>01/06/2053</b></div>
+      <div class="row"><span>שיעור ריבית שנתית</span><b>2.7500%</b></div>
+      <div class="row"><span>ריבית מתואמת עדכנית</span><b>2.7849%</b></div>
+      <div class="row"><span>מטרת הלוואה</span><b>דיור</b></div>
+      <div class="row"><span>ביטוח EMI</span><b>לא מבוטח</b></div>
+      <div class="row"><span>יתרת תקופה בחודשים</span><b>335</b></div>
+      <div class="row"><span>חיוב אחרון בהלוואה</span><b>₪3,512.27</b></div>
+      <div class="row"><span>מדד בסיס</span><b>96.78026761</b></div>
+      <div class="row"><span>מדד נוכחי ידוע</span><b>103.10000000</b></div>
+      <div class="row"><span>יתרת קרן</span><b>₪772,688.41</b></div>
+      <div class="row"><span>יתרת הצמדת קרן</span><b>₪50,456.40</b></div>
+      <div class="row"><span>ריבית צבורה</span><b>₪1,239.52</b></div>
+      <div class="row"><span>הצמדת ריבית</span><b>₪80.94</b></div>
+      <div class="row"><span>יתרת פיגור</span><b>₪0.00</b></div>
+      <div class="row total"><span>סה״כ עמלת פרעון מוקדם</span><b>₪0.00</b></div>
+      <div class="row"><span>שיעור ריבית כוללת חזויה</span><b>5.1655%</b></div>
+      <div class="row"><span>שיעור ריבית לצרכי השוואה</span><b>5.1655%</b></div>
+      <div class="row total"><span>סה״כ יתרה לסילוק (מסלול)</span><b>₪824,465.27</b></div>
+    </div>
+
+    <div class="account-summary">
+      <div class="loan-head"><strong>סיכום נתוני ההלוואות לסילוק חשבון המשכנתא</strong><span></span></div>
+      <div class="row"><span>סה״כ יתרה (כל המסלולים)</span><b>₪1,617,234.05</b></div>
+      <div class="row"><span>סה״כ עמלת פרעון מוקדם</span><b>₪5,008.44</b></div>
+      <div class="row"><span>סה״כ יתרת ביניים</span><b>₪1,622,242.49</b></div>
+      <div class="row"><span>יתרות חובה</span><b>₪0.00</b></div>
+      <div class="row"><span>עמלה תפעולית</span><b>₪60.00</b></div>
+      <div class="row total"><span>סה״כ יתרה לסילוק</span><b>₪1,622,302.49</b></div>
+      <div class="row"><span>שיעור ריבית כוללת חזויה ברמת חשבון</span><b>5.6042%</b></div>
+      <div class="row"><span>שיעור ריבית לצרכי השוואה ברמת חשבון</span><b>5.5744%</b></div>
+      <div class="row"><span>תוקף היתרה (כיבוד הרשאה לחיוב מתאריך)</span><b>01/07/2025</b></div>
+    </div>
+
+    <footer class="doc-foot">
+      מסמך זה הופק אוטומטית על ידי ארתור מנתוני דוח היתרות שהעלה הלקוח, לצורך הגשת הצעת מחיר בלבד. אינו מהווה אסמכתא לסילוק ההלוואה. פרטים מזהים אישיים (שם, ת״ז, כתובת, מספרי חשבון) הוסרו במלואם ואינם נשמרים אצל ארתור.
+    </footer>
+  </div>
+</div>

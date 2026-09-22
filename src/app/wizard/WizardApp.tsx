@@ -5,6 +5,7 @@ import Image from "next/image";
 import "./wizard.css";
 import { IconSprite } from "./components/IconSprite";
 import { ProgressBar } from "./components/ui";
+import { StageTip } from "./components/StageTip";
 import { STAGES, STAGE_CHAPTER, initialWizardState, WizardState } from "./lib/types";
 import { wizardReducer } from "./lib/reducer";
 import {
@@ -64,6 +65,8 @@ export function WizardApp() {
         {state.stage === "credit" && <CreditStage {...stageProps} />}
         {state.stage === "documents" && <DocumentsStage {...stageProps} />}
         {state.stage === "summary" && <SummaryStage {...stageProps} />}
+
+        <StageTip stage={state.stage} requestType={state.requestType} />
       </div>
 
       <SiteFooter />

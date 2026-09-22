@@ -277,3 +277,94 @@
 .done-panel .btn-link { position: relative; z-index: 1; color: #fff; text-decoration-color: rgba(255,255,255,.55); }
 
 @media (max-width: 420px) { .parsed-grid { grid-template-columns: 1fr; } .statrow { grid-template-columns: 1fr; } }
+
+/* ---- tip box ("did you know") at the foot of every stage ---- */
+.tipbox {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-block-start: 22px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-2) 40%, var(--surface)) 0%, var(--surface-2) 100%);
+  box-shadow: 0 18px 38px -30px color-mix(in srgb, var(--accent-strong) 90%, transparent);
+  animation: tipIn .45s cubic-bezier(.22, 1, .36, 1) both;
+}
+/* soft light spill from behind the bulb */
+.tipbox__blob {
+  position: absolute;
+  inset-inline-start: -34px;
+  inset-block-start: -46px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 45%, transparent) 0%, transparent 68%);
+  pointer-events: none;
+}
+/* faint dot texture in the far corner, echoing the page background */
+.tipbox::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -10px;
+  inset-block-end: -10px;
+  width: 92px;
+  height: 92px;
+  background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--accent-strong) 30%, transparent) 1px, transparent 0) 0 0/9px 9px;
+  opacity: .5;
+  pointer-events: none;
+}
+.tipbox__bulb {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--hero-1);
+  box-shadow:
+    0 10px 20px -10px color-mix(in srgb, var(--accent-strong) 95%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.tipbox__glyph { grid-area: 1 / 1; width: 25px; height: 25px; }
+.tipbox__rays {
+  grid-area: 1 / 1;
+  width: 74px;
+  height: 74px;
+  color: var(--accent-strong);
+  opacity: .5;
+  animation: tipRays 3s ease-in-out infinite;
+}
+.tipbox__body { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.tipbox__kicker {
+  align-self: flex-start;
+  font-family: var(--font-rubik), sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--accent-strong);
+  padding-inline: 3px;
+  background: linear-gradient(transparent 62%, color-mix(in srgb, var(--accent) 55%, transparent) 62%);
+}
+.tipbox__body p { font-size: 13.5px; line-height: 1.65; color: var(--ink-soft); }
+
+@keyframes tipIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes tipRays {
+  0%, 100% { opacity: .32; transform: scale(.94) rotate(0deg); }
+  50% { opacity: .75; transform: scale(1) rotate(22.5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tipbox { animation: none; }
+  .tipbox__rays { animation: none; opacity: .5; }
+}
+@media (max-width: 420px) {
+  .tipbox { gap: 12px; padding: 16px; }
+  .tipbox__bulb { width: 40px; height: 40px; }
+  .tipbox__glyph { width: 22px; height: 22px; }
+  .tipbox__rays { width: 64px; height: 64px; }
+}
