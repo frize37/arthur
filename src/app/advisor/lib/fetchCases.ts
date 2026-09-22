@@ -155,24 +155,68 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
   });
 }
 
-export async function fetchMyCommission(
-  advisorId: string
-): Promise<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null; logoUrl: string | null }> {
+export interface MyProfile {
+  commissionType: "percent" | "fixed" | null;
+  commissionValue: number | null;
+  logoUrl: string | null;
+  /** שם העסק כפי שמופיע בדף הבית; ריק = משתמשים בשם היועץ. */
+  publicName: string | null;
+  publicSpecialty: string | null;
+  /** כשנעול — רק המשרד משנה את הפרופיל הפומבי. */
+  profileLocked: boolean;
+}
+
+const EMPTY_PROFILE: MyProfile = {
+  commissionType: null,
+  commissionValue: null,
+  logoUrl: null,
+  publicName: null,
+  publicSpecialty: null,
+  profileLocked: false,
+};
+
+export async function fetchMyCommission(advisorId: string): Promise<MyProfile> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("advisors_directory")
-    .select("commission_type, commission_value, logo_url")
+    .select("commission_type, commission_value, logo_url, public_name, public_specialty, profile_locked")
     .eq("id", advisorId)
     .maybeSingle();
   if (error || !data) {
     if (error) console.error("Failed to fetch commission:", error.message);
-    return { commissionType: null, commissionValue: null, logoUrl: null };
+    return EMPTY_PROFILE;
   }
   return {
     commissionType: data.commission_type ?? null,
     commissionValue: data.commission_value != null ? Number(data.commission_value) : null,
     logoUrl: data.logo_url ?? null,
+    publicName: data.public_name ?? null,
+    publicSpecialty: data.public_specialty ?? null,
+    profileLocked: data.profile_locked ?? false,
   };
+}
+
+/**
+ * עובר רק כשהמשרד לא נעל את הפרופיל — הטריגר ב-0025 הוא שאוכף את זה,
+ * לא המסך הזה.
+ */
+export async function updateMyPublicProfile(
+  advisorId: string,
+  input: { publicName: string; publicSpecialty: string }
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("advisors")
+    .update({
+      public_name: input.publicName.trim() || null,
+      public_specialty: input.publicSpecialty.trim() || null,
+    })
+    .eq("id", advisorId);
+  if (error) {
+    console.error("Failed to update public profile:", error.message);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function uploadMyLogo(advisorId: string, file: File): Promise<{ ok: true; url: string } | { ok: false; error: string }> {

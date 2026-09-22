@@ -35,6 +35,10 @@ export async function fetchAdvisors(): Promise<Record<string, Advisor>> {
       commissionType: row.commission_type ?? null,
       commissionValue: row.commission_value != null ? Number(row.commission_value) : null,
       logoUrl: row.logo_url ?? null,
+      publicName: row.public_name ?? null,
+      publicSpecialty: row.public_specialty ?? null,
+      isPublic: row.is_public ?? true,
+      profileLocked: row.profile_locked ?? false,
     };
   }
   return map;
@@ -115,7 +119,16 @@ export async function updateAdvisorCommission(advisorId: string, commissionType:
 
 export async function updateAdvisorProfile(
   advisorId: string,
-  input: { name: string; specialty: string; commissionType: "percent" | "fixed"; commissionValue: number }
+  input: {
+    name: string;
+    specialty: string;
+    commissionType: "percent" | "fixed";
+    commissionValue: number;
+    publicName: string;
+    publicSpecialty: string;
+    isPublic: boolean;
+    profileLocked: boolean;
+  }
 ): Promise<boolean> {
   const supabase = createClient();
   const { error } = await supabase
@@ -125,10 +138,63 @@ export async function updateAdvisorProfile(
       specialty: input.specialty,
       commission_type: input.commissionType,
       commission_value: input.commissionValue,
+      // Empty means "no separate trading name" — store null so the landing
+      // page falls back to the internal name rather than showing a blank.
+      public_name: input.publicName.trim() || null,
+      public_specialty: input.publicSpecialty.trim() || null,
+      is_public: input.isPublic,
+      profile_locked: input.profileLocked,
     })
     .eq("id", advisorId);
   if (error) {
     console.error("Failed to update advisor profile:", error.message);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * עמודות התשובות שהמשרד רשאי לתקן אחרי שהלקוח שלח את השאלון.
+ * לא כולל פרטי קשר, סטטוס, או נתוני מסמכים — אלה מנוהלים במקום אחר.
+ */
+export interface CaseAnswersPatch {
+  request_type: string;
+  goal: string;
+  property_value: number;
+  mortgage_amount: number;
+  equity: number;
+  appraisal_value: number | null;
+  property_legal: string;
+  property_source: string | null;
+  selling_existing: string | null;
+  oldest_age: number;
+  has_zakaut: string | null;
+  income: number;
+  extra: number;
+  comfort_payment: number;
+  max_stress_payment: number;
+  has_second_applicant: string;
+  employment1: string;
+  seniority1: string;
+  employment2: string | null;
+  seniority2: string | null;
+  other_loans: string;
+  other_loans_payment: number | null;
+  other_loans_ending_soon: string | null;
+  other_loans_months_left: string | null;
+  credit_issues: string;
+  future_release: string;
+  future_release_amount: number | null;
+  future_release_timing: string | null;
+  upcoming_event: string;
+  income_change: string;
+}
+
+export async function updateCaseAnswers(caseId: string, patch: Partial<CaseAnswersPatch>): Promise<boolean> {
+  const supabase = createClient();
+  const { error } = await supabase.from("cases").update(patch).eq("id", caseId);
+  if (error) {
+    console.error("Failed to update case answers:", error.message);
     return false;
   }
   return true;
@@ -314,6 +380,12 @@ export async function fetchCases(): Promise<AdminCase[]> {
       originalDocType: row.original_doc_type ?? null,
       cleanDocName: row.clean_doc_name ?? null,
       cleanDocType: row.clean_doc_type ?? null,
+      answers: {
+        incomeBase: Number(row.income ?? 0),
+        extra: Number(row.extra ?? 0),
+        comfortPayment: Number(row.comfort_payment ?? 0),
+        maxStressPayment: Number(row.max_stress_payment ?? 0),
+      },
       completionNote: row.completion_note ?? null,
       completedBy: row.completed_by ?? null,
     };

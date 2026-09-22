@@ -5,7 +5,16 @@ import "./advisor.css";
 import { AdvisorIcons } from "./components/AdvisorIcons";
 import { ArthurMascot } from "@/components/ArthurMascot";
 import { AdvisorCase, LABELS, STATUS_META, computeCase, computeCommission, deriveKeyPoints } from "./lib/data";
-import { fetchMyCases, fetchMyCommission, getCleanDocUrl, submitCompletion, submitOffer, uploadMyLogo } from "./lib/fetchCases";
+import {
+  MyProfile,
+  fetchMyCases,
+  fetchMyCommission,
+  getCleanDocUrl,
+  submitCompletion,
+  submitOffer,
+  updateMyPublicProfile,
+  uploadMyLogo,
+} from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -27,13 +36,45 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [bellOpen, setBellOpen] = useState(false);
   const [bellSeen, setBellSeen] = useState(false);
-  const [commission, setCommission] = useState<{ commissionType: "percent" | "fixed" | null; commissionValue: number | null; logoUrl: string | null }>({
+  const [commission, setCommission] = useState<MyProfile>({
     commissionType: null,
     commissionValue: null,
     logoUrl: null,
+    publicName: null,
+    publicSpecialty: null,
+    profileLocked: false,
   });
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({ publicName: "", publicSpecialty: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  // המשרד יכול לנעול את הפרופיל הפומבי; אז הוא לקריאה בלבד כאן.
+  const locked = commission.profileLocked;
+
+  function openProfile() {
+    setProfileDraft({ publicName: commission.publicName ?? "", publicSpecialty: commission.publicSpecialty ?? "" });
+    setProfileError(null);
+    setProfileOpen(true);
+  }
+
+  async function saveProfile() {
+    setSavingProfile(true);
+    setProfileError(null);
+    const res = await updateMyPublicProfile(advisorId, profileDraft);
+    setSavingProfile(false);
+    if (!res.ok) {
+      setProfileError("השמירה נכשלה. ייתכן שהמשרד נעל את הפרופיל.");
+      return;
+    }
+    setCommission((c) => ({
+      ...c,
+      publicName: profileDraft.publicName.trim() || null,
+      publicSpecialty: profileDraft.publicSpecialty.trim() || null,
+    }));
+    setProfileOpen(false);
+  }
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -135,24 +176,72 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
               )}
             </div>
             <div className="advisor-chip">
-              <label className="advisor-chip__logo" title={commission.logoUrl ? "החלפת הלוגו" : "העלאת לוגו"}>
-                {uploadingLogo ? (
-                  <div className="advisor-chip__avatar"><span className="spinner" /></div>
-                ) : commission.logoUrl ? (
-                  <img className="advisor-chip__avatar" src={commission.logoUrl} alt="" style={{ objectFit: "cover" }} />
-                ) : (
-                  <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
-                )}
-                <span className="advisor-chip__camera" aria-hidden>
-                  <svg viewBox="0 0 24 24"><path d="M4 8h3l1.4-2h7.2L17 8h3v11H4V8Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
-                </span>
-                <input type="file" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo} />
-                <span className="sr-only">העלאת לוגו</span>
-              </label>
+              {locked ? (
+                <div className="advisor-chip__logo">
+                  {commission.logoUrl ? (
+                    <img className="advisor-chip__avatar" src={commission.logoUrl} alt="" style={{ objectFit: "cover" }} />
+                  ) : (
+                    <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
+                  )}
+                </div>
+              ) : (
+                <label className="advisor-chip__logo" title={commission.logoUrl ? "החלפת הלוגו" : "העלאת לוגו"}>
+                  {uploadingLogo ? (
+                    <div className="advisor-chip__avatar"><span className="spinner" /></div>
+                  ) : commission.logoUrl ? (
+                    <img className="advisor-chip__avatar" src={commission.logoUrl} alt="" style={{ objectFit: "cover" }} />
+                  ) : (
+                    <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
+                  )}
+                  <span className="advisor-chip__camera" aria-hidden>
+                    <svg viewBox="0 0 24 24"><path d="M4 8h3l1.4-2h7.2L17 8h3v11H4V8Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+                  </span>
+                  <input type="file" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo} />
+                  <span className="sr-only">העלאת לוגו</span>
+                </label>
+              )}
               <div className="advisor-chip__info">
-                <strong>{advisorName}</strong>
-                <small>{commission.logoUrl ? "יועץ/ת משכנתאות" : "הוסיפו לוגו ←"}</small>
+                <strong>{commission.publicName || advisorName}</strong>
+                {locked ? (
+                  <small>{commission.publicSpecialty || "יועץ/ת משכנתאות"}</small>
+                ) : (
+                  <button type="button" className="advisor-chip__edit" onClick={() => (profileOpen ? setProfileOpen(false) : openProfile())}>
+                    {commission.publicName || commission.logoUrl ? "עריכת הפרופיל" : "השלמת הפרופיל ←"}
+                  </button>
+                )}
               </div>
+
+              {profileOpen && !locked && (
+                <div className="profile-panel">
+                  <div className="profile-panel__head">מה מוצג עליכם בדף הבית</div>
+                  <label>
+                    <span>שם לפרסום</span>
+                    <input
+                      type="text"
+                      value={profileDraft.publicName}
+                      placeholder={advisorName}
+                      onChange={(e) => setProfileDraft((d) => ({ ...d, publicName: e.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    <span>במה אתם מתמחים</span>
+                    <input
+                      type="text"
+                      value={profileDraft.publicSpecialty}
+                      placeholder="למשל: מחזור משכנתאות ותיקים מורכבים"
+                      onChange={(e) => setProfileDraft((d) => ({ ...d, publicSpecialty: e.target.value }))}
+                    />
+                  </label>
+                  <p className="profile-panel__hint">שדה ריק יציג את הפרטים הרשומים עליכם במערכת. הלוגו מתעדכן בלחיצה על התמונה.</p>
+                  {profileError && <p className="profile-panel__error">{profileError}</p>}
+                  <div className="profile-panel__actions">
+                    <button type="button" className="btn btn-primary" disabled={savingProfile} onClick={saveProfile}>
+                      {savingProfile ? "שומר…" : "שמירה"}
+                    </button>
+                    <button type="button" className="btn btn-ghost" onClick={() => setProfileOpen(false)}>ביטול</button>
+                  </div>
+                </div>
+              )}
             </div>
             <SignOutButton className="btn btn-ghost" />
           </div>

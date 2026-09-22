@@ -85,6 +85,13 @@ export interface AdminCase {
   cleanDocType: string | null;
   completionNote: string | null;
   completedBy: "advisor" | "admin" | null;
+  /** הערכים הגולמיים כפי שהלקוח הזין — brief.income הוא סכום מחושב ולכן לא ניתן לעריכה ישירה. */
+  answers: {
+    incomeBase: number;
+    extra: number;
+    comfortPayment: number;
+    maxStressPayment: number;
+  };
 }
 
 export interface Advisor {
@@ -98,6 +105,12 @@ export interface Advisor {
   commissionType: "percent" | "fixed" | null;
   commissionValue: number | null;
   logoUrl: string | null;
+  /** שם העסק לפרסום — לעיתים שונה משם היועץ עצמו. ריק = משתמשים ב-name. */
+  publicName: string | null;
+  publicSpecialty: string | null;
+  isPublic: boolean;
+  /** כשדלוק — רק המשרד משנה את הפרופיל הפומבי, לא היועץ. */
+  profileLocked: boolean;
 }
 
 export const LABELS = {

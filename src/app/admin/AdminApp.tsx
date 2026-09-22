@@ -26,6 +26,7 @@ import {
 } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
+import { CaseAnswersEditor } from "./components/CaseAnswersEditor";
 import { SignOutButton } from "@/components/SignOutButton";
 import { CaseChat } from "@/components/CaseChat";
 
@@ -368,6 +369,8 @@ function DetailView({
               {briefRow("חיווי אשראי", c.credit.creditIssues === "yes" ? "דורש תשומת לב" : "תקין")}
             </div>
           </div>
+
+          <CaseAnswersEditor case_={c} onUpdate={onUpdate} />
 
           {c.docTracks.length > 0 && <LoanTracksCard tracks={c.docTracks} totals={c.docTotals} source={c.docSource} />}
 
@@ -824,6 +827,10 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(a.name);
   const [specialty, setSpecialty] = useState(a.specialty);
+  const [publicName, setPublicName] = useState(a.publicName ?? "");
+  const [publicSpecialty, setPublicSpecialty] = useState(a.publicSpecialty ?? "");
+  const [isPublic, setIsPublic] = useState(a.isPublic);
+  const [profileLocked, setProfileLocked] = useState(a.profileLocked);
   const [commissionType, setCommissionType] = useState<"percent" | "fixed">(a.commissionType ?? "percent");
   const [commissionValue, setCommissionValue] = useState(a.commissionValue ?? 10);
   const [saving, setSaving] = useState(false);
@@ -848,6 +855,10 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
   function openEdit() {
     setName(a.name);
     setSpecialty(a.specialty);
+    setPublicName(a.publicName ?? "");
+    setPublicSpecialty(a.publicSpecialty ?? "");
+    setIsPublic(a.isPublic);
+    setProfileLocked(a.profileLocked);
     setCommissionType(a.commissionType ?? "percent");
     setCommissionValue(a.commissionValue ?? 10);
     setCustomPassword("");
@@ -858,7 +869,16 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
 
   async function save() {
     setSaving(true);
-    const ok = await updateAdvisorProfile(a.id, { name, specialty, commissionType, commissionValue });
+    const ok = await updateAdvisorProfile(a.id, {
+      name,
+      specialty,
+      commissionType,
+      commissionValue,
+      publicName,
+      publicSpecialty,
+      isPublic,
+      profileLocked,
+    });
     setSaving(false);
     if (ok) {
       setEditing(false);
@@ -898,7 +918,16 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
       ) : (
         <div className="lead-row__avatar">{initials}</div>
       )}
-      <div className="lead-row__info"><strong>{a.name}</strong><small>{a.specialty}{a.email ? ` · ${a.email}` : ""}</small></div>
+      <div className="lead-row__info">
+        <strong>{a.name}</strong>
+        <small>
+          {a.specialty}
+          {a.email ? ` · ${a.email}` : ""}
+          {a.publicName ? ` · מפורסם כ- ${a.publicName}` : ""}
+          {!a.isPublic ? " · לא מוצג באתר" : ""}
+          {a.profileLocked ? " · פרופיל נעול" : ""}
+        </small>
+      </div>
       <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
       <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
       <div className="lead-row__stat"><span>זמן תגובה</span><b>{a.avgResponseHours} ש׳</b></div>
@@ -911,6 +940,33 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="שם מלא" style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 140px" }} />
             <input type="text" value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="התמחות" style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 140px" }} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <small style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-soft)" }}>מה מוצג בדף הבית</small>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <input
+                type="text"
+                value={publicName}
+                onChange={(e) => setPublicName(e.target.value)}
+                placeholder={`שם לפרסום (ריק = ${a.name})`}
+                style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 140px" }}
+              />
+              <input
+                type="text"
+                value={publicSpecialty}
+                onChange={(e) => setPublicSpecialty(e.target.value)}
+                placeholder={`התמחות לפרסום (ריק = ${a.specialty})`}
+                style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 8px", flex: "1 1 140px" }}
+              />
+            </div>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer" }}>
+              <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+              מוצג ברשימת היועצים בדף הבית
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer" }}>
+              <input type="checkbox" checked={!profileLocked} onChange={(e) => setProfileLocked(!e.target.checked)} />
+              היועץ רשאי לערוך בעצמו לוגו, שם והתמחות לפרסום
+            </label>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <select value={commissionType} onChange={(e) => setCommissionType(e.target.value as "percent" | "fixed")} style={{ fontSize: 12, borderRadius: 8, border: "1.5px solid var(--line)", padding: "5px 6px" }}>
