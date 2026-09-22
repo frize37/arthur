@@ -175,6 +175,24 @@ export async function fetchMyCommission(
   };
 }
 
+export async function uploadMyLogo(advisorId: string, file: File): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const supabase = createClient();
+  // The storage policy added in 0024 keys off this first path segment.
+  const path = `${advisorId}/${Date.now()}-${file.name}`;
+  const { error: uploadErr } = await supabase.storage.from("advisor-logos").upload(path, file, { upsert: true });
+  if (uploadErr) {
+    console.error("Failed to upload logo:", uploadErr.message);
+    return { ok: false, error: uploadErr.message };
+  }
+  const { data } = supabase.storage.from("advisor-logos").getPublicUrl(path);
+  const { error: updateErr } = await supabase.from("advisors").update({ logo_url: data.publicUrl }).eq("id", advisorId);
+  if (updateErr) {
+    console.error("Failed to save logo url:", updateErr.message);
+    return { ok: false, error: updateErr.message };
+  }
+  return { ok: true, url: data.publicUrl };
+}
+
 export async function submitCompletion(caseId: string, outcome: "closed" | "closed_no_deal", note: string) {
   const supabase = createClient();
   const { error } = await supabase

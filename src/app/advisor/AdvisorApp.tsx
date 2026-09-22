@@ -5,7 +5,7 @@ import "./advisor.css";
 import { AdvisorIcons } from "./components/AdvisorIcons";
 import { ArthurMascot } from "@/components/ArthurMascot";
 import { AdvisorCase, LABELS, STATUS_META, computeCase, computeCommission, deriveKeyPoints } from "./lib/data";
-import { fetchMyCases, fetchMyCommission, getCleanDocUrl, submitCompletion, submitOffer } from "./lib/fetchCases";
+import { fetchMyCases, fetchMyCommission, getCleanDocUrl, submitCompletion, submitOffer, uploadMyLogo } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -32,6 +32,19 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
     commissionValue: null,
     logoUrl: null,
   });
+
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingLogo(true);
+    const res = await uploadMyLogo(advisorId, file);
+    setUploadingLogo(false);
+    if (res.ok) setCommission((c) => ({ ...c, logoUrl: res.url }));
+    else alert("העלאת הלוגו נכשלה: " + res.error);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -122,14 +135,23 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
               )}
             </div>
             <div className="advisor-chip">
-              {commission.logoUrl ? (
-                <img className="advisor-chip__avatar" src={commission.logoUrl} alt="" style={{ objectFit: "cover" }} />
-              ) : (
-                <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
-              )}
+              <label className="advisor-chip__logo" title={commission.logoUrl ? "החלפת הלוגו" : "העלאת לוגו"}>
+                {uploadingLogo ? (
+                  <div className="advisor-chip__avatar"><span className="spinner" /></div>
+                ) : commission.logoUrl ? (
+                  <img className="advisor-chip__avatar" src={commission.logoUrl} alt="" style={{ objectFit: "cover" }} />
+                ) : (
+                  <div className="advisor-chip__avatar">{advisorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
+                )}
+                <span className="advisor-chip__camera" aria-hidden>
+                  <svg viewBox="0 0 24 24"><path d="M4 8h3l1.4-2h7.2L17 8h3v11H4V8Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+                </span>
+                <input type="file" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo} />
+                <span className="sr-only">העלאת לוגו</span>
+              </label>
               <div className="advisor-chip__info">
                 <strong>{advisorName}</strong>
-                <small>יועץ/ת משכנתאות</small>
+                <small>{commission.logoUrl ? "יועץ/ת משכנתאות" : "הוסיפו לוגו ←"}</small>
               </div>
             </div>
             <SignOutButton className="btn btn-ghost" />

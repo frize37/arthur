@@ -32,7 +32,7 @@ export function WelcomeStage({ go }: StageProps) {
                   <br />
                   לפני ש<span className="hl">ארתור בודק</span>.
                 </h1>
-                <p>כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר יועצי משכנתאות מתחרים על התיק שלכם ומציעים לכם את התנאים הכי טובים שהם יכולים.</p>
+                <p>כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר יועצי משכנתאות מתחרים על התיק שלכם ומציעים לכם את התנאים הכי טובים שהם יכולים. ובסוף יש בן אדם — יועץ שידבר איתכם וילווה אתכם, לא מחשב.</p>
               </div>
               <div
                 className="hero-band__stage"
@@ -62,12 +62,12 @@ export function WelcomeStage({ go }: StageProps) {
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-down" /></svg></div><span>חיסכון ענק אפשרי</span></div>
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-upload" /></svg></div><span>יועצים מתחרים על התיק</span></div>
         <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-clock" /></svg></div><span>2 דקות וההצעה בדרך</span></div>
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-cash" /></svg></div><span>ליווי אישי צמוד</span></div>
+        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-cash" /></svg></div><span>יועץ אנושי שמדבר איתכם</span></div>
       </div>
 
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div className="card-badge">🔒 מאובטח ופרטי</div>
-        <BuddyRow bubble="כל תשובה כאן חשובה לדיוק ההצעה שתקבלו — אין תשובות מיותרות. ואת דוח היתרות אני לא שומר אצלי, רק שולף ממנו את המספרים." />
+        <BuddyRow bubble="בסוף התהליך יושב יועץ אמיתי שיטפל בכם — אני רק דואג שכמה מהטובים יתחרו על התיק שלכם. כל תשובה כאן חשובה לדיוק ההצעה שתקבלו — אין תשובות מיותרות. ואת דוח היתרות אני לא שומר אצלי, רק שולף ממנו את המספרים." />
         <button type="button" className="btn btn-primary" style={{ width: "100%", fontSize: 16, padding: 15 }} onClick={() => go("requestType")}>
           בואו נתחיל
         </button>

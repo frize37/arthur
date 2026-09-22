@@ -3,6 +3,8 @@ import Image from "next/image";
 import { ArthurMascot } from "@/components/ArthurMascot";
 import { SiteFooter } from "@/components/SiteFooter";
 import { fetchPublicStats } from "./lib/publicStats";
+import { fetchPublicAdvisors } from "./lib/publicAdvisors";
+import { AdvisorRoster } from "@/components/AdvisorRoster";
 import { shekel } from "./wizard/lib/finance";
 
 // Stats are live data, not build-time content — refresh at most once a
@@ -25,6 +27,24 @@ const STEPS = [
   {
     title: "יועצים מתחרים על התיק שלכם",
     desc: "התיק (בעילום שם) יוצא למספר יועצי משכנתאות, וכל אחד מגיש הצעת מחיר אמיתית — אתם מקבלים את המשתלמת ביותר.",
+  },
+];
+
+const PROMISES = [
+  {
+    title: "יש לכם עם מי לדבר",
+    desc: "יועץ משכנתאות בשר ודם מקבל את התיק שלכם, מדבר איתכם ומלווה אתכם עד הסוף. לא צ׳אט, לא טופס שחוזר במייל, ולא מחשב שמחליט במקומכם.",
+    icon: "M8 21h8M12 17v4M4.5 5.5h15v10a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-10Z M9 10.5h6",
+  },
+  {
+    title: "הם מתחרים עליכם",
+    desc: "זה כל ההבדל: במקום שתלכו ליועץ אחד ותקוו שהוא הכי טוב, כמה יועצים מקבלים את התיק באותו זמן ומתחרים עליו. התוצאה היא תנאים טובים יותר עבורכם.",
+    icon: "M7 17l-3-3 3-3M4 14h9a4 4 0 0 0 4-4V7M17 7l3 3-3 3",
+  },
+  {
+    title: "ורק הטובים שבהם",
+    desc: "עובדים איתנו מטובי יועצי המשכנתאות בארץ. כל יועץ נמדד על החיסכון שהשיג ועל השירות שנתן — ומי שלא עומד בזה, לא ממשיך.",
+    icon: "M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85L12 3.5Z",
   },
 ];
 
@@ -72,7 +92,7 @@ const FAQ: { q: string; a: string }[] = [
 ];
 
 export default async function Home() {
-  const stats = await fetchPublicStats();
+  const [stats, advisors] = await Promise.all([fetchPublicStats(), fetchPublicAdvisors()]);
   const statTiles = [
     { label: "תיקים שבדקנו", value: stats.casesChecked.toLocaleString("he-IL") },
     { label: "תיקים שנסגרו בהצלחה", value: stats.casesClosed.toLocaleString("he-IL") },
@@ -137,6 +157,36 @@ export default async function Home() {
             ))}
           </div>
         </section>
+
+        {/* HUMAN, NOT DIGITAL — the thing to say before anything else */}
+        <section className="mt-14" style={{ background: "var(--hero-1)" }}>
+          <div className="max-w-5xl mx-auto px-5 py-14">
+            <div className="text-center">
+              <span className="font-display font-bold text-xs text-[var(--hero-1)] bg-accent rounded-full px-3 py-1.5">רגע לפני שמתחילים</span>
+              <h2 className="text-white text-2xl md:text-3xl pt-3.5">אנחנו לא ייעוץ משכנתאות דיגיטלי</h2>
+              <p className="text-white/75 pt-2.5 max-w-[46ch] mx-auto leading-relaxed">
+                ארתור לא מחשב לכם משכנתה ושולח אותה במייל. ארתור מביא לכם בן אדם.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3 pt-10">
+              {PROMISES.map((p) => (
+                <div key={p.title} className="rounded-2xl bg-white/[0.07] border border-white/15 p-5">
+                  <div className="w-11 h-11 rounded-xl bg-accent text-[var(--hero-1)] grid place-items-center">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d={p.icon} />
+                    </svg>
+                  </div>
+                  <strong className="block font-display text-base text-white pt-3.5">{p.title}</strong>
+                  <p className="text-sm text-white/70 leading-relaxed pt-1.5">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* WHO IS COMPETING */}
+        <AdvisorRoster advisors={advisors} />
 
         {/* HOW IT WORKS */}
         <section className="max-w-5xl mx-auto px-5 py-16">

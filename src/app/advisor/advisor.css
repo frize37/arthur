@@ -199,3 +199,28 @@
   margin-top: 20px; padding-top: 10px; border-top: 1px solid rgba(14,32,56,.18);
   font-size: 10.5px; color: #74869F; line-height: 1.5;
 }
+
+/* ---- advisor's own logo: click the avatar in the header to upload ---- */
+.advisor-chip__logo { position: relative; display: block; cursor: pointer; border-radius: 50%; }
+.advisor-chip__logo input[type="file"] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.advisor-chip__logo .advisor-chip__avatar { transition: filter .15s ease; }
+.advisor-chip__logo:hover .advisor-chip__avatar { filter: brightness(.72); }
+.advisor-chip__logo:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.advisor-chip__camera {
+  position: absolute;
+  inset-block-end: -2px;
+  inset-inline-end: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--hero-1);
+  border: 1.5px solid var(--surface);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.advisor-chip__camera svg { width: 10px; height: 10px; }
+.spinner { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--accent); animation: advisorSpin .8s linear infinite; }
+@keyframes advisorSpin { to { transform: rotate(360deg); } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
