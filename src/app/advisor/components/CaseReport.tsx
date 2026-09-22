@@ -18,6 +18,7 @@ export function CaseReport({ case_: c, keyPoints }: { case_: AdvisorCase; keyPoi
       : c.property.value;
   const ltv = bankValue > 0 ? c.property.mortgage / bankValue : 0;
   const termYears = maxTermYears(c.profile.oldestAge);
+  const isNewCase = c.requestType === "new";
   const today = new Date().toLocaleDateString("he-IL");
 
   const reds = keyPoints.filter((p) => p.kind === "red");
@@ -62,11 +63,12 @@ export function CaseReport({ case_: c, keyPoints }: { case_: AdvisorCase; keyPoi
             <Row label="שווי לחישוב הבנק (הנמוך מביניהם)" value={shekel(bankValue)} />
           </>
         ) : (
-          <Row label="שמאות" value="טרם בוצעה" />
+          isNewCase && <Row label="שמאות" value="טרם בוצעה" />
         )}
         <Row label="סכום המשכנתה המבוקש" value={shekel(c.property.mortgage)} />
         <Row label="שיעור מימון בפועל" value={`${(ltv * 100).toFixed(1)}%`} emphasis={ltv > cap} />
-        <Row label="הון עצמי" value={shekel(c.equity)} />
+        {/* הון עצמי נשאל רק ברכישה חדשה — במחזור אין ערך אמיתי בתיק. */}
+        {isNewCase && <Row label="הון עצמי" value={shekel(c.equity)} />}
         <Row label="סטטוס רישום" value={LABELS.legal[c.property.legal] ?? c.property.legal} />
         {c.property.source && (
           <Row label="אופן הרכישה" value={LABELS.propertySource[c.property.source] ?? c.property.source} />
@@ -109,8 +111,18 @@ export function CaseReport({ case_: c, keyPoints }: { case_: AdvisorCase; keyPoi
               : "אין"
           }
         />
+        <Row label="הכנסה פנויה (אחרי הלוואות שנספרות)" value={shekel(calc.freeIncome)} />
         <Row label="החזר חודשי שנוח ללקוח" value={shekel(c.repayment.comfort)} />
         <Row label="החזר מקסימלי שהצהיר עליו" value={shekel(c.repayment.max)} />
+        <Row
+          label={calc.isEstimate ? "החזר חודשי (אומדן)" : "החזר חודשי נוכחי"}
+          value={shekel(calc.payment)}
+        />
+        <Row
+          label="יחס החזר מההכנסה הפנויה"
+          value={`${(calc.ratio * 100).toFixed(1)}% — ${calc.bandLabel}`}
+          emphasis={calc.band === "risk"}
+        />
         <Row label="חיווי אשראי" value={c.credit.creditIssues === "yes" ? "דורש תשומת לב" : "תקין"} />
       </Section>
 
@@ -157,7 +169,6 @@ export function CaseReport({ case_: c, keyPoints }: { case_: AdvisorCase; keyPoi
           {c.docTotals.totalEarlyRepaymentFee != null && (
             <Row label="סה״כ עמלת פרעון מוקדם" value={shekel(c.docTotals.totalEarlyRepaymentFee)} />
           )}
-          <Row label="החזר חודשי נוכחי (מחושב)" value={shekel(calc.payment)} />
           {c.docSource === "manual" && <Row label="מקור הנתונים" value="הוזנו ידנית על ידי הלקוח — לא נשלפו ממסמך" />}
         </Section>
       )}

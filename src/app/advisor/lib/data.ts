@@ -1,4 +1,4 @@
-import { MARKET, dtiBandFor, freeIncomeFor, ltvCapFor, maxTermYears, monthlyPayment, shekel } from "../../wizard/lib/finance";
+import { MARKET, bandFor, dtiBandFor, freeIncomeFor, ltvCapFor, maxTermYears, monthlyPayment, shekel } from "../../wizard/lib/finance";
 
 export type CaseStatus = "pending" | "sent" | "won" | "closed" | "closed_no_deal" | "lost";
 export type Band = "good" | "watch" | "risk";
@@ -117,16 +117,40 @@ export function computeCommission(feeIncVat: number, commissionType: "percent" |
   return 0;
 }
 
+/**
+ * החישוב האחד שכל המסך של היועץ נשען עליו.
+ *
+ * שתי הבחנות שהיו כאן קודם ותוקנו:
+ * 1. במשכנתה חדשה אין משכנתה קיימת, ולכן אי אפשר לחשב לפי doc.* —
+ *    הערכים האלה לא נשאלו והיו מיובאים מברירת המחדל של האשף.
+ * 2. יחס ההחזר נמדד מול ההכנסה הפנויה (אחרי הלוואות שנספרות),
+ *    לא מול סך ההכנסה — זה היחס שהבנק בודק.
+ */
 export function computeCase(c: AdvisorCase) {
-  const totalMonths = c.doc.years * 12 + c.doc.months;
-  const payment = monthlyPayment(c.doc.balance, c.doc.rate, totalMonths);
+  const isNew = c.requestType === "new";
+  const termYears = maxTermYears(c.profile.oldestAge);
+  const endsWithin18 = c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft !== "over18";
+  const freeIncome = freeIncomeFor(c.income.net, c.income.extra, c.credit.otherLoansPayment ?? 0, endsWithin18);
   const totalIncome = c.income.net + c.income.extra;
-  const ratio = totalIncome > 0 ? payment / totalIncome : 0;
-  const band: Band = payment <= c.repayment.comfort ? "good" : payment <= c.repayment.max ? "watch" : "risk";
-  const betterRate = Math.max(3.2, c.doc.rate - 0.7);
-  const betterPayment = monthlyPayment(c.doc.balance, betterRate, totalMonths);
-  const suggestedSavings = Math.max(0, (payment - betterPayment) * totalMonths);
-  return { payment, totalIncome, ratio, band, suggestedSavings };
+
+  const payment = isNew
+    ? monthlyPayment(c.property.mortgage, MARKET.assumedMixRate, termYears * 12)
+    : monthlyPayment(c.doc.balance, c.doc.rate, c.doc.years * 12 + c.doc.months);
+
+  const ratio = freeIncome > 0 ? payment / freeIncome : 0;
+  const { band, label: bandLabel } = dtiBandFor(ratio);
+  return {
+    payment,
+    /** ברכישה חדשה ההחזר הוא אומדן לפי ריבית שוק משוערת, לא נתון אמת. */
+    isEstimate: isNew,
+    termYears,
+    freeIncome,
+    totalIncome,
+    ratio,
+    band,
+    bandLabel,
+    comfortBand: bandFor(payment, c.repayment.comfort, c.repayment.max),
+  };
 }
 
 export type KeyPoint = { kind: "red" | "green" | "info" | "tip"; text: string };
@@ -142,19 +166,10 @@ export type KeyPoint = { kind: "red" | "green" | "info" | "tip"; text: string };
  * שהגיל מאפשר — ומסמנים במפורש שזה אומדן.
  */
 function estimateDti(c: AdvisorCase) {
-  const endsWithin18 = c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft !== "over18";
-  const freeIncome = freeIncomeFor(c.income.net, c.income.extra, c.credit.otherLoansPayment ?? 0, endsWithin18);
-  const termYears = maxTermYears(c.profile.oldestAge);
-  const payment =
-    c.requestType === "new"
-      ? monthlyPayment(c.property.mortgage, MARKET.assumedMixRate, termYears * 12)
-      : monthlyPayment(c.doc.balance, c.doc.rate, c.doc.years * 12 + c.doc.months);
-
-  if (freeIncome <= 0 || payment <= 0) return null;
-  const ratio = payment / freeIncome;
-  const { band, label } = dtiBandFor(ratio);
-  const basis = c.requestType === "new" ? ` (אומדן לפי ריבית ${MARKET.assumedMixRate}% ו-${termYears} שנים)` : "";
-  return { ratio, band, label, basis, payment, freeIncome, termYears };
+  const calc = computeCase(c);
+  if (calc.freeIncome <= 0 || calc.payment <= 0) return null;
+  const basis = calc.isEstimate ? ` (אומדן לפי ריבית ${MARKET.assumedMixRate}% ו-${calc.termYears} שנים)` : "";
+  return { ratio: calc.ratio, band: calc.band, label: calc.bandLabel, basis, payment: calc.payment, freeIncome: calc.freeIncome, termYears: calc.termYears };
 }
 
 export function deriveKeyPoints(c: AdvisorCase): KeyPoint[] {

@@ -3,6 +3,10 @@ import { WizardState, isComplexCase } from "./types";
 
 export async function submitCaseToDatabase(state: WizardState) {
   const caseId = state.caseId;
+  // שדות שלא נשאלו במסלול הזה נשלחים כ-null ולא עם ברירת המחדל של האשף —
+  // אחרת היועץ רואה מספר שהלקוח מעולם לא מסר (הון עצמי במחזור,
+  // יתרה וריבית של "משכנתה קיימת" ברכישה חדשה).
+  const isNew = state.requestType === "new";
   const row = {
     id: caseId,
     status: "new",
@@ -15,7 +19,7 @@ export async function submitCaseToDatabase(state: WizardState) {
     property_legal: state.propertyLegal,
     property_value: state.propertyValue,
     mortgage_amount: state.mortgageAmount,
-    equity: state.equity,
+    equity: isNew ? state.equity : null,
 
     selling_existing: state.sellingExisting,
     oldest_age: state.oldestAge,
@@ -49,10 +53,10 @@ export async function submitCaseToDatabase(state: WizardState) {
     doc_source: state.docSource,
     original_doc_name: state.originalDocName,
     original_doc_type: state.originalDocType,
-    doc_balance: state.docBalance,
-    doc_rate: state.docRate,
-    doc_years: state.docYears,
-    doc_months: state.docMonths,
+    doc_balance: isNew ? null : state.docBalance,
+    doc_rate: isNew ? null : state.docRate,
+    doc_years: isNew ? null : state.docYears,
+    doc_months: isNew ? null : state.docMonths,
     doc_quote_valid_date: state.docQuoteValidDate,
     doc_total_principal: state.docTotalPrincipal,
     doc_total_early_repayment_fee: state.docTotalEarlyRepaymentFee,

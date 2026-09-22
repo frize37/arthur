@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { bandFor, monthlyPayment } from "../../wizard/lib/finance";
+import { MARKET, dtiBandFor, freeIncomeFor, maxTermYears, monthlyPayment } from "../../wizard/lib/finance";
 import { Advisor, AdminCase, LoanTrack, Offer } from "./data";
 
 function relativeTime(iso: string): string {
@@ -271,10 +271,17 @@ export async function fetchCases(): Promise<AdminCase[]> {
   }
 
   return caseRows.map((row): AdminCase => {
-    const totalMonths = (row.doc_years ?? 0) * 12 + (row.doc_months ?? 0);
-    const payment = monthlyPayment(row.doc_balance ?? 0, row.doc_rate ?? 0, totalMonths);
+    // מול ההכנסה הפנויה ולפי ספי הבנקים — זהה לחישוב שהיועץ רואה, כדי שלא
+    // יוצגו שני יחסי החזר שונים על אותו תיק.
+    const isNewCase = row.request_type === "new";
+    const termYears = maxTermYears(row.oldest_age ?? 0);
+    const payment = isNewCase
+      ? monthlyPayment(row.mortgage_amount ?? 0, MARKET.assumedMixRate, termYears * 12)
+      : monthlyPayment(row.doc_balance ?? 0, row.doc_rate ?? 0, (row.doc_years ?? 0) * 12 + (row.doc_months ?? 0));
     const income = (row.income ?? 0) + (row.extra ?? 0);
-    const band = bandFor(payment, row.comfort_payment ?? 0, row.max_stress_payment ?? Infinity);
+    const endsWithin18 = row.other_loans_ending_soon === "yes" && row.other_loans_months_left !== "over18";
+    const freeIncome = freeIncomeFor(row.income ?? 0, row.extra ?? 0, row.other_loans_payment ?? 0, endsWithin18);
+    const band = dtiBandFor(freeIncome > 0 ? payment / freeIncome : 0).band;
 
     const offers: Offer[] = (offerRows ?? [])
       .filter((o) => o.case_id === row.id)

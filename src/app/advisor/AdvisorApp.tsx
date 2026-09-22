@@ -15,7 +15,7 @@ import {
   updateMyPublicProfile,
   uploadMyLogo,
 } from "./lib/fetchCases";
-import { shekel } from "../wizard/lib/finance";
+import { MARKET, shekel } from "../wizard/lib/finance";
 import { confettiBurst } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
 import { CaseChat } from "@/components/CaseChat";
@@ -301,11 +301,13 @@ function ListView({
                 <small>{LABELS.goal[c.goal]} · התקבל {c.receivedAt}</small>
               </span>
               <span className="case-row__payment">
-                <span>החזר חודשי</span>
+                <span>{calc.isEstimate ? "החזר (אומדן)" : "החזר חודשי"}</span>
                 <b className="num">{shekel(calc.payment)}</b>
               </span>
               <span className="case-row__badges">
-                <span className={`band-${calc.band}`}>{calc.band === "good" ? "בתוך הנוח" : calc.band === "watch" ? "לשים לב" : "מעל הסף"}</span>
+                <span className={`band-${calc.band}`}>
+                  {calc.band === "good" ? "יחס החזר תקין" : calc.band === "watch" ? "יחס החזר גבוה" : "מעל סף האישור"}
+                </span>
                 {c.complex && <span className="complex-badge"><svg><use href="#ic-search" /></svg>תיק מורכב</span>}
               </span>
               <span className={`pill ${STATUS_META[c.status].cls}`}>{STATUS_META[c.status].label}</span>
@@ -455,9 +457,17 @@ function DetailView({
           <div className="card">
             <h3><svg><use href="#ic-home" /></svg>פרטי הנכס</h3>
             <div className="brief-grid">
-              {briefRow("שווי נכס", shekel(c.property.value))}
+              {briefRow(c.requestType === "new" ? "שווי נכס / מחיר בחוזה" : "שווי נכס", shekel(c.property.value))}
               {briefRow("גובה משכנתה", shekel(c.property.mortgage))}
-              {briefRow("הון עצמי", shekel(c.equity))}
+              {/* הון עצמי נשאל רק ברכישה חדשה — במחזור אין לו משמעות ואין ערך אמיתי בתיק. */}
+              {c.requestType === "new" && briefRow("הון עצמי", shekel(c.equity))}
+              {c.requestType === "new" &&
+                briefRow("שמאות", c.property.appraisalValue && c.property.appraisalValue > 0 ? shekel(c.property.appraisalValue) : "טרם בוצעה")}
+              {c.property.sellingExisting &&
+                briefRow(
+                  "מכירת הדירה הקיימת",
+                  c.property.sellingExisting === "before" ? "לפני הרכישה" : c.property.sellingExisting === "after" ? "אחרי הרכישה" : "לא מוכרים"
+                )}
               {briefRow("סטטוס רישום", LABELS.legal[c.property.legal])}
               {c.property.source && briefRow("אופן הרכישה", LABELS.propertySource[c.property.source] ?? c.property.source)}
             </div>
@@ -478,6 +488,11 @@ function DetailView({
           <div className="card">
             <h3><svg><use href="#ic-user" /></svg>פרופיל והכנסות</h3>
             <div className="brief-grid">
+              {briefRow(
+                "גיל הלווה המבוגר",
+                c.profile.oldestAge > 0 ? `${c.profile.oldestAge} · עד ${calc.termYears} שנות משכנתה` : "לא נמסר"
+              )}
+              {briefRow("תעודת זכאות", c.zakaut ? LABELS.yesno[c.zakaut] ?? c.zakaut : "לא נמסר")}
               {briefRow("מבקש 1", `${LABELS.employment[c.profile.employment1]} · ותק ${LABELS.seniority[c.profile.seniority1]}`)}
               {c.profile.hasSecond === "yes" && c.profile.employment2 && c.profile.seniority2 &&
                 briefRow("מבקש 2", `${LABELS.employment[c.profile.employment2]} · ותק ${LABELS.seniority[c.profile.seniority2]}`)}
@@ -595,18 +610,28 @@ function DetailView({
                 <div className="gauge__needle" style={{ transform: `rotate(${needleDeg}deg)` }} />
                 <div className="gauge__hub" />
               </div>
-              <div className="ratio-big">יחס החזר מהכנסה<b className="num">{(calc.ratio * 100).toFixed(0)}%</b></div>
-              <span className={`band-${calc.band}`} style={{ alignSelf: "center" }}>
-                {calc.band === "good" ? "בתוך ההחזר הנוח ללקוח" : calc.band === "watch" ? "מעל הנוח, בתוך הסף המקסימלי" : "מעל הסף המקסימלי"}
-              </span>
+              <div className="ratio-big">יחס החזר מההכנסה הפנויה<b className="num">{(calc.ratio * 100).toFixed(0)}%</b></div>
+              <span className={`band-${calc.band}`} style={{ alignSelf: "center" }}>{calc.bandLabel}</span>
             </div>
             <div className="statrow" style={{ marginTop: 14 }}>
-              <div className="stat"><span>החזר חודשי</span><b className="num">{shekel(calc.payment)}</b></div>
-              <div className="stat"><span>הכנסה פנויה</span><b className="num">{shekel(calc.totalIncome)}</b></div>
+              <div className="stat">
+                <span>{calc.isEstimate ? "החזר חודשי (אומדן)" : "החזר חודשי נוכחי"}</span>
+                <b className="num">{shekel(calc.payment)}</b>
+              </div>
+              <div className="stat"><span>הכנסה פנויה</span><b className="num">{shekel(calc.freeIncome)}</b></div>
             </div>
             <div className="statrow" style={{ marginTop: 10 }}>
               <div className="stat"><span>החזר נוח ללקוח</span><b className="num">{shekel(c.repayment.comfort)}</b></div>
               <div className="stat"><span>סף מקסימלי</span><b className="num">{shekel(c.repayment.max)}</b></div>
+            </div>
+            <div className="anon-note" style={{ marginTop: 12 }}>
+              {calc.isEstimate
+                ? `רכישה חדשה — אין עדיין ריבית בפועל, אז ההחזר הוא אומדן לפי ריבית משוערת של ${MARKET.assumedMixRate}% על ${calc.termYears} שנים (התקופה המקסימלית לפי הגיל). היחס נמדד מול ההכנסה הפנויה, אחרי ניכוי הלוואות שנספרות.`
+                : "ההחזר הוא זה שמשולם היום לפי דוח היתרות. היחס נמדד מול ההכנסה הפנויה, אחרי ניכוי הלוואות שנספרות."}
+            </div>
+            <div className="statrow" style={{ marginTop: 10 }}>
+              <div className="stat"><span>הכנסה כוללת</span><b className="num">{shekel(calc.totalIncome)}</b></div>
+              <div className="stat"><span>תקופה מקסימלית</span><b className="num">{calc.termYears} שנים</b></div>
             </div>
           </div>
 

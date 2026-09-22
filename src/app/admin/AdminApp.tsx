@@ -338,7 +338,7 @@ function DetailView({
               {briefRow("סטטוס רישום", LABELS.legal[c.brief.propertyLegal] ?? c.brief.propertyLegal)}
               {c.brief.propertySource && briefRow("אופן הרכישה", LABELS.propertySource[c.brief.propertySource] ?? c.brief.propertySource)}
               {briefRow("הכנסה נטו", shekel(c.brief.income))}
-              {briefRow("יחס החזר", c.brief.ratioBand === "good" ? "בתוך הנוח" : c.brief.ratioBand === "watch" ? "לשים לב" : "מעל הסף")}
+              {briefRow("יחס החזר מההכנסה הפנויה", c.brief.ratioBand === "good" ? "תקין" : c.brief.ratioBand === "watch" ? "גבוה — מתומחר יקר יותר" : "מעל סף האישור")}
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { StageProps } from "../lib/reducer";
 import { isComplexCase } from "../lib/types";
 import { heroLandingEffects } from "../lib/effects";
+import { shekel } from "../lib/finance";
 import { BuddyRow, ChipRow, ChoiceGroup, Field, NavRow, Reveal, SliderField, Subhead } from "../components/ui";
 import { RiggedBear } from "../components/RiggedBear";
 
@@ -134,6 +135,11 @@ export function GoalStage({ state, set, go, back }: StageProps) {
 
 export function PropertyStage({ state, set, go, back }: StageProps) {
   const isNew = state.requestType === "new";
+  // בלי החסימה הזו השדות מגיעים ריקים למסד ומוצגים ליועץ עם ברירת מחדל שהלקוח לא בחר.
+  const incomplete =
+    !state.propertyLegal ||
+    (isNew && !state.propertySource) ||
+    (isNew && state.goal === "upgrade" && !state.sellingExisting);
   return (
     <section className="stage">
       <BuddyRow bubble="כמה פרטים על הנכס עצמו — זה קובע איזה מסמכים נצטרך ואיזה מסלולים רלוונטיים." />
@@ -185,13 +191,17 @@ export function PropertyStage({ state, set, go, back }: StageProps) {
           />
         </Field>
       </div>
-      <NavRow onBack={back} onNext={() => go("numbers")} />
+      <NavRow onBack={back} onNext={() => go("numbers")} nextDisabled={incomplete} />
     </section>
   );
 }
 
 export function NumbersStage({ state, set, go, back }: StageProps) {
   const isNew = state.requestType === "new";
+  // המשכנתה לא יכולה לעלות על שווי הנכס, והון עצמי + משכנתה אמורים לכסות אותו.
+  const overValue = state.mortgageAmount > state.propertyValue;
+  const gap = isNew ? state.propertyValue - (state.mortgageAmount + state.equity) : 0;
+  const mismatch = isNew && !overValue && Math.abs(gap) > state.propertyValue * 0.02;
   return (
     <section className="stage">
       <BuddyRow bubble="כמה מספרים ראשוניים כדי שנוכל להתחיל לחשב עבורכם — אפשר להעריך, נדייק אחר כך מהמסמכים." />
@@ -206,26 +216,52 @@ export function NumbersStage({ state, set, go, back }: StageProps) {
           step={10000}
         />
         {isNew && <SliderField label="ההון העצמי הקיים" value={state.equity} onChange={(v) => set("equity", v)} min={0} max={4000000} step={10000} />}
+        {overValue && (
+          <div className="match-note warn">
+            <svg><use href="#ic-alert" /></svg>
+            המשכנתה גבוהה משווי הנכס. נראה שאחד המספרים לא מדויק.
+          </div>
+        )}
+        {mismatch && (
+          <div className="match-note warn">
+            <svg><use href="#ic-alert" /></svg>
+            {gap > 0
+              ? `המשכנתה וההון העצמי מכסים פחות ממחיר הנכס — חסרים כ-${shekel(gap)}. בדקו שהמספרים מדויקים.`
+              : `המשכנתה וההון העצמי עולים יחד על מחיר הנכס בכ-${shekel(-gap)}. בדקו שהמספרים מדויקים.`}
+          </div>
+        )}
       </div>
-      <NavRow onBack={back} onNext={() => go("repayment")} />
+      <NavRow onBack={back} onNext={() => go("repayment")} nextDisabled={overValue} />
     </section>
   );
 }
 
 export function RepaymentStage({ state, set, go, back }: StageProps) {
+  const inverted = state.maxStressPayment < state.comfortPayment;
   return (
     <section className="stage">
       <BuddyRow bubble="אני שואל כדי לוודא שכל תוכנית שנבנה תישאר נוחה עבורכם גם אם הריבית תעלה." />
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <SliderField label="מה ההחזר החודשי שנוח לכם לשלם?" value={state.comfortPayment} onChange={(v) => set("comfortPayment", v)} min={1500} max={25000} step={100} />
         <SliderField label="מה ההחזר המקסימלי שתוכלו לעמוד בו אם הריבית תעלה?" value={state.maxStressPayment} onChange={(v) => set("maxStressPayment", v)} min={1500} max={30000} step={100} />
+        {inverted && (
+          <div className="match-note warn">
+            <svg><use href="#ic-alert" /></svg>
+            הסף המקסימלי נמוך מההחזר שנוח לכם — העלו אותו כדי שנדע עד לאן אפשר למתוח.
+          </div>
+        )}
       </div>
-      <NavRow onBack={back} onNext={() => go("planning")} />
+      <NavRow onBack={back} onNext={() => go("planning")} nextDisabled={inverted} />
     </section>
   );
 }
 
 export function PlanningStage({ state, set, go, back }: StageProps) {
+  const incomplete =
+    !state.futureRelease ||
+    (state.futureRelease === "yes" && !state.futureReleaseTiming) ||
+    !state.upcomingEvent ||
+    !state.incomeChange;
   return (
     <section className="stage">
       <BuddyRow bubble="אני שואל על העתיד הקרוב כדי לוודא שהתוכנית שנבנה תחזיק מעמד גם אם משהו משתנה." />
@@ -281,13 +317,18 @@ export function PlanningStage({ state, set, go, back }: StageProps) {
           />
         </Field>
       </div>
-      <NavRow onBack={back} onNext={() => go("employment")} />
+      <NavRow onBack={back} onNext={() => go("employment")} nextDisabled={incomplete} />
     </section>
   );
 }
 
 export function EmploymentStage({ state, set, go, back }: StageProps) {
   const complex = isComplexCase(state);
+  const incomplete =
+    !state.hasSecondApplicant ||
+    !state.employment1 ||
+    !state.seniority1 ||
+    (state.hasSecondApplicant === "yes" && (!state.employment2 || !state.seniority2));
   return (
     <section className="stage">
       <BuddyRow
@@ -376,7 +417,7 @@ export function EmploymentStage({ state, set, go, back }: StageProps) {
         <SliderField label="הכנסה נטו חודשית של משק הבית" value={state.income} onChange={(v) => set("income", v)} min={5000} max={45000} step={500} />
         <SliderField label="הכנסות נוספות קבועות (שכ״ד, קצבאות)" value={state.extra} onChange={(v) => set("extra", v)} min={0} max={10000} step={250} />
       </div>
-      <NavRow onBack={back} onNext={() => go("credit")} />
+      <NavRow onBack={back} onNext={() => go("credit")} nextDisabled={incomplete} />
     </section>
   );
 }
@@ -387,6 +428,11 @@ export function CreditStage({ state, set, go, back }: StageProps) {
     go("documents");
   }
   const complex = isComplexCase(state);
+  const incomplete =
+    !state.otherLoans ||
+    (state.otherLoans === "yes" && !state.otherLoansEndingSoon) ||
+    (state.otherLoansEndingSoon === "yes" && !state.otherLoansMonthsLeft) ||
+    !state.creditIssues;
   return (
     <section className="stage">
       <BuddyRow
@@ -452,7 +498,7 @@ export function CreditStage({ state, set, go, back }: StageProps) {
           />
         </Field>
       </div>
-      <NavRow onBack={back} onNext={goToDocuments} />
+      <NavRow onBack={back} onNext={goToDocuments} nextDisabled={incomplete} />
     </section>
   );
 }
