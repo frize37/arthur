@@ -139,18 +139,47 @@ export function PropertyStage({ state, set, go, back }: StageProps) {
       <BuddyRow bubble="כמה פרטים על הנכס עצמו — זה קובע איזה מסמכים נצטרך ואיזה מסלולים רלוונטיים." />
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {isNew && (
-          <Field label="ממי קונים את הנכס?">
-            <ChipRow
-              value={state.propertySource}
-              onSelect={(v) => set("propertySource", v)}
-              options={[
-                { value: "contractor", label: "מקבלן (על הנייר)" },
-                { value: "secondhand", label: "יד שנייה" },
-                { value: "selfbuild", label: "בנייה עצמית / תמ״א 38" },
-                { value: "discounted", label: "מחיר למשתכן / מופחת" },
-              ]}
-            />
-          </Field>
+          <>
+            <Field label="כמה דירות יש בבעלותכם היום?">
+              <ChipRow
+                value={state.ownedProperties}
+                onSelect={(v) => set("ownedProperties", v as typeof state.ownedProperties)}
+                options={[
+                  { value: "none", label: "אף אחת" },
+                  { value: "one", label: "דירה אחת" },
+                  { value: "twoPlus", label: "שתיים או יותר" },
+                ]}
+              />
+              <small className="hint">זו השאלה שקובעת את תקרת המימון שהבנק רשאי לתת לכם.</small>
+            </Field>
+            {state.ownedProperties === "one" && (
+              <Reveal>
+                <Field label="מה תעשו עם הדירה הקיימת?">
+                  <ChipRow
+                    value={state.sellingExisting}
+                    onSelect={(v) => set("sellingExisting", v as typeof state.sellingExisting)}
+                    options={[
+                      { value: "before", label: "נמכור לפני הרכישה" },
+                      { value: "after", label: "נמכור אחרי הרכישה" },
+                      { value: "no", label: "נשאיר אותה" },
+                    ]}
+                  />
+                </Field>
+              </Reveal>
+            )}
+            <Field label="ממי קונים את הנכס?">
+              <ChipRow
+                value={state.propertySource}
+                onSelect={(v) => set("propertySource", v)}
+                options={[
+                  { value: "contractor", label: "מקבלן (על הנייר)" },
+                  { value: "secondhand", label: "יד שנייה" },
+                  { value: "selfbuild", label: "בנייה עצמית / תמ״א 38" },
+                  { value: "discounted", label: "מחיר למשתכן / מופחת" },
+                ]}
+              />
+            </Field>
+          </>
         )}
         <Field label={isNew ? "מה סטטוס הרישום של הנכס?" : "מה סטטוס הרישום של הנכס הקיים?"}>
           <ChipRow
@@ -288,6 +317,18 @@ export function EmploymentStage({ state, set, go, back }: StageProps) {
             ]}
           />
         </Field>
+        <SliderField
+          label={state.hasSecondApplicant === "yes" ? "גיל המבוגר/ת מביניכם" : "בן/בת כמה אתם?"}
+          value={state.oldestAge}
+          onChange={(v) => set("oldestAge", v)}
+          min={18}
+          max={80}
+          step={1}
+          format={(n) => `${n}`}
+        />
+        <small className="hint" style={{ marginTop: -12 }}>
+          הבנקים דורשים שהמשכנתה תסתיים עד גיל 75 — זה מה שקובע לכמה שנים אפשר לפרוס אותה.
+        </small>
         <Subhead title="מבקש/ת 1" />
         <Field label="סטטוס תעסוקה">
           <ChipRow

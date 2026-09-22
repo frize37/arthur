@@ -243,7 +243,11 @@ export async function fetchCases(): Promise<AdminCase[]> {
         propertyLegal: row.property_legal ?? "tabu",
         propertySource: row.property_source ?? null,
         equity: row.equity ?? 0,
+        ownedProperties: row.owned_properties ?? null,
+        sellingExisting: row.selling_existing ?? null,
+        appraisalValue: row.appraisal_value != null ? Number(row.appraisal_value) : null,
       },
+      zakaut: row.has_zakaut ?? null,
       planning: {
         futureRelease: row.future_release ?? "no",
         futureReleaseAmount: row.future_release_amount ?? null,
@@ -257,6 +261,7 @@ export async function fetchCases(): Promise<AdminCase[]> {
         seniority1: row.seniority1 ?? "over3",
         employment2: row.employment2 ?? undefined,
         seniority2: row.seniority2 ?? undefined,
+        oldestAge: row.oldest_age ?? 0,
       },
       credit: {
         otherLoans: row.other_loans ?? "no",

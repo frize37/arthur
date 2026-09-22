@@ -63,6 +63,16 @@ export interface WizardState {
   mortgageAmount: number;
   equity: number;
 
+  // קובע את תקרת שיעור המימון: מחוסר דיור 75%, משפר דיור 70%, משקיע 50%.
+  ownedProperties: "none" | "one" | "twoPlus" | null;
+  sellingExisting: "before" | "after" | "no" | null;
+  // סיום התשלומים עד גיל 75 — קובע את התקופה המקסימלית האפשרית.
+  oldestAge: number;
+  // זכאות: ריבית נמוכה, בלי עמלת פירעון מוקדם, ולא נכנסת להקצאת ההון של הבנק.
+  hasZakaut: YesNo;
+  // הבנק מחשב מימון לפי הנמוך מבין מחיר החוזה לשמאות — פער כאן חוסר בהון עצמי.
+  appraisalValue: number;
+
   comfortPayment: number;
   maxStressPayment: number;
 
@@ -125,6 +135,12 @@ export const initialWizardState: WizardState = {
   propertyValue: 1800000,
   mortgageAmount: 950000,
   equity: 400000,
+
+  ownedProperties: null,
+  sellingExisting: null,
+  oldestAge: 35,
+  hasZakaut: null,
+  appraisalValue: 0,
 
   comfortPayment: 6000,
   maxStressPayment: 8000,

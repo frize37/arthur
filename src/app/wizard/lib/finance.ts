@@ -24,3 +24,28 @@ export function bandFor(payment: number, comfort: number, max: number): Band {
   if (payment <= max) return "watch";
   return "risk";
 }
+
+/**
+ * תקרת שיעור המימון לפי סיווג הלווה (הוראת בנק ישראל מ-10/2012).
+ * מחוסר דיור 75%, משפר דיור 70%, משקיע 50%. מי שמוכר את דירתו הקיימת
+ * לפני הרכישה נחשב מחוסר דיור; מי שמוכר אחריה — משפר דיור.
+ */
+export function ltvCapFor(
+  ownedProperties: string | null,
+  sellingExisting: string | null
+): { cap: number; label: string } {
+  if (ownedProperties === "none") return { cap: 0.75, label: "מחוסר דיור" };
+  if (ownedProperties === "twoPlus") return { cap: 0.5, label: "משקיע" };
+  if (ownedProperties === "one") {
+    if (sellingExisting === "before") return { cap: 0.75, label: "מחוסר דיור (מוכרים לפני)" };
+    if (sellingExisting === "after") return { cap: 0.7, label: "משפר דיור" };
+    return { cap: 0.5, label: "משקיע (נשארים עם שתי דירות)" };
+  }
+  return { cap: 0.7, label: "לא סווג — הנחה שמרנית" };
+}
+
+/** הבנקים דורשים שהמשכנתה תסתיים עד גיל 75, והרגולציה מגבילה ל-30 שנה. */
+export function maxTermYears(oldestAge: number): number {
+  if (!oldestAge || oldestAge <= 0) return 30;
+  return Math.max(0, Math.min(30, 75 - oldestAge));
+}

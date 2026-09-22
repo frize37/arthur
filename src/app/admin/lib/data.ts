@@ -1,4 +1,4 @@
-import { shekel } from "../../wizard/lib/finance";
+import { ltvCapFor, maxTermYears, shekel } from "../../wizard/lib/finance";
 
 export type CaseStatus = "new" | "verifying" | "awaiting" | "ready" | "sent" | "closed" | "closed_no_deal";
 
@@ -57,7 +57,11 @@ export interface AdminCase {
     propertyLegal: string;
     propertySource: string | null;
     equity: number;
+    ownedProperties: string | null;
+    sellingExisting: string | null;
+    appraisalValue: number | null;
   };
+  zakaut: string | null;
   planning: {
     futureRelease: string;
     futureReleaseAmount: number | null;
@@ -65,7 +69,7 @@ export interface AdminCase {
     upcomingEvent: string;
     incomeChange: string;
   };
-  profile: { hasSecond: string; employment1: string; seniority1: string; employment2?: string; seniority2?: string };
+  profile: { hasSecond: string; employment1: string; seniority1: string; employment2?: string; seniority2?: string; oldestAge: number };
   credit: { otherLoans: string; otherLoansPayment: number | null; otherLoansEndingSoon?: string; otherLoansMonthsLeft?: string; creditIssues: string };
   offers: Offer[];
   timeline: { label: string; time: string }[];
@@ -146,39 +150,91 @@ export const TABS: { key: CaseStatus | "all"; label: string }[] = [
 // Same idea as the advisor dashboard's key-points list — a distilled "so
 // what" summary of the wizard answers, for a quick read before assigning
 // or reviewing offers, instead of hunting through several data grids.
-export function deriveKeyPoints(c: AdminCase): string[] {
-  const points: string[] = [];
+export type KeyPoint = { kind: "red" | "green" | "info"; text: string };
 
-  if (c.complex) points.push("תיק מסומן כמורכב — כדאי לעבור על כל הפרטים בעיון לפני הקצאה ליועצים.");
+export function deriveKeyPoints(c: AdminCase): KeyPoint[] {
+  const points: KeyPoint[] = [];
+  const red = (text: string) => points.push({ kind: "red", text });
+  const green = (text: string) => points.push({ kind: "green", text });
+  const info = (text: string) => points.push({ kind: "info", text });
+
+  /* --- שומר סף 1: שיעור מימון --- */
+  const { cap, label } = ltvCapFor(c.brief.ownedProperties, c.brief.sellingExisting);
+  const bankValue = c.brief.appraisalValue && c.brief.appraisalValue > 0
+    ? Math.min(c.brief.propertyValue, c.brief.appraisalValue)
+    : c.brief.propertyValue;
+  const actualLtv = bankValue > 0 ? c.brief.mortgage / bankValue : 0;
+
+  if (c.brief.ownedProperties) {
+    if (actualLtv > cap + 0.001) {
+      const maxLoan = cap * bankValue;
+      red(
+        `חריגה מתקרת המימון: כ-${(actualLtv * 100).toFixed(1)}% מול תקרה של ${Math.round(cap * 100)}% (${label}). ` +
+          `המקסימום שיאושר הוא ${shekel(maxLoan)} — חסרים ${shekel(c.brief.mortgage - maxLoan)} בהון עצמי.`
+      );
+    } else if (actualLtv <= cap - 0.1) {
+      green(`שיעור מימון נוח: כ-${(actualLtv * 100).toFixed(1)}% מול תקרה של ${Math.round(cap * 100)}% (${label}).`);
+    } else {
+      info(`שיעור מימון: כ-${(actualLtv * 100).toFixed(1)}% מול תקרה של ${Math.round(cap * 100)}% (${label}).`);
+    }
+  }
+
+  if (c.brief.appraisalValue && c.brief.appraisalValue > 0 && c.brief.appraisalValue < c.brief.propertyValue) {
+    red(
+      `השמאות (${shekel(c.brief.appraisalValue)}) נמוכה ממחיר החוזה (${shekel(c.brief.propertyValue)}) — ` +
+        `פער של ${shekel(c.brief.propertyValue - c.brief.appraisalValue)} שחייב לבוא מההון העצמי.`
+    );
+  }
+
+  /* --- שומר סף 2: גיל מול תקופה --- */
+  if (c.profile.oldestAge > 0) {
+    const maxYears = maxTermYears(c.profile.oldestAge);
+    if (maxYears < 30) {
+      const kind = maxYears <= 15 ? red : info;
+      kind(`גיל הלווה המבוגר ${c.profile.oldestAge} — תקופה מקסימלית ${maxYears} שנים (סיום עד גיל 75).`);
+    }
+  }
+
+  /* --- זכאות --- */
+  if (c.zakaut === "yes") {
+    green("יש תעודת זכאות — ריבית נמוכה יותר, בלי עמלת פירעון מוקדם, ולא נכנסת להקצאת ההון.");
+  } else if (c.zakaut === "unsure") {
+    info("הלקוח לא בטוח לגבי זכאות — שווה לבדוק.");
+  }
+
+  if (c.complex) red("תיק מסומן כמורכב — כדאי לעבור על כל הפרטים בעיון לפני הקצאה ליועצים.");
 
   if (c.planning.futureRelease === "yes") {
     const amount = c.planning.futureReleaseAmount != null ? shekel(c.planning.futureReleaseAmount) : "סכום לא צוין";
     const timing = c.planning.futureReleaseTiming ? LABELS.futureReleaseTiming[c.planning.futureReleaseTiming] : null;
-    points.push(`צפויה משיכת כספים משמעותית: ${amount}${timing ? ` (${timing})` : ""}.`);
+    green(`צפויה משיכת כספים משמעותית: ${amount}${timing ? ` (${timing})` : ""}.`);
   } else if (c.planning.futureRelease === "unsure") {
-    points.push("הלקוח לא בטוח אם צפויה משיכת כספים משמעותית בעתיד.");
+    info("הלקוח לא בטוח אם צפויה משיכת כספים משמעותית בעתיד.");
   }
 
   if (c.planning.upcomingEvent !== "none") {
-    points.push(`מתוכננת הוצאה גדולה בקרוב: ${LABELS.upcomingEvent[c.planning.upcomingEvent] ?? c.planning.upcomingEvent}.`);
+    info(`מתוכננת הוצאה גדולה בקרוב: ${LABELS.upcomingEvent[c.planning.upcomingEvent] ?? c.planning.upcomingEvent}.`);
   }
 
-  if (c.planning.incomeChange === "yes") points.push("הלקוח צופה שינוי בהכנסה.");
-  else if (c.planning.incomeChange === "unsure") points.push("הלקוח לא בטוח אם צפוי שינוי בהכנסה.");
+  if (c.planning.incomeChange === "yes") info("הלקוח צופה שינוי בהכנסה.");
 
   if (c.credit.otherLoans === "yes") {
-    let text = `יש הלוואות נוספות בהחזר חודשי כולל של ${shekel(c.credit.otherLoansPayment ?? 0)}`;
-    if (c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft) {
-      text += `, צפויות להסתיים תוך ${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft] ?? c.credit.otherLoansMonthsLeft}`;
+    const endingSoon = c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft;
+    if (endingSoon) {
+      green(
+        `הלוואות נוספות (${shekel(c.credit.otherLoansPayment ?? 0)} לחודש) שמסתיימות תוך ` +
+          `${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft!] ?? c.credit.otherLoansMonthsLeft} — לא נספרות בכושר ההחזר.`
+      );
+    } else {
+      red(`הלוואות נוספות בהחזר חודשי של ${shekel(c.credit.otherLoansPayment ?? 0)} שנספרות בכושר ההחזר.`);
     }
-    points.push(text + ".");
   }
 
-  if (c.credit.creditIssues === "yes") points.push("יש חיווי אשראי שדורש תשומת לב.");
+  if (c.credit.creditIssues === "yes") red("יש חיווי אשראי שדורש תשומת לב.");
 
-  if (c.profile.hasSecond === "yes") points.push("יש לווה/ת נוסף/ת בתיק.");
+  if (c.profile.hasSecond === "yes") info("יש לווה/ת נוסף/ת בתיק.");
 
-  if (c.brief.propertySource) points.push(`אופן הרכישה: ${LABELS.propertySource[c.brief.propertySource] ?? c.brief.propertySource}.`);
+  if (c.brief.propertySource) info(`אופן הרכישה: ${LABELS.propertySource[c.brief.propertySource] ?? c.brief.propertySource}.`);
 
   return points;
 }

@@ -1,4 +1,4 @@
-import { monthlyPayment, shekel } from "../../wizard/lib/finance";
+import { ltvCapFor, maxTermYears, monthlyPayment, shekel } from "../../wizard/lib/finance";
 
 export type CaseStatus = "pending" | "sent" | "won" | "closed" | "closed_no_deal" | "lost";
 export type Band = "good" | "watch" | "risk";
@@ -40,8 +40,17 @@ export interface AdvisorCase {
   requestType: "new" | "refinance" | "consolidate";
   goal: string;
   complex: boolean;
-  property: { value: number; mortgage: number; legal: string; source: string | null };
+  property: {
+    value: number;
+    mortgage: number;
+    legal: string;
+    source: string | null;
+    ownedProperties: string | null;
+    sellingExisting: string | null;
+    appraisalValue: number | null;
+  };
   equity: number;
+  zakaut: string | null;
   repayment: { comfort: number; max: number };
   planning: {
     futureRelease: string;
@@ -50,7 +59,7 @@ export interface AdvisorCase {
     upcomingEvent: string;
     incomeChange: string;
   };
-  profile: { hasSecond: string; employment1: string; seniority1: string; employment2?: string; seniority2?: string };
+  profile: { hasSecond: string; employment1: string; seniority1: string; employment2?: string; seniority2?: string; oldestAge: number };
   income: { net: number; extra: number };
   credit: { otherLoans: string; otherLoansPayment: number | null; otherLoansEndingSoon?: string; otherLoansMonthsLeft?: string; creditIssues: string };
   doc: { balance: number; rate: number; years: number; months: number };
@@ -119,42 +128,103 @@ export function computeCase(c: AdvisorCase) {
   return { payment, totalIncome, ratio, band, suggestedSavings };
 }
 
+export type KeyPoint = { kind: "red" | "green" | "info"; text: string };
+
 // Distills the wizard fields that matter for giving actual advice — the raw
 // data grids below already show everything, but an advisor scanning a new
-// case needs the "so what" version first, not a form to re-read.
-export function deriveKeyPoints(c: AdvisorCase): string[] {
-  const points: string[] = [];
+// case needs the "so what" version first, not a form to re-read. Red points
+// are things that block or price the file badly; green points are what
+// strengthens it.
+export function deriveKeyPoints(c: AdvisorCase): KeyPoint[] {
+  const points: KeyPoint[] = [];
+  const red = (text: string) => points.push({ kind: "red", text });
+  const green = (text: string) => points.push({ kind: "green", text });
+  const info = (text: string) => points.push({ kind: "info", text });
 
-  if (c.complex) points.push("תיק מסומן כמורכב — כדאי לעבור על כל הפרטים בעיון לפני הגשת הצעה.");
+  /* --- שומר סף 1: שיעור מימון --- */
+  const { cap, label } = ltvCapFor(c.property.ownedProperties, c.property.sellingExisting);
+  // הבנק מחשב לפי הנמוך מבין מחיר החוזה לשמאות
+  const bankValue = c.property.appraisalValue && c.property.appraisalValue > 0
+    ? Math.min(c.property.value, c.property.appraisalValue)
+    : c.property.value;
+  const actualLtv = bankValue > 0 ? c.property.mortgage / bankValue : 0;
+
+  if (c.property.ownedProperties) {
+    if (actualLtv > cap + 0.001) {
+      const maxLoan = cap * bankValue;
+      red(
+        `חריגה מתקרת המימון: כ-${(actualLtv * 100).toFixed(1)}% מול תקרה של ${Math.round(cap * 100)}% (${label}). ` +
+          `המקסימום שהבנק יאשר הוא ${shekel(maxLoan)} — חסרים ${shekel(c.property.mortgage - maxLoan)} בהון עצמי.`
+      );
+    } else if (actualLtv <= cap - 0.1) {
+      green(`שיעור מימון נוח: כ-${(actualLtv * 100).toFixed(1)}% מול תקרה של ${Math.round(cap * 100)}% (${label}).`);
+    } else {
+      info(`שיעור מימון: כ-${(actualLtv * 100).toFixed(1)}% מול תקרה של ${Math.round(cap * 100)}% (${label}).`);
+    }
+  }
+
+  if (c.property.appraisalValue && c.property.appraisalValue > 0 && c.property.appraisalValue < c.property.value) {
+    red(
+      `השמאות (${shekel(c.property.appraisalValue)}) נמוכה ממחיר החוזה (${shekel(c.property.value)}) — ` +
+        `הבנק מממן לפי הנמוך, כך שנוצר פער של ${shekel(c.property.value - c.property.appraisalValue)} שחייב לבוא מההון העצמי.`
+    );
+  }
+
+  /* --- שומר סף 2: גיל מול תקופה --- */
+  if (c.profile.oldestAge > 0) {
+    const maxYears = maxTermYears(c.profile.oldestAge);
+    if (maxYears < 30) {
+      const kind = maxYears <= 15 ? red : info;
+      kind(
+        `גיל הלווה המבוגר ${c.profile.oldestAge} — המשכנתה חייבת להסתיים עד גיל 75, כלומר תקופה מקסימלית של ${maxYears} שנים` +
+          (maxYears <= 15 ? ". זה מעלה משמעותית את ההחזר החודשי, ושווה לבדוק צירוף לווה נוסף או ערב." : ".")
+      );
+    }
+  }
+
+  /* --- זכאות --- */
+  if (c.zakaut === "yes") {
+    green("יש תעודת זכאות — ריבית נמוכה יותר, בלי עמלת פירעון מוקדם, ואינה נכנסת להקצאת ההון של הבנק.");
+  } else if (c.zakaut === "unsure") {
+    info("הלקוח לא בטוח לגבי זכאות — שווה לבדוק, זה משפיע גם על הריבית וגם על עמלות הפירעון.");
+  }
+
+  if (c.complex) red("תיק מסומן כמורכב — כדאי לעבור על כל הפרטים בעיון לפני הגשת הצעה.");
 
   if (c.planning.futureRelease === "yes") {
     const amount = c.planning.futureReleaseAmount != null ? shekel(c.planning.futureReleaseAmount) : "סכום לא צוין";
     const timing = c.planning.futureReleaseTiming ? LABELS.futureReleaseTiming[c.planning.futureReleaseTiming] : null;
-    points.push(`צפויה משיכת כספים משמעותית: ${amount}${timing ? ` (${timing})` : ""} — שווה לשקול מסלול עם אפשרות פירעון מוקדם ללא עמלה.`);
+    green(`צפויה משיכת כספים משמעותית: ${amount}${timing ? ` (${timing})` : ""} — שווה מסלול שאפשר לפרוע בלי עמלה.`);
   } else if (c.planning.futureRelease === "unsure") {
-    points.push("הלקוח לא בטוח אם צפויה משיכת כספים משמעותית בעתיד — כדאי לברר.");
+    info("הלקוח לא בטוח אם צפויה משיכת כספים משמעותית בעתיד — כדאי לברר.");
   }
 
   if (c.planning.upcomingEvent !== "none") {
-    points.push(`מתוכננת הוצאה גדולה בקרוב: ${LABELS.upcomingEvent[c.planning.upcomingEvent] ?? c.planning.upcomingEvent}.`);
+    info(`מתוכננת הוצאה גדולה בקרוב: ${LABELS.upcomingEvent[c.planning.upcomingEvent] ?? c.planning.upcomingEvent}.`);
   }
 
-  if (c.planning.incomeChange === "yes") points.push("הלקוח צופה שינוי בהכנסה — כדאי לברר כיוון ומועד לפני שקובעים החזר יעד.");
-  else if (c.planning.incomeChange === "unsure") points.push("הלקוח לא בטוח אם צפוי שינוי בהכנסה.");
+  if (c.planning.incomeChange === "yes") info("הלקוח צופה שינוי בהכנסה — כדאי לברר כיוון ומועד לפני שקובעים החזר יעד.");
 
   if (c.credit.otherLoans === "yes") {
-    let text = `יש הלוואות נוספות בהחזר חודשי כולל של ${shekel(c.credit.otherLoansPayment ?? 0)}`;
-    if (c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft) {
-      text += `, צפויות להסתיים תוך ${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft] ?? c.credit.otherLoansMonthsLeft} — רלוונטי לחישוב יכולת ההחזר שלו בטווח הקרוב`;
+    // הלוואה שנגמרת תוך 18 חודש לא נספרת בכושר ההחזר (הוראת בנק ישראל 04/2014),
+    // ולכן סילוק של אחת שקרובה לסף הוא מנוף ממשי להגדלת המשכנתא.
+    const endingSoon = c.credit.otherLoansEndingSoon === "yes" && c.credit.otherLoansMonthsLeft;
+    if (endingSoon) {
+      green(
+        `יש הלוואות נוספות (${shekel(c.credit.otherLoansPayment ?? 0)} לחודש) שמסתיימות תוך ` +
+          `${LABELS.monthsLeft[c.credit.otherLoansMonthsLeft!] ?? c.credit.otherLoansMonthsLeft} — ` +
+          `הלוואה שנגמרת תוך 18 חודש לא נספרת בכושר ההחזר.`
+      );
+    } else {
+      red(`יש הלוואות נוספות בהחזר חודשי של ${shekel(c.credit.otherLoansPayment ?? 0)} שנספרות בכושר ההחזר.`);
     }
-    points.push(text + ".");
   }
 
-  if (c.credit.creditIssues === "yes") points.push("יש חיווי אשראי שדורש תשומת לב — כדאי לברר פרטים מול הלקוח לפני הגשת הצעה.");
+  if (c.credit.creditIssues === "yes") red("יש חיווי אשראי שדורש תשומת לב — כדאי לברר פרטים מול הלקוח לפני הגשת הצעה.");
 
-  if (c.profile.hasSecond === "yes") points.push("יש לווה/ת נוסף/ת בתיק — ראו פרטי תעסוקה בכרטיס הפרופיל.");
+  if (c.profile.hasSecond === "yes") info("יש לווה/ת נוסף/ת בתיק — ראו פרטי תעסוקה בכרטיס הפרופיל.");
 
-  if (c.property.source) points.push(`אופן הרכישה: ${LABELS.propertySource[c.property.source] ?? c.property.source}.`);
+  if (c.property.source) info(`אופן הרכישה: ${LABELS.propertySource[c.property.source] ?? c.property.source}.`);
 
   return points;
 }

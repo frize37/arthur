@@ -74,8 +74,17 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
       requestType: row.request_type,
       goal: row.goal,
       complex: row.complex,
-      property: { value: row.property_value ?? 0, mortgage: row.mortgage_amount ?? 0, legal: row.property_legal ?? "tabu", source: row.property_source ?? null },
+      property: {
+        value: row.property_value ?? 0,
+        mortgage: row.mortgage_amount ?? 0,
+        legal: row.property_legal ?? "tabu",
+        source: row.property_source ?? null,
+        ownedProperties: row.owned_properties ?? null,
+        sellingExisting: row.selling_existing ?? null,
+        appraisalValue: row.appraisal_value != null ? Number(row.appraisal_value) : null,
+      },
       equity: row.equity ?? 0,
+      zakaut: row.has_zakaut ?? null,
       repayment: { comfort: row.comfort_payment ?? 0, max: row.max_stress_payment ?? 0 },
       planning: {
         futureRelease: row.future_release ?? "no",
@@ -90,6 +99,7 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
         seniority1: row.seniority1 ?? "over3",
         employment2: row.employment2 ?? undefined,
         seniority2: row.seniority2 ?? undefined,
+        oldestAge: row.oldest_age ?? 0,
       },
       income: { net: row.income ?? 0, extra: row.extra ?? 0 },
       credit: {

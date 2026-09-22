@@ -143,6 +143,7 @@ export function SliderField({
   step,
   maxLabel,
   minLabel,
+  format = shekel,
 }: {
   label: string;
   value: number;
@@ -152,13 +153,14 @@ export function SliderField({
   step: number;
   maxLabel?: string;
   minLabel?: string;
+  format?: (n: number) => string;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
     <div className="slidercard">
       <div className="toprow">
         <span>{label}</span>
-        <span className="num">{shekel(value)}</span>
+        <span className="num">{format(value)}</span>
       </div>
       <input
         type="range"
@@ -171,8 +173,8 @@ export function SliderField({
         style={{ ["--val" as string]: `${pct}%` }}
       />
       <div className="rangebounds">
-        <span>{maxLabel ?? shekel(max)}</span>
-        <span>{minLabel ?? shekel(min)}</span>
+        <span>{maxLabel ?? format(max)}</span>
+        <span>{minLabel ?? format(min)}</span>
       </div>
     </div>
   );

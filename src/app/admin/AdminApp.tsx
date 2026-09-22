@@ -297,11 +297,25 @@ function DetailView({
           {keyPoints.length > 0 && (
             <div className="card" style={{ borderColor: "var(--accent)" }}>
               <h3><svg><use href="#ic-alert" /></svg>נקודות חשובות</h3>
-              <ul style={{ margin: 0, paddingInlineStart: 20, display: "flex", flexDirection: "column", gap: 6, fontSize: 13.5, color: "var(--ink-soft)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {keyPoints.map((point, i) => (
-                  <li key={i}>{point}</li>
+                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 13.5, color: "var(--ink-soft)" }}>
+                    <span
+                      aria-hidden
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        marginTop: 6,
+                        flexShrink: 0,
+                        background:
+                          point.kind === "red" ? "var(--risk)" : point.kind === "green" ? "var(--good)" : "var(--ink-faint)",
+                      }}
+                    />
+                    <span>{point.text}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 

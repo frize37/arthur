@@ -17,6 +17,12 @@ export async function submitCaseToDatabase(state: WizardState) {
     mortgage_amount: state.mortgageAmount,
     equity: state.equity,
 
+    owned_properties: state.ownedProperties,
+    selling_existing: state.sellingExisting,
+    oldest_age: state.oldestAge,
+    has_zakaut: state.hasZakaut,
+    appraisal_value: state.appraisalValue || null,
+
     comfort_payment: state.comfortPayment,
     max_stress_payment: state.maxStressPayment,
 

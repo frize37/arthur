@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { StageProps } from "../lib/reducer";
-import { NavRow } from "../components/ui";
+import { ChipRow, Field, NavRow, Reveal, SliderField } from "../components/ui";
 import { RiggedBear, type RigMood } from "../components/RiggedBear";
 import { shekel } from "../lib/finance";
 import { confettiBurst } from "../lib/effects";
@@ -145,6 +145,69 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
     setBubble(MANUAL_CONFIRMED_BUBBLE);
     confettiBurst();
     setTimeout(() => setMood("idle"), 1550);
+  }
+
+  // משכנתא חדשה — אין משכנתא קיימת ולכן אין דוח יתרות לבקש. במקומו נשאלות
+  // רק שתי השאלות שמשנות את התוצאה: זכאות (ריבית זולה יותר, בלי עמלת פירעון
+  // מוקדם, ולא נספרת בהקצאת ההון), ושמאות אם כבר נעשתה — כי הבנק מחשב מימון
+  // לפי הנמוך מבין מחיר החוזה לשמאות, ופער שם מתגלה כחור בהון העצמי.
+  if (state.requestType === "new") {
+    return (
+      <section className="stage">
+        <div className="buddy-row buddy-row--doc">
+          <RiggedBear mood="idle" />
+          <div className="bubble">
+            במשכנתא חדשה אין עדיין דוח יתרות — אז רק שתי שאלות אחרונות שמשנות את ההצעה שתקבלו.
+          </div>
+        </div>
+
+        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <Field label="יש לכם תעודת זכאות ממשרד הבינוי והשיכון?">
+            <ChipRow
+              value={state.hasZakaut}
+              onSelect={(v) => set("hasZakaut", v as typeof state.hasZakaut)}
+              options={[
+                { value: "yes", label: "כן" },
+                { value: "no", label: "לא" },
+                { value: "unsure", label: "לא בטוחים" },
+              ]}
+            />
+            <small className="hint">
+              זכאות נותנת ריבית נמוכה יותר, בלי עמלת פירעון מוקדם — שווה לבדוק גם אם אתם לא בטוחים.
+            </small>
+          </Field>
+
+          <Field label="כבר נעשתה שמאות לנכס?">
+            <ChipRow
+              value={state.appraisalValue > 0 ? "yes" : "no"}
+              onSelect={(v) => set("appraisalValue", v === "yes" ? state.propertyValue : 0)}
+              options={[
+                { value: "no", label: "עוד לא" },
+                { value: "yes", label: "כן, יש שמאות" },
+              ]}
+            />
+            <small className="hint">
+              הבנק מחשב את המימון לפי הנמוך מבין מחיר החוזה לשמאות — אז פער ביניהם משנה כמה תצטרכו להביא מהבית.
+            </small>
+          </Field>
+
+          {state.appraisalValue > 0 && (
+            <Reveal>
+              <SliderField
+                label="על כמה העריך השמאי את הנכס?"
+                value={state.appraisalValue}
+                onChange={(v) => set("appraisalValue", v)}
+                min={300000}
+                max={8000000}
+                step={10000}
+              />
+            </Reveal>
+          )}
+        </div>
+
+        <NavRow onBack={back} onNext={() => go("summary")} nextDisabled={state.hasZakaut == null} />
+      </section>
+    );
   }
 
   return (
