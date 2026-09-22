@@ -62,11 +62,11 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
     const items: { icon: string; text: string; time: string }[] = [];
     for (const c of cases) {
       if (c.status === "pending") {
-        items.push({ icon: "ic-sparkle", text: `תיק חדש ממתין להצעה שלך — ${c.id}`, time: c.receivedAt });
+        items.push({ icon: "ic-sparkle", text: `תיק חדש ממתין להצעה שלך — ${c.caseNumber}`, time: c.receivedAt });
       } else if (c.status === "won") {
-        items.push({ icon: "ic-check-circle", text: `זכית בתיק ${c.id} — אפשר ליצור קשר עם הלקוח`, time: c.receivedAt });
+        items.push({ icon: "ic-check-circle", text: `זכית בתיק ${c.caseNumber} — אפשר ליצור קשר עם הלקוח`, time: c.receivedAt });
       } else if (c.status === "closed") {
-        items.push({ icon: "ic-check-circle", text: `עסקה הושלמה בתיק ${c.id}`, time: c.receivedAt });
+        items.push({ icon: "ic-check-circle", text: `עסקה הושלמה בתיק ${c.caseNumber}`, time: c.receivedAt });
       }
     }
     return items;
@@ -186,7 +186,7 @@ function ListView({
             <button key={c.id} type="button" className="case-row" onClick={() => onOpen(c.id)}>
               <span className="case-row__icon"><svg><use href={`#${LABELS.specialtyIcon[c.requestType]}`} /></svg></span>
               <span className="case-row__main">
-                <strong>{c.id} · {LABELS.requestType[c.requestType]}</strong>
+                <strong>תיק {c.caseNumber} · {LABELS.requestType[c.requestType]}</strong>
                 <small>{LABELS.goal[c.goal]} · התקבל {c.receivedAt}</small>
               </span>
               <span className="case-row__payment">
@@ -225,7 +225,7 @@ function DetailView({
   const needleDeg = -90 + Math.max(0, Math.min(1, calc.ratio / 0.6)) * 180;
   const keyPoints = deriveKeyPoints(c);
 
-  const [offerSavings, setOfferSavings] = useState(Math.round(calc.suggestedSavings / 500) * 500);
+  const [offerSavings, setOfferSavings] = useState(0);
   const [offerFee, setOfferFee] = useState(2500);
   const [offerNotes, setOfferNotes] = useState("");
   const [sending, setSending] = useState(false);
@@ -275,7 +275,7 @@ function DetailView({
           <svg><use href="#ic-back" /></svg>כל התיקים
         </button>
         <div className="detail-title">
-          <h2>{c.id}</h2>
+          <h2>תיק {c.caseNumber}</h2>
           <small>{LABELS.requestType[c.requestType]} · התקבל {c.receivedAt}{c.complex ? " · תיק מורכב 🕵️" : ""}</small>
         </div>
         <button type="button" className="btn btn-ghost" onClick={() => window.print()} style={{ marginInlineStart: "auto" }}>
@@ -459,6 +459,8 @@ function DetailView({
                   &ldquo;ריבית לצרכי השוואה&rdquo; כבר כוללת בתוכה את עמלת הפרעון המוקדם ואת תחזית הריבית — זו הריבית האפקטיבית להשוואה מול הצעה חדשה.
                 </div>
               </div>
+            ) : c.requestType === "new" ? (
+              <div className="anon-note">משכנתה חדשה — אין משכנתה קיימת, ולכן אין דוח יתרות בתיק.</div>
             ) : (
               <div className="brief-grid">
                 {briefRow("יתרת קרן (הערכה)", shekel(c.doc.balance))}
@@ -501,9 +503,6 @@ function DetailView({
             <h3><svg><use href="#ic-sparkle" /></svg>סימולטור הצעה מהיר</h3>
             {showOfferForm ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div className="suggested-note">
-                  <svg><use href="#ic-sparkle" /></svg>הצעת מערכת: לפי נתוני התיק, פוטנציאל חיסכון משוער של {shekel(calc.suggestedSavings)} לאורך חיי ההלוואה.
-                </div>
                 <div className="field">
                   <label>חיסכון משוער ללקוח</label>
                   <div className="prefix-input"><span>₪</span><input type="number" step={500} value={offerSavings} onChange={(e) => setOfferSavings(Number(e.target.value) || 0)} /></div>

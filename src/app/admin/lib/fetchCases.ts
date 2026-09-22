@@ -223,6 +223,7 @@ export async function fetchCases(): Promise<AdminCase[]> {
 
     return {
       id: row.id,
+      caseNumber: row.case_number ?? 0,
       receivedAt: relativeTime(row.created_at),
       status: row.status,
       requestType: row.request_type,

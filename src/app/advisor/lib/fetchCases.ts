@@ -69,6 +69,7 @@ export async function fetchMyCases(advisorId: string): Promise<AdvisorCase[]> {
 
     return {
       id: row.id,
+      caseNumber: row.case_number ?? 0,
       receivedAt: relativeTime(row.created_at),
       status,
       requestType: row.request_type,

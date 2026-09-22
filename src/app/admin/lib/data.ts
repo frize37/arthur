@@ -43,6 +43,8 @@ export interface DocTotals {
 
 export interface AdminCase {
   id: string;
+  /** מספר תצוגה קצר; המזהה האמיתי נשאר ה-UUID. */
+  caseNumber: number;
   receivedAt: string;
   status: CaseStatus;
   requestType: "new" | "refinance" | "consolidate";
@@ -224,11 +226,7 @@ export function deriveKeyPoints(c: AdminCase): KeyPoint[] {
 
     if (dti.band !== "good") {
       const gap = dti.payment - dti.freeIncome * 0.35;
-      tip(
-        `כדי לרדת מתחת ל-35% צריך להוריד כ-${shekel(gap)} מההחזר החודשי — רכיב צמוד מדד (החזר התחלתי נמוך יותר) ` +
-          `או הארכת תקופה` + (dti.termYears < 30 ? `, אם כי הגיל מגביל ל-${dti.termYears} שנים` : "") +
-          ". שימו לב שרכיב צמוד לא כדאי למתוח מעבר ל-15 שנה — ההחזר בו עולה עם המדד."
-      );
+      tip(`צריך להוריד כ-${shekel(gap)} מההחזר החודשי כדי להיכנס מתחת ל-35%.`);
     }
   }
 
@@ -272,22 +270,6 @@ export function deriveKeyPoints(c: AdminCase): KeyPoint[] {
   if (c.profile.hasSecond === "yes") info("יש לווה/ת נוסף/ת בתיק.");
 
   if (c.brief.propertySource) info(`אופן הרכישה: ${LABELS.propertySource[c.brief.propertySource] ?? c.brief.propertySource}.`);
-
-  /* --- המלצות --- */
-  if (c.planning.futureRelease === "yes") {
-    tip("צפויה משיכת כספים — כדאי לכוון את היועצים לרכיב קבוע קצר יותר, כדי שעמלת הפירעון ביציאה תהיה נמוכה.");
-  }
-  if (c.brief.propertySource === "contractor") {
-    tip("רכישה מקבלן: התשלומים צמודים למדד תשומות הבנייה, כך שמחיר החוזה אינו סופי. שווה לבדוק הקדמת תשלומים.");
-  }
-  if (
-    c.profile.employment1 === "selfemployed" ||
-    c.profile.employment1 === "controlling" ||
-    c.profile.employment2 === "selfemployed" ||
-    c.profile.employment2 === "controlling"
-  ) {
-    tip("עצמאי/בעל שליטה בתיק — הבנק בוחן רווח נקי בשומה, וכל בנק מחשב דיבידנד אחרת. שווה יועץ שמתמחה בזה.");
-  }
 
   return points;
 }

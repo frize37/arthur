@@ -35,6 +35,8 @@ export interface DocTotals {
 
 export interface AdvisorCase {
   id: string;
+  /** מספר תצוגה קצר; המזהה האמיתי נשאר ה-UUID. */
+  caseNumber: number;
   receivedAt: string;
   status: CaseStatus;
   requestType: "new" | "refinance" | "consolidate";
@@ -215,14 +217,7 @@ export function deriveKeyPoints(c: AdvisorCase): KeyPoint[] {
 
     if (band !== "good") {
       const gap = dti.payment - freeIncome * 0.35;
-      tip(
-        `כדי לרדת מתחת ל-35% צריך להוריד כ-${shekel(gap)} מההחזר החודשי. שתי הדרכים המקובלות: ` +
-          `רכיב צמוד מדד (ההחזר ההתחלתי נמוך יותר) והארכת תקופה` +
-          (dti.termYears < 30 ? ` — אבל כאן הגיל מגביל ל-${dti.termYears} שנים` : "") +
-          `. אזהרה חשובה: צמוד מדד מוזיל את ההחזר היום אבל ההחזר עולה עם המדד לאורך השנים, ולכן מקובל ` +
-          `לא למתוח רכיב צמוד מעבר ל-15 שנה. אם ההחזר ההתחלתי כבר יושב על התקרה שהלקוח הצהיר עליה ` +
-          `(${shekel(c.repayment.max)}), צמוד ארוך יוציא אותו מהתקציב תוך כמה שנים — זה פתרון לכושר ההחזר על הנייר, לא לסיכון האמיתי.`
-      );
+      tip(`צריך להוריד כ-${shekel(gap)} מההחזר החודשי כדי להיכנס מתחת ל-35%.`);
     }
   }
 
@@ -270,46 +265,22 @@ export function deriveKeyPoints(c: AdvisorCase): KeyPoint[] {
 
   if (c.property.source) info(`אופן הרכישה: ${LABELS.propertySource[c.property.source] ?? c.property.source}.`);
 
-  /* ================================================================
-   * המלצות — נגזרות מהתשובות, לא כללי אצבע גנריים.
-   * ================================================================ */
+  /* --- המלצות: רק מה שנגזר מהמספרים של התיק הזה --- */
 
-  // כוונת פירעון מוקדם קובעת את אופי הרכיב הקבוע: קל״צ ארוך גובה עמלת
-  // היוון כבדה ביציאה, בעוד פריים ומשתנה יוצאים בזול.
-  if (c.planning.futureRelease === "yes") {
-    tip(
-      "הלקוח צופה משיכת כספים — כלומר סביר שיפרע חלק מוקדם. כדאי לקצר את הרכיב הקבוע " +
-        "ולהגדיל פריים/משתנה, ששם עמלת הפירעון נמוכה או אפסית. קל״צ ארוך הוא בדיוק הרכיב שגובה עמלת היוון כבדה ביציאה."
-    );
-  }
-
-  // רכישה מקבלן — הצמדה למדד תשומות הבנייה מייקרת את העסקה אחרי החתימה.
-  if (c.property.source === "contractor") {
-    tip(
-      "רכישה מקבלן: התשלומים צמודים למדד תשומות הבנייה, כך שמחיר החוזה אינו המחיר הסופי. " +
-        "שווה לבדוק מול הלקוח אפשרות להקדים תשלומים — זה פוטר מההצמדה על מה ששולם בפועל."
-    );
-  }
-
-  // עצמאי/בעל שליטה — הרווח הנקי בשומה הוא מה שקובע, ולא המחזור.
-  if (
-    c.profile.employment1 === "selfemployed" ||
-    c.profile.employment1 === "controlling" ||
-    c.profile.employment2 === "selfemployed" ||
-    c.profile.employment2 === "controlling"
-  ) {
-    tip(
-      "יש כאן עצמאי/בעל שליטה: הבנק מסתכל על הרווח הנקי בשומה, לא על המחזור. " +
-        "כדאי לוודא מול הלקוח מה מציגה השומה האחרונה לפני הגשה — וגם שכל בנק מחשב הכנסה מדיבידנד אחרת, כך שבחירת הבנק משנה את כושר ההחזר."
-    );
-  }
-
-  // ההפרש בין ההחזר הנוח למקסימלי הוא תקציב הסיכון של הלקוח.
+  // ההפרש בין ההחזר הנוח למקסימלי הוא תקציב הסיכון שהלקוח עצמו הגדיר.
   if (c.repayment.comfort > 0 && c.repayment.max > c.repayment.comfort) {
-    const headroom = c.repayment.max - c.repayment.comfort;
     tip(
-      `הלקוח הצהיר על החזר נוח של ${shekel(c.repayment.comfort)} ומקסימלי של ${shekel(c.repayment.max)} — ` +
-        `כלומר תקציב סיכון של ${shekel(headroom)} לחודש. זה הגבול שבתוכו אפשר לקחת חשיפה למשתנה בלי להפחיד אותו.`
+      `הלקוח הצהיר על החזר נוח ${shekel(c.repayment.comfort)} ומקסימלי ${shekel(c.repayment.max)} — ` +
+        `תקציב סיכון של ${shekel(c.repayment.max - c.repayment.comfort)} לחודש. זה הגבול לחשיפה למשתנה בתיק הזה.`
+    );
+  }
+
+  // סכום ומועד ידועים — אפשר להצמיד אליהם את מבנה הרכיב הקבוע.
+  if (c.planning.futureRelease === "yes" && c.planning.futureReleaseAmount) {
+    const timing = c.planning.futureReleaseTiming ? LABELS.futureReleaseTiming[c.planning.futureReleaseTiming] : null;
+    tip(
+      `צפויים ${shekel(c.planning.futureReleaseAmount)} ${timing ? `בעוד ${timing}` : "בעתיד"} — ` +
+        `כדאי לבנות את התיק כך שהסכום הזה ייפרע בלי קנס.`
     );
   }
 

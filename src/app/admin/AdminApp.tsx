@@ -177,7 +177,7 @@ export function AdminApp({
                     <button key={c.id} type="button" className="case-row" onClick={() => setSelectedId(c.id)}>
                       <span className="case-row__icon"><svg><use href={`#${LABELS.specialtyIcon[c.requestType]}`} /></svg></span>
                       <span className="case-row__main">
-                        <strong>{c.id} · {LABELS.requestType[c.requestType]}</strong>
+                        <strong>תיק {c.caseNumber} · {LABELS.requestType[c.requestType]}</strong>
                         <small>{LABELS.goal[c.goal]} · התקבל {c.receivedAt}</small>
                       </span>
                       <span className="case-row__progress"><span>סטטוס הצעות</span><b>{progress}</b></span>
@@ -273,7 +273,7 @@ function DetailView({
           <svg><use href="#ic-back" /></svg>כל התיקים
         </button>
         <div className="detail-title">
-          <h2>{c.id}</h2>
+          <h2>תיק {c.caseNumber}</h2>
           <small>{LABELS.requestType[c.requestType]} · {LABELS.goal[c.goal]}{c.complex ? " · תיק מורכב 🕵️" : ""}</small>
         </div>
         <span className={`pill ${STATUS_META[c.status].cls}`}>{STATUS_META[c.status].label}</span>

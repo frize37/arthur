@@ -30,7 +30,7 @@ export function CaseReport({ case_: c, keyPoints }: { case_: AdvisorCase; keyPoi
       <header className="case-report__head">
         <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={280} height={140} className="case-report__logo" />
         <div className="case-report__meta">
-          <strong>סיכום תיק {c.id}</strong>
+          <strong>סיכום תיק {c.caseNumber}</strong>
           <span>הופק ב-{today}</span>
         </div>
       </header>
