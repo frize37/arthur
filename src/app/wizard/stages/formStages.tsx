@@ -1,86 +1,14 @@
 "use client";
 
-import { useRef } from "react";
-import Image from "next/image";
 import type { StageProps } from "../lib/reducer";
 import { isComplexCase } from "../lib/types";
-import { heroLandingEffects } from "../lib/effects";
 import { shekel } from "../lib/finance";
 import { BuddyRow, ChipRow, ChoiceGroup, Field, NavRow, Reveal, SliderField, Subhead } from "../components/ui";
-import { RiggedBear } from "../components/RiggedBear";
 
-export function WelcomeStage({ go }: StageProps) {
-  const stageRef = useRef<HTMLDivElement>(null);
+export function RequestTypeStage({ state, set, go }: StageProps) {
   return (
     <section className="stage">
-      <div className="hero-fullbleed">
-        <div className="hero-wrap">
-          <div className="hero-band">
-            <div className="hero-band__diagonal" />
-            <div className="hero-band__inner">
-              <div className="hero-band__glow" />
-              <div className="sticker sticker--coin">₪</div>
-              <div className="sticker sticker--pop">
-                <svg viewBox="0 0 24 24"><path d="M12 4v13m0 0-5-5m5 5 5-5" stroke="currentColor" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </div>
-              <div className="sticker sticker--teal">
-                <svg viewBox="0 0 24 24"><path d="M12 2 14.5 9 22 9 16 13.5 18 21 12 16.5 6 21 8 13.5 2 9 9.5 9Z" fill="currentColor" /></svg>
-              </div>
-              <div className="hero-band__copy">
-                <span className="kicker-onhero">🕵️ לא אתם מחפשים יועץ — היועצים מתחרים עליכם</span>
-                <h1>
-                  אל תיקחו משכנתה
-                  <br />
-                  לפני ש<span className="hl">ארתור בודק</span>.
-                </h1>
-                <p>כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר יועצי משכנתאות מתחרים על התיק שלכם ומציעים לכם את התנאים הכי טובים שהם יכולים. ובסוף יש בן אדם — יועץ שידבר איתכם וילווה אתכם, לא מחשב.</p>
-              </div>
-              <div
-                className="hero-band__stage"
-                ref={stageRef}
-                onAnimationEnd={(e) => {
-                  if (e.animationName === "heroDrop" && stageRef.current) heroLandingEffects(stageRef.current);
-                }}
-              >
-                <div className="hero-bear-drop">
-                  <RiggedBear />
-                </div>
-              </div>
-            </div>
-            <svg className="skyline" viewBox="0 0 400 60" preserveAspectRatio="none">
-              <path d="M0,60 L0,38 L30,38 L30,24 L55,24 L55,40 L80,40 L80,20 L100,20 L100,10 L120,10 L120,42 L150,42 L150,28 L175,28 L175,46 L205,46 L205,16 L230,16 L230,6 L250,6 L250,44 L280,44 L280,30 L305,30 L305,48 L335,48 L335,22 L360,22 L360,38 L400,38 L400,60 Z" fill="rgba(0,0,0,0.18)" />
-            </svg>
-          </div>
-          <button type="button" className="float-cta" onClick={() => go("requestType")}>
-            <Image className="peek" src="/brand/arthur-bear-full.png" alt="" width={80} height={80} />
-            <span className="txt">בואו נתחיל</span>
-            <span className="chev">‹‹</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="trust-row">
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-down" /></svg></div><span>חיסכון ענק אפשרי</span></div>
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-upload" /></svg></div><span>יועצים מתחרים על התיק</span></div>
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-clock" /></svg></div><span>2 דקות וההצעה בדרך</span></div>
-        <div className="trust-badge"><div className="trust-badge__icon"><svg><use href="#ic-cash" /></svg></div><span>יועץ אנושי שמדבר איתכם</span></div>
-      </div>
-
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div className="card-badge">🔒 מאובטח ופרטי</div>
-        <BuddyRow bubble="בסוף התהליך יושב יועץ אמיתי שיטפל בכם — אני רק דואג שכמה מהטובים יתחרו על התיק שלכם. כל תשובה כאן חשובה לדיוק ההצעה שתקבלו — אין תשובות מיותרות. ואת דוח היתרות אני לא שומר אצלי, רק שולף ממנו את המספרים." />
-        <button type="button" className="btn btn-primary" style={{ width: "100%", fontSize: 16, padding: 15 }} onClick={() => go("requestType")}>
-          בואו נתחיל
-        </button>
-      </div>
-    </section>
-  );
-}
-
-export function RequestTypeStage({ state, set, go, back }: StageProps) {
-  return (
-    <section className="stage">
-      <BuddyRow bubble="כדי להתאים לכם בדיוק את המומחה ואת המסלול הנכון, בואו נתחיל מהבסיס — מה אתם עושים היום?" />
+      <BuddyRow bubble="נעים להכיר, אני ארתור. בסוף התהליך יושב יועץ אמיתי שיטפל בכם — אני רק דואג שכמה מהטובים יתחרו על התיק שלכם. ואת דוח היתרות אני לא שומר אצלי, רק שולף ממנו את המספרים. נתחיל מהבסיס: מה אתם עושים היום?" />
       <div className="card">
         <ChoiceGroup
           value={state.requestType}
@@ -92,7 +20,7 @@ export function RequestTypeStage({ state, set, go, back }: StageProps) {
           ]}
         />
       </div>
-      <NavRow onBack={back} onNext={() => go("goal")} nextDisabled={!state.requestType} />
+      <NavRow showBack={false} onNext={() => go("goal")} nextDisabled={!state.requestType} />
     </section>
   );
 }
@@ -143,7 +71,7 @@ export function PropertyStage({ state, set, go, back }: StageProps) {
   return (
     <section className="stage">
       <BuddyRow bubble="כמה פרטים על הנכס עצמו — זה קובע איזה מסמכים נצטרך ואיזה מסלולים רלוונטיים." />
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="card card--form">
         {isNew && (
           <>
             {/* מטרת הרכישה כבר אומרת כמה דירות יש בבעלות — "שדרוג" פירושו שיש
@@ -198,40 +126,87 @@ export function PropertyStage({ state, set, go, back }: StageProps) {
 
 export function NumbersStage({ state, set, go, back }: StageProps) {
   const isNew = state.requestType === "new";
-  // המשכנתה לא יכולה לעלות על שווי הנכס, והון עצמי + משכנתה אמורים לכסות אותו.
+  // במשכנתה חדשה הסכום נגזר: מה שחסר לרכישה אחרי ההון העצמי. מי שמזיז את
+  // הסליידר מעבר לזה מבקש בעצם תוספת, ולכן נשאל במפורש אם זו הכוונה.
+  const needed = Math.max(0, state.propertyValue - state.equity);
+  const extra = isNew ? state.mortgageAmount - needed : 0;
+  const extraConfirmed = extra > 0 && state.mortgageExtraConfirmedFor === state.mortgageAmount;
   const overValue = state.mortgageAmount > state.propertyValue;
-  const gap = isNew ? state.propertyValue - (state.mortgageAmount + state.equity) : 0;
-  const mismatch = isNew && !overValue && Math.abs(gap) > state.propertyValue * 0.02;
+  const shortfall = isNew && extra < 0 && -extra > state.propertyValue * 0.02;
+
+  // שווי או הון עצמי השתנו — המשכנתה חוזרת לסכום שנגזר מהם.
+  function setBase(field: "propertyValue" | "equity", v: number) {
+    set(field, v);
+    if (!isNew) return;
+    const value = field === "propertyValue" ? v : state.propertyValue;
+    const equity = field === "equity" ? v : state.equity;
+    set("mortgageAmount", Math.max(0, value - equity));
+    set("mortgageExtraConfirmedFor", null);
+  }
+
   return (
     <section className="stage">
-      <BuddyRow bubble="כמה מספרים ראשוניים כדי שנוכל להתחיל לחשב עבורכם — אפשר להעריך, נדייק אחר כך מהמסמכים." />
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <SliderField label="שווי הנכס המוערך (או מחיר החוזה)" value={state.propertyValue} onChange={(v) => set("propertyValue", v)} min={500000} max={8000000} step={10000} />
-        <SliderField
-          label={isNew ? "גובה המשכנתה המבוקשת" : "גובה המשכנתה הקיימת"}
-          value={state.mortgageAmount}
-          onChange={(v) => set("mortgageAmount", v)}
-          min={200000}
-          max={6000000}
-          step={10000}
-        />
-        {isNew && <SliderField label="ההון העצמי הקיים" value={state.equity} onChange={(v) => set("equity", v)} min={0} max={4000000} step={10000} />}
+      <BuddyRow
+        bubble={
+          isNew
+            ? "תנו לי את מחיר הנכס ואת ההון העצמי — את גובה המשכנתה אני כבר מחשב לבד. אפשר להעריך, נדייק אחר כך."
+            : "כמה מספרים ראשוניים כדי שנוכל להתחיל לחשב עבורכם — אפשר להעריך, נדייק אחר כך מהמסמכים."
+        }
+      />
+      <div className="card card--form">
+        <SliderField label="שווי הנכס המוערך (או מחיר החוזה)" value={state.propertyValue} onChange={(v) => setBase("propertyValue", v)} min={500000} max={8000000} step={10000} />
+        {isNew && <SliderField label="ההון העצמי הקיים" value={state.equity} onChange={(v) => setBase("equity", v)} min={0} max={4000000} step={10000} />}
+        <div className="derived-field">
+          <SliderField
+            label={isNew ? "גובה המשכנתה" : "גובה המשכנתה הקיימת"}
+            value={state.mortgageAmount}
+            onChange={(v) => set("mortgageAmount", v)}
+            min={200000}
+            max={6000000}
+            step={10000}
+          />
+          {isNew && extra === 0 && (
+            <small className="hint">חושב אוטומטית: שווי הנכס פחות ההון העצמי. אפשר לשנות אם צריך יותר.</small>
+          )}
+        </div>
+        {isNew && extra > 0 && !overValue && (
+          <div className={"extra-ask" + (extraConfirmed ? " is-confirmed" : "")} role="group" aria-label="אישור תוספת למשכנתה">
+            <p>
+              לרכישה חסרים לכם <b>{shekel(needed)}</b>, וביקשתם <b>{shekel(state.mortgageAmount)}</b>.
+              {extraConfirmed ? " סימנתי שאתם רוצים " : " האם אתם רוצים "}
+              <b>תוספת של {shekel(extra)}</b>
+              {extraConfirmed ? " מעבר לרכישה — למשל לשיפוץ או לסגירת הלוואות." : " מעבר לרכישה — למשל לשיפוץ או לסגירת הלוואות?"}
+            </p>
+            {!extraConfirmed ? (
+              <div className="extra-ask__actions">
+                <button type="button" className="btn btn-primary" onClick={() => set("mortgageExtraConfirmedFor", state.mortgageAmount)}>
+                  כן, אני רוצה את התוספת
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => set("mortgageAmount", needed)}>
+                  לא, רק מה שצריך לרכישה
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="btn-link" onClick={() => { set("mortgageAmount", needed); set("mortgageExtraConfirmedFor", null); }}>
+                בעצם בלי תוספת
+              </button>
+            )}
+          </div>
+        )}
         {overValue && (
           <div className="match-note warn">
             <svg><use href="#ic-alert" /></svg>
             המשכנתה גבוהה משווי הנכס. נראה שאחד המספרים לא מדויק.
           </div>
         )}
-        {mismatch && (
+        {shortfall && (
           <div className="match-note warn">
             <svg><use href="#ic-alert" /></svg>
-            {gap > 0
-              ? `המשכנתה וההון העצמי מכסים פחות ממחיר הנכס — חסרים כ-${shekel(gap)}. בדקו שהמספרים מדויקים.`
-              : `המשכנתה וההון העצמי עולים יחד על מחיר הנכס בכ-${shekel(-gap)}. בדקו שהמספרים מדויקים.`}
+            {`המשכנתה וההון העצמי מכסים פחות ממחיר הנכס — חסרים כ-${shekel(-extra)}. בדקו שהמספרים מדויקים.`}
           </div>
         )}
       </div>
-      <NavRow onBack={back} onNext={() => go("repayment")} nextDisabled={overValue} />
+      <NavRow onBack={back} onNext={() => go("repayment")} nextDisabled={overValue || (extra > 0 && !extraConfirmed)} />
     </section>
   );
 }
@@ -241,7 +216,7 @@ export function RepaymentStage({ state, set, go, back }: StageProps) {
   return (
     <section className="stage">
       <BuddyRow bubble="אני שואל כדי לוודא שכל תוכנית שנבנה תישאר נוחה עבורכם גם אם הריבית תעלה." />
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="card card--form">
         <SliderField label="מה ההחזר החודשי שנוח לכם לשלם?" value={state.comfortPayment} onChange={(v) => set("comfortPayment", v)} min={1500} max={25000} step={100} />
         <SliderField label="מה ההחזר המקסימלי שתוכלו לעמוד בו אם הריבית תעלה?" value={state.maxStressPayment} onChange={(v) => set("maxStressPayment", v)} min={1500} max={30000} step={100} />
         {inverted && (
@@ -265,7 +240,7 @@ export function PlanningStage({ state, set, go, back }: StageProps) {
   return (
     <section className="stage">
       <BuddyRow bubble="אני שואל על העתיד הקרוב כדי לוודא שהתוכנית שנבנה תחזיק מעמד גם אם משהו משתנה." />
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="card card--form">
         <Field label="צפי לשחרר סכום כסף משמעותי ב-5 השנים הקרובות? (קרן השתלמות, חיסכון, מכירת נכס)">
           <ChipRow
             value={state.futureRelease}
@@ -335,11 +310,11 @@ export function EmploymentStage({ state, set, go, back }: StageProps) {
         mood={complex ? "bear-detective" : "bear"}
         bubble={
           complex
-            ? "תיק עם כמה מקורות הכנסה דורש קצת בלשות 🕵️ — כבר נתאים לכם יועץ שמתמחה בדיוק בזה."
+            ? "תיק עם כמה מקורות הכנסה דורש קצת בלשות — כבר נתאים לכם יועץ שמתמחה בדיוק בזה."
             : "עכשיו נבדוק את יכולת ההחזר, כדי לוודא שכל תוכנית שנציע תשאיר לכם ראש שקט בסוף החודש."
         }
       />
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="card card--form">
         <Field label="יש מבקש/ת נוסף/ת למשכנתה?">
           <ChipRow
             value={state.hasSecondApplicant}
@@ -439,11 +414,11 @@ export function CreditStage({ state, set, go, back }: StageProps) {
         mood={complex ? "bear-detective" : "bear"}
         bubble={
           complex
-            ? 'קלטתי — זה בדיוק המידע שעוזר לנו לשייך אתכם ליועץ עם ניסיון בתיקים כאלה. בלי שיפוט, רק התאמה טובה יותר. 🕵️'
+            ? 'קלטתי — זה בדיוק המידע שעוזר לנו לשייך אתכם ליועץ עם ניסיון בתיקים כאלה. בלי שיפוט, רק התאמה טובה יותר.'
             : 'כמה שאלות רכות שעוזרות לנו לשייך אתכם ליועץ עם הניסיון המתאים — אין תשובה "לא טובה" כאן.'
         }
       />
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="card card--form">
         <Field label="יש הלוואות נוספות פעילות כיום? (לא כולל המשכנתה)">
           <ChipRow
             value={state.otherLoans}

@@ -1,32 +1,37 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArthurMascot } from "@/components/ArthurMascot";
-import { SiteFooter } from "@/components/SiteFooter";
 import { fetchPublicStats } from "./lib/publicStats";
 import { fetchPublicAdvisors } from "./lib/publicAdvisors";
 import { AdvisorRoster } from "@/components/AdvisorRoster";
+import { SiteFooter } from "@/components/SiteFooter";
 import { shekel } from "./wizard/lib/finance";
+import "./landing.css";
 
 // Stats are live data, not build-time content — refresh at most once a
 // minute instead of baking in whatever the counts were at deploy time.
 export const revalidate = 60;
 
+// Each step is one divider tab in the folder, in the tab's own color.
 const STEPS = [
   {
+    color: "var(--accent)",
     title: "עונים על שאלון קצר",
     desc: "כ-2 דקות, מסך אחד-שניים לכל נושא. כל שאלה חשובה לדיוק ההצעה שתקבלו.",
   },
   {
+    color: "var(--hoodie)",
     title: "מעלים דוח יתרות",
     desc: "או ממלאים את פרטי הריבית בעצמכם — כך או כך, המספרים האלה הם הבסיס להצעה האמיתית.",
   },
   {
+    color: "var(--surface-2)",
     title: "מאמתים זהות בקצרה",
     desc: "קוד חד-פעמי במייל, כדי שהתיק ייפתח בביטחון מלא.",
   },
   {
+    color: "var(--pop-warm)",
     title: "יועצים מתחרים על התיק שלכם",
-    desc: "התיק (בעילום שם) יוצא למספר יועצי משכנתאות, וכל אחד מגיש הצעת מחיר אמיתית — אתם מקבלים את המשתלמת ביותר.",
+    desc: "התיק יוצא למספר יועצי משכנתאות, וכל אחד מגיש הצעת מחיר אמיתית — אתם מקבלים את המשתלמת ביותר.",
   },
 ];
 
@@ -34,17 +39,14 @@ const PROMISES = [
   {
     title: "יש לכם עם מי לדבר",
     desc: "יועץ משכנתאות בשר ודם מקבל את התיק שלכם, מדבר איתכם ומלווה אתכם עד הסוף. לא צ׳אט, לא טופס שחוזר במייל, ולא מחשב שמחליט במקומכם.",
-    icon: "M8 21h8M12 17v4M4.5 5.5h15v10a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-10Z M9 10.5h6",
   },
   {
     title: "הם מתחרים עליכם",
     desc: "זה כל ההבדל: במקום שתלכו ליועץ אחד ותקוו שהוא הכי טוב, כמה יועצים מקבלים את התיק באותו זמן ומתחרים עליו. התוצאה היא תנאים טובים יותר עבורכם.",
-    icon: "M7 17l-3-3 3-3M4 14h9a4 4 0 0 0 4-4V7M17 7l3 3-3 3",
   },
   {
     title: "ורק הטובים שבהם",
     desc: "עובדים איתנו מטובי יועצי המשכנתאות בארץ. כל יועץ נמדד על החיסכון שהשיג ועל השירות שנתן — ומי שלא עומד בזה, לא ממשיך.",
-    icon: "M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85L12 3.5Z",
   },
 ];
 
@@ -91,9 +93,25 @@ const FAQ: { q: string; a: string }[] = [
   },
 ];
 
+function Check() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 12l5 5 9-10" />
+    </svg>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  );
+}
+
 export default async function Home() {
   const [stats, advisors] = await Promise.all([fetchPublicStats(), fetchPublicAdvisors()]);
-  const statTiles = [
+  const ledger = [
     { label: "תיקים שבדקנו", value: stats.casesChecked.toLocaleString("he-IL") },
     { label: "תיקים שנסגרו בהצלחה", value: stats.casesClosed.toLocaleString("he-IL") },
     { label: "חיסכון שסיפקנו ללקוחות", value: shekel(stats.totalSavings) },
@@ -101,155 +119,223 @@ export default async function Home() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full">
-      <header className="border-b border-line">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 px-5 py-3.5">
-          <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={280} height={140} className="h-16 w-auto" />
-          <Link
-            href="/wizard"
-            className="font-display font-bold text-sm rounded-xl bg-accent text-[var(--hero-1)] px-4 py-2 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5"
-          >
-            בדיקה חינמית
-          </Link>
+    <div className="cf flex flex-col min-h-full">
+      <header className="cf-header">
+        <div className="cf-wrap">
+          <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={280} height={140} className="cf-header__logo" priority />
+          <nav className="cf-nav" aria-label="ניווט ראשי">
+            <a href="#how">איך זה עובד</a>
+            <a href="#advisors">היועצים</a>
+            <a href="#faq">שאלות</a>
+            <a href="#join" className="cf-nav__join">יועצים? הצטרפו</a>
+          </nav>
         </div>
       </header>
 
       <main className="flex-1">
-        {/* HERO */}
-        <section
-          className="relative overflow-hidden text-center"
-          style={{ background: "linear-gradient(155deg, var(--hero-1) 0%, var(--hero-2) 48%, var(--hero-3) 100%)" }}
-        >
-          <div className="max-w-2xl mx-auto flex flex-col items-center px-5 pt-6 pb-10 md:pb-14">
-            <div className="hero-visual w-full">
-              <div className="bear-drop">
-                <ArthurMascot className="w-[340px] sm:w-[440px] md:w-[520px] h-auto drop-shadow-[0_24px_30px_rgba(0,0,0,0.32)]" />
-              </div>
-              <h1 className="comic-bubble">
-                אל תיקחו משכנתה
-                <br />
-                לפני ש<b>ארתור בודק</b>.
-              </h1>
-            </div>
-
-            <div className="hero-copy-fade flex flex-col items-center">
-              <p className="text-white/85 pt-1.5 max-w-[40ch]">
-                כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר כמה יועצי משכנתאות מתחרים על התיק שלכם ומציעים לכם את התנאים הכי טובים שהם יכולים. בחינם, ובלי שום התחייבות.
-              </p>
-              <Link
-                href="/wizard"
-                className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-white text-[var(--hero-1)] px-6 py-3.5 shadow-lg transition hover:-translate-y-0.5"
-              >
-                תנו לי לבדוק ←
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* LIVE STATS */}
-        <section className="max-w-4xl mx-auto -mt-7 relative z-10 px-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {statTiles.map((tile) => (
-              <div key={tile.label} className="bg-surface border border-line rounded-2xl shadow-[var(--shadow)] px-3 py-4 text-center">
-                <p className="font-display font-black text-lg text-teal tabular-nums">{tile.value}</p>
-                <p className="font-display font-bold text-xs text-ink-soft leading-snug pt-1">{tile.label}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* HUMAN, NOT DIGITAL — the thing to say before anything else */}
-        <section className="mt-14" style={{ background: "var(--hero-1)" }}>
-          <div className="max-w-5xl mx-auto px-5 py-14">
-            <div className="text-center">
-              <span className="font-display font-bold text-xs text-[var(--hero-1)] bg-accent rounded-full px-3 py-1.5">רגע לפני שמתחילים</span>
-              <h2 className="text-white text-2xl md:text-3xl pt-3.5">אנחנו לא ייעוץ משכנתאות דיגיטלי</h2>
-              <p className="text-white/75 pt-2.5 max-w-[46ch] mx-auto leading-relaxed">
-                ארתור לא מחשב לכם משכנתה ושולח אותה במייל. ארתור מביא לכם בן אדם.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3 pt-10">
-              {PROMISES.map((p) => (
-                <div key={p.title} className="rounded-2xl bg-white/[0.07] border border-white/15 p-5">
-                  <div className="w-11 h-11 rounded-xl bg-accent text-[var(--hero-1)] grid place-items-center">
-                    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d={p.icon} />
-                    </svg>
+        {/* THE OPEN CASE FILE */}
+        <div className="cf-wrap">
+          <div className="cf-folder">
+            <section className="cf-panel cf-cover" aria-labelledby="hero-title">
+              <div className="cf-label">
+                <h1 id="hero-title" className="cf-h1">
+                  אל תיקחו משכנתה לפני ש<mark>ארתור בודק</mark>.
+                </h1>
+                <p className="cf-lede">
+                  כמה שאלות פשוטות, דוח יתרות אחד — ותוך זמן קצר כמה יועצי משכנתאות מתחרים על התיק שלכם ומציעים לכם את התנאים הכי טובים שהם יכולים.
+                </p>
+                <div className="cf-actions">
+                  <Link href="/wizard" className="cf-cta">
+                    לפתוח תיק בחינם
+                    <Arrow />
+                  </Link>
+                  <div className="cf-trust">
+                    <span><Check />בחינם</span>
+                    <span><Check />בלי התחייבות</span>
                   </div>
-                  <strong className="block font-display text-base text-white pt-3.5">{p.title}</strong>
-                  <p className="text-sm text-white/70 leading-relaxed pt-1.5">{p.desc}</p>
+                </div>
+              </div>
+            </section>
+
+            <Image
+              src="/brand/arthur-bear-full.png"
+              alt="ארתור הדובי בודק את התיק עם זכוכית מגדלת"
+              width={600}
+              height={600}
+              className="cf-bear"
+              priority
+            />
+
+            <section className="cf-panel cf-back" aria-label="הדגמה: כך נראה תיק שיוצא ליועצים">
+              <nav className="cf-tabs" aria-label="קפיצה לחלקי הדף">
+                <a href="#how">איך זה עובד</a>
+                <a href="#advisors">היועצים</a>
+                <a href="#faq">שאלות</a>
+                <a href="#join">ליועצים</a>
+              </nav>
+              <div className="cf-sheet">
+                <div className="cf-sheet__head">
+                  <strong>תיק משכנתה</strong>
+                  <span>דוגמה</span>
+                </div>
+                <dl className="cf-fields">
+                  <div className="cf-field"><dt>סוג</dt><dd>מיחזור משכנתה קיימת</dd></div>
+                  <div className="cf-field"><dt>יתרה</dt><dd>{shekel(1140000)} · 3 מסלולים</dd></div>
+                  <div className="cf-field">
+                    <dt>שם וטלפון</dt>
+                    <dd className="cf-redacted"><i aria-hidden /><small>רק היועץ שתבחרו יראה</small></dd>
+                  </div>
+                </dl>
+                <div className="cf-routing">
+                  <span>התיק יצא ל-4 יועצים · 3 הצעות התקבלו</span>
+                  <span className="cf-dots" aria-hidden><i /><i /><i /><i /></span>
+                </div>
+                <div className="cf-slips">
+                  <div className="cf-slip">
+                    <span className="cf-slip__clip" aria-hidden />
+                    <b>יועצת א׳</b>
+                    <strong>{shekel(94300)}</strong>
+                    <small>חיסכון משוער</small>
+                  </div>
+                  <div className="cf-slip">
+                    <b>יועץ ב׳</b>
+                    <strong>{shekel(81900)}</strong>
+                    <small>חיסכון משוער</small>
+                  </div>
+                  <div className="cf-slip cf-slip--best">
+                    <b>יועץ ג׳ <span className="cf-flag">המשתלמת</span></b>
+                    <strong>{shekel(112600)}</strong>
+                    <small>חיסכון משוער</small>
+                  </div>
+                </div>
+                <div className="cf-stamp" aria-hidden>נבדק<small>ע״י ארתור</small></div>
+                <p className="cf-demo">נתוני הדגמה בלבד</p>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* THE REGISTER — live numbers */}
+        <section className="cf-section" aria-labelledby="ledger-title">
+          <div className="cf-wrap">
+            <div className="cf-ledger">
+              <div className="cf-ledger__head">
+                <strong id="ledger-title">הרישום של ארתור</strong>
+                <span>מתעדכן באופן שוטף</span>
+              </div>
+              <dl className="cf-ledger__rows">
+                {ledger.map((row) => (
+                  <div key={row.label} className="cf-ledger__row">
+                    <dt>{row.label}</dt>
+                    <span className="cf-leader" aria-hidden />
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        {/* ARTHUR'S MEMO — human, not digital */}
+        <section className="cf-section" style={{ paddingTop: 0 }} aria-labelledby="memo-title">
+          <div className="cf-wrap cf-memo">
+            <div>
+              <h2 id="memo-title" className="cf-h2">אנחנו לא ייעוץ משכנתאות דיגיטלי</h2>
+              <p className="cf-sub">ארתור לא מחשב לכם משכנתה ושולח אותה במייל. ארתור מביא לכם בן אדם.</p>
+            </div>
+            <article className="cf-memo__sheet">
+              <dl className="cf-memo__meta">
+                <dt>אל</dt><dd>מי שיש לו משכנתה</dd>
+                <dt>מאת</dt><dd>ארתור</dd>
+                <dt>בנושא</dt><dd>מה מקבלים כשפותחים תיק</dd>
+              </dl>
+              {PROMISES.map((p) => (
+                <div key={p.title} className="cf-point">
+                  <h3>{p.title}</h3>
+                  <p>{p.desc}</p>
                 </div>
               ))}
-            </div>
+              <div className="cf-sign">
+                <span>בחינם, ובלי שום התחייבות.</span>
+                <span className="cf-stamp-static" aria-hidden>ארתור</span>
+              </div>
+            </article>
           </div>
         </section>
 
         {/* WHO IS COMPETING */}
         <AdvisorRoster advisors={advisors} />
 
-        {/* HOW IT WORKS */}
-        <section className="max-w-5xl mx-auto px-5 py-16">
-          <div className="text-center mb-10">
-            <span className="font-display font-bold text-xs text-accent-strong bg-accent-soft rounded-full px-3 py-1.5">התהליך</span>
-            <h2 className="text-2xl md:text-3xl pt-3">איך זה עובד, מהתחלה ועד ההצעה</h2>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step, i) => (
-              <div key={step.title} className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow)]">
-                <span className="font-display font-black text-2xl text-accent-strong">{i + 1}</span>
-                <strong className="block font-display text-base pt-2">{step.title}</strong>
-                <p className="text-sm text-ink-soft leading-relaxed pt-1.5">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* MEET ARTHUR VISUAL */}
-        <section className="max-w-5xl mx-auto px-5 pb-16">
-          <div className="rounded-3xl border border-line bg-surface p-2.5 shadow-[var(--shadow)] overflow-hidden">
-            <Image
-              src="/brand/arthur-hero-banner.jpg"
-              alt="ארתור מעביר את התיק ליועצים המתאימים"
-              width={1536}
-              height={1024}
-              className="w-full h-auto rounded-2xl"
-            />
+        {/* HOW IT WORKS — divider tabs */}
+        <section id="how" className="cf-section" aria-labelledby="how-title">
+          <div className="cf-wrap">
+            <h2 id="how-title" className="cf-h2">איך זה עובד, מהתחלה ועד ההצעה</h2>
+            <ol className="cf-stack">
+              {STEPS.map((step, i) => (
+                <li key={step.title} className="cf-stack__sheet" style={{ ["--i" as string]: i, ["--t" as string]: step.color }}>
+                  <h3 className="cf-stack__tab"><span>{i + 1}</span>{step.title}</h3>
+                  <p>{step.desc}</p>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
         {/* FAQ */}
-        <section id="faq" className="bg-surface-2/40 border-y border-line">
-          <div className="max-w-3xl mx-auto px-5 py-16">
-            <div className="text-center mb-8">
-              <span className="font-display font-bold text-xs text-accent-strong bg-accent-soft rounded-full px-3 py-1.5">שאלות ותשובות</span>
-              <h2 className="text-2xl md:text-3xl pt-3">10 שאלות שכולם שואלים אותנו</h2>
-            </div>
-            <div className="flex flex-col gap-3">
+        <section id="faq" className="cf-section" style={{ paddingTop: 0 }} aria-labelledby="faq-title">
+          <div className="cf-wrap" style={{ maxWidth: 960 }}>
+            <h2 id="faq-title" className="cf-h2">10 שאלות שכולם שואלים אותנו</h2>
+            <div className="cf-faq">
               {FAQ.map((item) => (
-                <details key={item.q} className="group rounded-2xl border border-line bg-surface px-5 py-4 open:shadow-[var(--shadow)]">
-                  <summary className="flex items-center justify-between gap-3 cursor-pointer font-display font-bold text-sm list-none">
+                <details key={item.q}>
+                  <summary>
                     {item.q}
-                    <span className="text-accent-strong text-lg leading-none transition group-open:rotate-45">+</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
                   </summary>
-                  <p className="text-sm text-ink-soft leading-relaxed pt-3">{item.a}</p>
+                  <p>{item.a}</p>
                 </details>
               ))}
             </div>
           </div>
         </section>
 
-        {/* FINAL CTA */}
-        <section className="max-w-3xl mx-auto px-5 py-16 text-center">
-          <ArthurMascot className="w-24 h-24 mx-auto" />
-          <h2 className="text-2xl md:text-3xl pt-4">מוכנים לדעת בדיוק איפה אתם עומדים?</h2>
-          <p className="text-ink-soft pt-2 max-w-[46ch] mx-auto">2 דקות, בלי התחייבות, ובלי עלות. ארתור כבר בודק.</p>
-          <Link
-            href="/wizard"
-            className="inline-flex mt-6 font-display font-bold text-base rounded-xl bg-accent text-[var(--hero-1)] px-7 py-3.5 shadow-[0_12px_22px_-12px_color-mix(in_srgb,var(--accent)_65%,transparent)] transition hover:-translate-y-0.5"
-          >
-            בואו נתחיל
-          </Link>
+        {/* FOR ADVISORS */}
+        <section id="join" className="cf-section" style={{ paddingTop: 0 }} aria-labelledby="join-title">
+          <div className="cf-wrap">
+            <div className="cf-join">
+              <div>
+                <h2 id="join-title" className="cf-h2">יועצי משכנתאות? התיקים מגיעים אליכם</h2>
+                <p className="cf-sub">ארתור מכין את התיק: שאלון מלא, נתוני דוח היתרות ופרטי המסלולים, בלי פרט מזהה. אתם מגישים הצעה, והלקוח בוחר.</p>
+                <div className="cf-actions">
+                  <Link href="/login" className="cf-cta cf-cta--yellow">כניסה ליועצים</Link>
+                </div>
+              </div>
+              <ul className="cf-join__list">
+                <li className="cf-join__item"><Check /><span><b>תיקים לפי ההתמחות שלכם.</b> מיחזור, עצמאים, מסלולים משתנים ועוד.</span></li>
+                <li className="cf-join__item"><Check /><span><b>תיק מסודר מהרגע הראשון.</b> הנתונים הפיננסיים כבר שם, בלי לרדוף אחרי מסמכים.</span></li>
+                <li className="cf-join__item"><Check /><span><b>נמדדים על מה שחשוב.</b> חיסכון, שירות ומהירות הגשת ההצעה.</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* CLOSE */}
+        <section className="cf-section" style={{ paddingTop: 0 }} aria-labelledby="close-title">
+          <div className="cf-wrap cf-close">
+            <Image src="/brand/arthur-bear-full.png" alt="" width={440} height={440} className="cf-close__bear" />
+            <div>
+              <h2 id="close-title" className="cf-h2">מוכנים לדעת בדיוק איפה אתם עומדים?</h2>
+              <p className="cf-sub">2 דקות, בלי התחייבות, ובלי עלות. ארתור כבר בודק.</p>
+              <div className="cf-actions">
+                <Link href="/wizard" className="cf-cta cf-cta--yellow">
+                  לפתוח תיק בחינם
+                  <Arrow />
+                </Link>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
 

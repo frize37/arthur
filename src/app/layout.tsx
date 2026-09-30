@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Rubik, Assistant } from "next/font/google";
+import { Secular_One, Assistant } from "next/font/google";
 import "./globals.css";
 
-const rubik = Rubik({
-  variable: "--font-rubik",
+// Secular One is the case-file's label face: headings, stamps, big figures.
+// It ships in one weight only, so never pair it with font-bold.
+const secular = Secular_One({
+  variable: "--font-secular",
   subsets: ["hebrew", "latin"],
-  weight: ["500", "700", "900"],
+  weight: "400",
 });
 
 const assistant = Assistant({
   variable: "--font-assistant",
   subsets: ["hebrew", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -21,8 +23,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="he" dir="rtl" className={`${rubik.variable} ${assistant.variable} h-full`}>
-      <body className="min-h-full flex flex-col bg-paper text-ink font-sans antialiased">
+    <html lang="he" dir="rtl" className={`${secular.variable} ${assistant.variable} h-full`}>
+      <body className="min-h-full flex flex-col bg-desk text-ink font-sans antialiased">
         {children}
       </body>
     </html>

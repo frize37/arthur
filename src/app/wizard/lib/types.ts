@@ -1,5 +1,4 @@
 export const STAGES = [
-  "welcome",
   "requestType",
   "goal",
   "property",
@@ -62,6 +61,9 @@ export interface WizardState {
   propertyValue: number;
   mortgageAmount: number;
   equity: number;
+  // במשכנתה חדשה הסכום נגזר משווי הנכס פחות ההון העצמי. מי שמבקש יותר
+  // מאשר במפורש את התוספת — כאן נשמר הסכום שאושר, כדי לא לשאול שוב.
+  mortgageExtraConfirmedFor: number | null;
 
   // תקרת המימון נגזרת ממטרת הרכישה; מה שנשאר לשאול הוא רק התזמון אצל
   // משפרי דיור — מכירה לפני הרכישה נחשבת מחוסר דיור, ואחריה משפר דיור.
@@ -126,15 +128,16 @@ export interface WizardState {
 }
 
 export const initialWizardState: WizardState = {
-  stage: "welcome",
+  stage: "requestType",
   requestType: null,
   goal: null,
 
   propertySource: null,
   propertyLegal: null,
   propertyValue: 1800000,
-  mortgageAmount: 950000,
+  mortgageAmount: 1400000,
   equity: 400000,
+  mortgageExtraConfirmedFor: null,
 
   sellingExisting: null,
   oldestAge: 35,

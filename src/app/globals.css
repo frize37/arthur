@@ -1,70 +1,92 @@
 @import "tailwindcss";
 
+/*
+ * Arthur's case file. Every surface is a piece of one office folder:
+ * a navy desk, the folder boards, warm paper sheets, index tabs in the
+ * bear's colors (cap yellow, hoodie teal, coral), and a red rubber stamp.
+ */
 :root {
-  --paper: #F2F8FA;
-  --surface: #FFFFFF;
-  --surface-2: #FFF4D9;
-  --ink: #0E2038;
-  --ink-soft: #3D5170;
-  --ink-faint: #74869F;
-  --line: rgba(14, 32, 56, 0.13);
-  --line-strong: rgba(14, 32, 56, 0.26);
-  --accent: #FFB300;
-  --accent-strong: #E08900;
-  --accent-soft: #FFEDBD;
-  --teal: #06AABE;
-  --teal-soft: #D3F5F8;
-  --pop-warm: #FF6B4A;
-  --pop-warm-soft: #FFE1D6;
-  --good: #21A15E;
-  --watch: #E0960A;
-  --risk: #E14B3B;
-  --pop: #3E8FD1;
-  --pop-soft: #DDEBF7;
-  --hero-1: #0B2647;
-  --hero-2: #06AABE;
-  --hero-3: #FFC93C;
-  --shadow: 0 20px 45px -30px rgba(14, 32, 56, 0.45);
+  /* folder + desk */
+  --desk: #0D1E3B;
+  --folder: #1A3A6E;
+  --folder-in: #214784;
+  --on-folder: #FFFFFF;
+  --on-folder-soft: #B8C6E0;
+
+  /* paper */
+  --paper: #F4F1EA;
+  --surface: #FFFDF8;
+  --surface-2: #EDE8DC;
+  --rule: #D8D1C1;
+
+  /* ink */
+  --ink: #13213A;
+  --ink-soft: #4B5770;
+  --ink-faint: #636C80;
+  --line: rgba(19, 33, 58, 0.14);
+  --line-strong: rgba(19, 33, 58, 0.28);
+
+  /* tabs: the bear's colors */
+  --accent: #FFC21A;
+  --accent-strong: #8F5B00;
+  --accent-soft: #FFF0C4;
+  --hoodie: #0FA3B5;
+  --teal: #0A7F8E;
+  --teal-soft: #D6F1F4;
+  --pop-warm: #F08A5D;
+  --pop-warm-soft: #FCE4D8;
+  --pop: #1A3A6E;
+  --pop-soft: #DEE6F3;
+
+  /* status */
+  --stamp: #C8462E;
+  --good: #1E8452;
+  --watch: #9A6A00;
+  --risk: #C23B2A;
+
+  /* legacy names, kept so older rules resolve inside the new world */
+  --hero-1: var(--desk);
+  --hero-2: var(--folder);
+  --hero-3: var(--accent);
+
+  --shadow: 0 18px 34px -24px rgba(13, 30, 59, 0.5);
+  --shadow-paper: 0 22px 34px -20px rgba(0, 0, 0, 0.55);
 }
 
 /*
  * This site intentionally does NOT follow the visitor's OS dark-mode
- * setting — the brand palette (bear colors, warm accent) is designed as
- * one fixed light look, so no `prefers-color-scheme` block here. A real
- * dark theme, if ever added, should be an explicit in-app toggle that
- * sets data-theme="dark" below, not something that silently changes
- * with the visitor's system settings.
+ * setting — the brand palette is designed as one fixed look, so no
+ * `prefers-color-scheme` block here. A real dark theme, if ever added,
+ * should be an explicit in-app toggle that sets data-theme="dark" below.
  */
-
 :root[data-theme="dark"] {
-  --paper: #071624;
-  --surface: #0D2038;
-  --surface-2: #2A2008;
-  --ink: #EAF1F7;
-  --ink-soft: #A9BBD0;
-  --ink-faint: #6E8298;
-  --line: rgba(234, 241, 247, 0.14);
-  --line-strong: rgba(234, 241, 247, 0.28);
-  --accent: #F7D34C;
-  --accent-strong: #FBE28A;
+  --paper: #0A1830;
+  --surface: #11244A;
+  --surface-2: #1A3160;
+  --rule: #2A4270;
+  --ink: #EEF2F8;
+  --ink-soft: #B8C6E0;
+  --ink-faint: #8C9CB8;
+  --line: rgba(238, 242, 248, 0.14);
+  --line-strong: rgba(238, 242, 248, 0.28);
+  --accent-strong: #FFD766;
   --accent-soft: #3A2E0A;
-  --teal: #5FD3E3;
-  --teal-soft: #123239;
-  --good: #5CC98A;
-  --watch: #E8B84B;
-  --risk: #E2685B;
-  --pop: #6FB6EE;
-  --pop-soft: #132638;
-  --hero-1: #050E1A;
-  --hero-2: #123B49;
-  --hero-3: #F7D34C;
+  --teal: #5FD0DD;
+  --teal-soft: #0F3340;
+  --pop-soft: #162B52;
   --shadow: 0 20px 45px -28px rgba(0, 0, 0, 0.6);
 }
 
 @theme inline {
+  --color-desk: var(--desk);
+  --color-folder: var(--folder);
+  --color-folder-in: var(--folder-in);
+  --color-on-folder: var(--on-folder);
+  --color-on-folder-soft: var(--on-folder-soft);
   --color-paper: var(--paper);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-rule: var(--rule);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-ink-faint: var(--ink-faint);
@@ -73,103 +95,59 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
+  --color-hoodie: var(--hoodie);
   --color-teal: var(--teal);
   --color-teal-soft: var(--teal-soft);
   --color-pop-warm: var(--pop-warm);
   --color-pop-warm-soft: var(--pop-warm-soft);
+  --color-stamp: var(--stamp);
   --color-good: var(--good);
   --color-watch: var(--watch);
   --color-risk: var(--risk);
   --color-pop: var(--pop);
   --color-pop-soft: var(--pop-soft);
-  --font-display: var(--font-rubik);
+  --font-display: var(--font-secular);
   --font-sans: var(--font-assistant);
 }
 
+html, body {
+  background: var(--desk);
+}
 body {
-  background: var(--paper);
   color: var(--ink);
-  background-image: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
-  background-size: 24px 24px;
 }
 
+::selection { background: var(--accent); color: var(--desk); }
+
 :focus-visible {
-  outline: 2.5px solid var(--teal);
+  outline: 3px solid var(--hoodie);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-rubik), var(--font-assistant), sans-serif;
-  font-weight: 900;
-  letter-spacing: -0.01em;
+  font-family: var(--font-secular), var(--font-assistant), sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
 }
 
-/* Landing-page hero: the bear starts as a tiny, invisible speck and
-   rockets toward the viewer inside a fixed-height cropping stage, so
-   only its head + upper body ever show, huge — then the speech bubble
-   pops in, then the supporting copy fades in below. */
-.hero-visual {
-  position: relative;
-  width: 100%;
-  height: clamp(230px, 32vw, 360px);
-  overflow: hidden;
-}
+/* Scrollbars and numerals belong to the folder too. */
+html { scrollbar-color: var(--line-strong) transparent; }
+.tabular { font-variant-numeric: tabular-nums; }
 
-@keyframes heroGrow {
-  0% { transform: translate(-50%, -30px) scale(0.04); opacity: 0; }
-  16% { opacity: 1; }
-  62% { transform: translate(-50%, 10px) scale(1.06); opacity: 1; }
-  80% { transform: translate(-50%, -6px) scale(0.98); }
-  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+/* the stamp that lands when a milestone is reached */
+@keyframes stampLand {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(2); filter: blur(4px); }
+  18% { opacity: .95; transform: translate(-50%, -50%) rotate(-12deg) scale(1); filter: none; }
+  75% { opacity: .95; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
 }
-.bear-drop {
-  position: absolute;
-  top: 64px;
-  left: 50%;
-  transform-origin: top center;
-  animation: heroGrow 1.7s cubic-bezier(0.15, 0.75, 0.2, 1) both;
+.stamp-flash {
+  position: fixed; top: 38%; left: 50%; z-index: 90; pointer-events: none;
+  color: var(--stamp); border: 4px solid var(--stamp); border-radius: 10px; background: rgba(255, 253, 248, .85);
+  padding: 8px 22px 6px; font-family: var(--font-secular), sans-serif; font-size: 40px; line-height: 1; text-align: center;
+  animation: stampLand 1.4s cubic-bezier(.16, 1, .3, 1) forwards;
 }
+.stamp-flash small { display: block; font-family: var(--font-assistant), sans-serif; font-weight: 800; font-size: 14px; padding-top: 4px; }
 
-@keyframes bubblePop {
-  0% { transform: translateX(-50%) scale(0.3) translateY(14px); opacity: 0; }
-  72% { transform: translateX(-50%) scale(1.08) translateY(-2px); opacity: 1; }
-  100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
-}
-.comic-bubble {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  background: #fff;
-  color: var(--hero-1);
-  border-radius: 22px;
-  padding: 13px 20px;
-  font-family: var(--font-rubik), sans-serif;
-  font-weight: 900;
-  font-size: clamp(15px, 3.2vw, 20px);
-  line-height: 1.32;
-  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.4);
-  width: max-content;
-  max-width: 21ch;
-  animation: bubblePop 0.5s cubic-bezier(0.24, 1.3, 0.4, 1) 1.6s both;
-  transform-origin: bottom center;
-  z-index: 2;
-}
-.comic-bubble::after {
-  content: "";
-  position: absolute;
-  bottom: -9px;
-  left: 50%;
-  width: 18px;
-  height: 18px;
-  background: #fff;
-  transform: translateX(-50%) rotate(45deg);
-}
-
-@keyframes heroCopyFade {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.hero-copy-fade {
-  animation: heroCopyFade 0.5s ease 2.05s both;
-}

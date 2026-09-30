@@ -1,20 +1,29 @@
 import Link from "next/link";
 import Image from "next/image";
 
+const LINKS = [
+  { href: "/#faq", label: "שאלות נפוצות" },
+  { href: "/login", label: "כניסה ליועצים" },
+  { href: "/about", label: "אודות" },
+  { href: "/terms", label: "תנאי שימוש" },
+  { href: "/privacy", label: "מדיניות פרטיות" },
+  { href: "/accessibility", label: "הצהרת נגישות" },
+];
+
+// The desk under the folder: every public page ends on it.
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line py-8">
-      <div className="max-w-5xl mx-auto px-5 flex flex-col items-center gap-4 text-center">
-        <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-7 w-auto opacity-80" />
-        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs font-display font-semibold text-ink-soft">
-          <Link href="/#faq" className="hover:text-teal transition">שאלות נפוצות</Link>
-          <Link href="/login" className="hover:text-teal transition">כניסה ליועצים</Link>
-          <Link href="/about" className="hover:text-teal transition">אודות</Link>
-          <Link href="/terms" className="hover:text-teal transition">תנאי שימוש</Link>
-          <Link href="/privacy" className="hover:text-teal transition">מדיניות פרטיות</Link>
-          <Link href="/accessibility" className="hover:text-teal transition">הצהרת נגישות</Link>
+    <footer className="bg-desk text-on-folder-soft border-t border-white/10 py-8">
+      <div className="max-w-[1320px] mx-auto px-[clamp(16px,4vw,48px)] flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+        <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="h-8 w-auto brightness-0 invert opacity-85" />
+        <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold" aria-label="קישורים">
+          {LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="text-on-folder-soft hover:text-white transition-colors">
+              {l.label}
+            </Link>
+          ))}
         </nav>
-        <p className="text-[11px] text-ink-faint">© ארתור — כל הזכויות שמורות.</p>
+        <p className="text-[13px]">© ארתור — כל הזכויות שמורות.</p>
       </div>
     </footer>
   );

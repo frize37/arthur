@@ -1,38 +1,58 @@
 "use client";
 
+import { createContext, useContext } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { CHAPTERS } from "../lib/types";
 import { shekel } from "../lib/finance";
 
 export function ProgressBar({ chapter }: { chapter: number | undefined }) {
+  // The chapters are the folder's divider tabs: finished ones carry a stamp,
+  // the open one stands taller in cap yellow.
   return (
-    <div className="progress" hidden={chapter === undefined}>
-      {CHAPTERS.map((label, i) => (
-        <div key={label} className={"pstep" + (i === chapter ? " active" : chapter !== undefined && i < chapter ? " done" : "")}>
-          <div className="pstep__line" />
-          <div className="pbadge">
-            <span className="pnum">{i + 1}</span>
-            <svg><use href="#ic-check2" /></svg>
-          </div>
-          <div className="plabel">{label}</div>
-        </div>
-      ))}
-    </div>
+    <ol className="progress" hidden={chapter === undefined} aria-label="התקדמות בתיק">
+      {CHAPTERS.map((label, i) => {
+        const status = i === chapter ? "active" : chapter !== undefined && i < chapter ? "done" : "";
+        return (
+          <li key={label} className={"pstep" + (status ? " " + status : "")} aria-current={status === "active" ? "step" : undefined}>
+            <span className="pbadge" aria-hidden>
+              <span className="pnum">{i + 1}</span>
+              <svg><use href="#ic-check2" /></svg>
+            </span>
+            <span className="plabel">{label}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
+}
+
+/**
+ * Where Arthur stands. On question stages the wizard gives him a column of
+ * his own beside the sheet, so a stage fits one screen; each stage still
+ * decides what he says and how he looks, and portals it into that column.
+ */
+export const BuddySlotContext = createContext<HTMLElement | null>(null);
+
+export function SideBuddy({ children }: { children: React.ReactNode }) {
+  const slot = useContext(BuddySlotContext);
+  return slot ? createPortal(children, slot) : <>{children}</>;
 }
 
 export function BuddyRow({ bubble, mood = "bear", size }: { bubble: string; mood?: "bear" | "bear-celebrate" | "bear-detective"; size?: "doc" }) {
   return (
-    <div className={"buddy-row" + (size === "doc" ? " buddy-row--doc" : "")}>
-      <Image
-        src="/brand/arthur-bear-full.png"
-        alt="ארתור"
-        width={120}
-        height={120}
-        className={`buddy-icon buddy-icon--${mood}`}
-      />
-      <div className="bubble">{bubble}</div>
-    </div>
+    <SideBuddy>
+      <div className={"buddy-row" + (size === "doc" ? " buddy-row--doc" : "")}>
+        <Image
+          src="/brand/arthur-bear-full.png"
+          alt="ארתור"
+          width={240}
+          height={240}
+          className={`buddy-icon buddy-icon--${mood}`}
+        />
+        <div className="bubble">{bubble}</div>
+      </div>
+    </SideBuddy>
   );
 }
 

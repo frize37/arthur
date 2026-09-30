@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import type { StageProps } from "../lib/reducer";
-import { ChipRow, Field, NavRow, Reveal, SliderField } from "../components/ui";
+import { ChipRow, Field, NavRow, Reveal, SliderField, SideBuddy } from "../components/ui";
 import { RiggedBear, type RigMood } from "../components/RiggedBear";
 import { shekel } from "../lib/finance";
-import { confettiBurst } from "../lib/effects";
+import { stampFlash } from "../lib/effects";
 import type { LoanTrack } from "../lib/types";
 
 type Phase = "idle" | "parsing" | "error";
 type Mode = "upload" | "manual";
 
 const IDLE_BUBBLE = "העלו דוח יתרות או אישור עקרוני — אני אשלוף מתוכו את המספרים החשובים לבד, ואתם רק תאשרו.";
-const PARSED_BUBBLE = "איזה כיף! מצאתי את כל הנתונים במסמך 🎉 אפשר לבדוק ולתקן אם צריך.";
+const PARSED_BUBBLE = "איזה כיף! מצאתי את כל הנתונים במסמך. אפשר לבדוק ולתקן אם צריך.";
 const MANUAL_BUBBLE =
   "אין לכם את הדוח? לא נורא, תמלאו את הפרטים בעצמכם. רק שימו לב: אם יתברר שיש אי-דיוקים, היועץ יכול לבטל את ההצעה שהוגשה על בסיסם — אז כדאי שיהיו מדויקים ככל שאפשר.";
-const MANUAL_CONFIRMED_BUBBLE = "קיבלתי את הפרטים 👍 שווה לוודא שהם מדויקים, כי לפיהם היועצים יגישו הצעה — ואי-דיוקים עלולים לבטל אותה.";
+const MANUAL_CONFIRMED_BUBBLE = "קיבלתי את הפרטים. שווה לוודא שהם מדויקים, כי לפיהם היועצים יגישו הצעה — ואי-דיוקים עלולים לבטל אותה.";
 
 const ANCHOR_OPTIONS = ["אג\"ח ממשלתי", "פריים", "דולר"];
 
@@ -105,7 +105,7 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
       setPhase("idle");
       setMood("clap");
       setBubble(PARSED_BUBBLE);
-      confettiBurst();
+      stampFlash();
       setTimeout(() => setMood("idle"), 1550);
     } catch (err) {
       setPhase("error");
@@ -143,7 +143,7 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
     });
     setMood("clap");
     setBubble(MANUAL_CONFIRMED_BUBBLE);
-    confettiBurst();
+    stampFlash();
     setTimeout(() => setMood("idle"), 1550);
   }
 
@@ -154,14 +154,16 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
   if (state.requestType === "new") {
     return (
       <section className="stage">
-        <div className="buddy-row buddy-row--doc">
-          <RiggedBear mood="idle" />
-          <div className="bubble">
-            במשכנתא חדשה אין עדיין דוח יתרות — אז רק שתי שאלות אחרונות שמשנות את ההצעה שתקבלו.
+        <SideBuddy>
+          <div className="buddy-row buddy-row--doc">
+            <RiggedBear mood="idle" />
+            <div className="bubble">
+              במשכנתא חדשה אין עדיין דוח יתרות — אז רק שתי שאלות אחרונות שמשנות את ההצעה שתקבלו.
+            </div>
           </div>
-        </div>
+        </SideBuddy>
 
-        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="card card--form">
           <Field label="יש לכם תעודת זכאות ממשרד הבינוי והשיכון?">
             <ChipRow
               value={state.hasZakaut}
@@ -212,12 +214,13 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
 
   return (
     <section className="stage">
-      <div className="buddy-row buddy-row--doc">
-        <RiggedBear mood={mood} />
-        <div className="bubble">{bubble}</div>
-      </div>
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <div className="card-badge">🤖 קריאה אוטומטית חכמה</div>
+      <SideBuddy>
+        <div className="buddy-row buddy-row--doc">
+          <RiggedBear mood={mood} />
+          <div className="bubble">{bubble}</div>
+        </div>
+      </SideBuddy>
+      <div className="card card--form">
         {mode === "upload" && !state.docConfirmed && (
           <div className="anon-note">תעלו את דוח היתרות שלכם — כך נוכל לדייק את ההצעה שתקבלו.</div>
         )}
@@ -265,7 +268,7 @@ export function DocumentsStage({ state, set, dispatch, go, back }: StageProps) {
               </label>
             </div>
           )}
-          {state.docConfirmed && state.docSource === "ai" && <div className="filechip">📎 {fileName}</div>}
+          {state.docConfirmed && state.docSource === "ai" && <div className="filechip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M20 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.8-8.8a3.3 3.3 0 0 1 4.7 4.7l-8.8 8.8a1.7 1.7 0 0 1-2.4-2.4l8-8" /></svg>{fileName}</div>}
         </div>
         )}
         {mode === "upload" && !state.docConfirmed && phase === "idle" && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import "./advisor.css";
+import "../office.css";
 import { AdvisorIcons } from "./components/AdvisorIcons";
 import { ArthurMascot } from "@/components/ArthurMascot";
 import { AdvisorCase, LABELS, STATUS_META, computeCase, computeCommission, deriveKeyPoints } from "./lib/data";
@@ -16,7 +17,7 @@ import {
   uploadMyLogo,
 } from "./lib/fetchCases";
 import { MARKET, shekel } from "../wizard/lib/finance";
-import { confettiBurst } from "../wizard/lib/effects";
+import { stampFlash } from "../wizard/lib/effects";
 import { SignOutButton } from "@/components/SignOutButton";
 import { CaseChat } from "@/components/CaseChat";
 import { CaseReport } from "./components/CaseReport";
@@ -143,7 +144,7 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
       <div className="topbar">
         <div className="topbar__inner">
           <div className="brand">
-            <ArthurMascot className="w-7 h-7" />
+            <ArthurMascot className="w-11 h-11" />
             <div>
               <span>מאורת הדובי</span>
               <small>לוח הבקרה ליועצי משכנתאות</small>
@@ -206,7 +207,7 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
                   <small>{commission.publicSpecialty || "יועץ/ת משכנתאות"}</small>
                 ) : (
                   <button type="button" className="advisor-chip__edit" onClick={() => (profileOpen ? setProfileOpen(false) : openProfile())}>
-                    {commission.publicName || commission.logoUrl ? "עריכת הפרופיל" : "השלמת הפרופיל ←"}
+                    {commission.publicName || commission.logoUrl ? "עריכת הפרופיל" : "השלמת הפרופיל"}
                   </button>
                 )}
               </div>
@@ -366,7 +367,7 @@ function DetailView({
     setSending(false);
     if (ok) {
       onUpdate({ status: "sent", offer: { savings: offerSavings, fee: offerFee } });
-      confettiBurst();
+      stampFlash();
       fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -389,7 +390,7 @@ function DetailView({
         </button>
         <div className="detail-title">
           <h2>תיק {c.caseNumber}</h2>
-          <small>{LABELS.requestType[c.requestType]} · התקבל {c.receivedAt}{c.complex ? " · תיק מורכב 🕵️" : ""}</small>
+          <small>{LABELS.requestType[c.requestType]} · התקבל {c.receivedAt}{c.complex ? " · תיק מורכב" : ""}</small>
         </div>
         <button type="button" className="btn btn-ghost" onClick={() => window.print()} style={{ marginInlineStart: "auto" }}>
           <svg><use href="#ic-doc" /></svg>הפקת דוח תיק
@@ -402,7 +403,7 @@ function DetailView({
       <div className="detail-layout">
         <div className="detail-layout__main">
           {c.client && (
-            <div className="card" style={{ borderColor: "var(--good)" }}>
+            <div className="card card--wide" style={{ borderColor: "var(--good)" }}>
               <h3><svg><use href="#ic-check-circle" /></svg>מזל טוב, זכיתם בתיק! פרטי הלקוח</h3>
               <div className="brief-grid">
                 {briefRow("שם מלא", c.client.name)}
@@ -415,7 +416,7 @@ function DetailView({
             </div>
           )}
           {keyPoints.length > 0 && (
-            <div className="card" style={{ borderColor: "var(--accent)" }}>
+            <div className="card card--wide" style={{ borderColor: "var(--accent)" }}>
               <h3><svg><use href="#ic-sparkle" /></svg>נקודות חשובות</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {keyPoints.map((point, i) => (
@@ -510,7 +511,7 @@ function DetailView({
               {briefRow("חיווי אשראי", c.credit.creditIssues === "yes" ? "דורש תשומת לב" : "תקין")}
             </div>
           </div>
-          <div className="card">
+          <div className="card card--wide">
             <h3><svg><use href="#ic-doc" /></svg>מסמכים שצורפו</h3>
             {c.cleanDocName && (
               <button type="button" className="btn-link" style={{ alignSelf: "flex-start" }} disabled={downloadingDoc} onClick={downloadCleanDoc}>
@@ -667,9 +668,9 @@ function DetailView({
                     {c.offer
                       ? `נשלחה הצעה עם חיסכון משוער ${shekel(c.offer.savings)} ושכר טרחה ${shekel(c.offer.fee)}.` +
                         (c.status === "won"
-                          ? " הלקוח אישר את ההצעה 🎉"
+                          ? " הלקוח אישר את ההצעה."
                           : c.status === "closed"
-                          ? " העסקה בוצעה בהצלחה 🎉"
+                          ? " העסקה בוצעה בהצלחה."
                           : c.status === "closed_no_deal"
                           ? " התיק נסגר ללא ביצוע."
                           : c.status === "lost"
@@ -706,7 +707,7 @@ function AdvisorCaseCompletion({ caseId, onUpdate }: { caseId: string; onUpdate:
     setSending(null);
     if (ok) {
       onUpdate({ status: outcome, completionNote: note || null, completedBy: "advisor" });
-      if (outcome === "closed") confettiBurst();
+      if (outcome === "closed") stampFlash();
     }
   }
 

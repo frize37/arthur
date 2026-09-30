@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./admin.css";
+import "../office.css";
 import { AdminIcons } from "./components/AdminIcons";
 import { Advisor, AdminCase, CaseStatus, DocTotals, LABELS, LoanTrack, Offer, STATUS_META, TABS, deriveKeyPoints } from "./lib/data";
 import {
@@ -25,7 +26,7 @@ import {
   uploadOriginalDoc,
 } from "./lib/fetchCases";
 import { shekel } from "../wizard/lib/finance";
-import { confettiBurst } from "../wizard/lib/effects";
+import { stampFlash } from "../wizard/lib/effects";
 import { CaseAnswersEditor } from "./components/CaseAnswersEditor";
 import { SignOutButton } from "@/components/SignOutButton";
 import { CaseChat } from "@/components/CaseChat";
@@ -247,7 +248,7 @@ function DetailView({
       offers,
       timeline: [...c.timeline, { label: `נבחרה הצעת ${winnerAdvisor.name} ונשלחה ללקוח`, time: "עכשיו" }],
     });
-    confettiBurst();
+    stampFlash();
 
     const winningOffer = offers[selectedOfferIdx];
     fetch("/api/notify", {
@@ -275,7 +276,7 @@ function DetailView({
         </button>
         <div className="detail-title">
           <h2>תיק {c.caseNumber}</h2>
-          <small>{LABELS.requestType[c.requestType]} · {LABELS.goal[c.goal]}{c.complex ? " · תיק מורכב 🕵️" : ""}</small>
+          <small>{LABELS.requestType[c.requestType]} · {LABELS.goal[c.goal]}{c.complex ? " · תיק מורכב" : ""}</small>
         </div>
         <span className={`pill ${STATUS_META[c.status].cls}`}>{STATUS_META[c.status].label}</span>
       </div>
@@ -296,7 +297,7 @@ function DetailView({
           </div>
 
           {keyPoints.length > 0 && (
-            <div className="card" style={{ borderColor: "var(--accent)" }}>
+            <div className="card card--wide" style={{ borderColor: "var(--accent)" }}>
               <h3><svg><use href="#ic-alert" /></svg>נקודות חשובות</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {keyPoints.map((point, i) => (
@@ -377,7 +378,7 @@ function DetailView({
           <CaseDocuments case_={c} onUpdate={onUpdate} />
 
           {c.status === "new" ? (
-            <div className="card">
+            <div className="card card--wide">
               <h3><svg><use href="#ic-send" /></svg>הקצאת התיק ליועצים</h3>
               <AssignAdvisors
                 caseId={c.id}
@@ -395,7 +396,7 @@ function DetailView({
               />
             </div>
           ) : (
-          <div className="card">
+          <div className="card card--wide">
             <h3><svg><use href="#ic-send" /></svg>השוואת הצעות מהיועצים</h3>
             <OfferCompare c={c} advisors={advisors} selectedOfferIdx={selectedOfferIdx} onSelect={setSelectedOfferIdx} />
             {(c.status === "ready" || c.status === "awaiting") && c.offers.length > 0 && (
@@ -442,7 +443,7 @@ function DetailView({
           )}
 
           {c.status !== "new" && c.status !== "closed" && c.status !== "closed_no_deal" && (
-            <div className="card">
+            <div className="card card--wide">
               <h3><svg><use href="#ic-check-circle" /></svg>סגירת התיק</h3>
               <div className="anon-note" style={{ marginBottom: 10 }}>
                 אפשר לסמן שהעסקה בוצעה בהצלחה, או לסגור את התיק ללא ביצוע — בכל שלב, לא רק אחרי שהוצעה הצעה.
@@ -550,7 +551,7 @@ function OfferCard({
         <span className="offer-card__avatar">{initials}</span>
         <div>
           <strong>{a.name}</strong>
-          <small>{a.specialty} · ★{a.rating}</small>
+          <small>{a.specialty} · <svg viewBox="0 0 24 24" width="0.9em" height="0.9em" fill="currentColor" aria-hidden style={{ display: "inline", verticalAlign: "-0.1em", color: "var(--accent-strong)" }}><path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85L12 3.5Z" /></svg> {a.rating}</small>
         </div>
       </div>
       <div className="offer-card__stats">
@@ -575,7 +576,7 @@ function rateKindLabel(t: LoanTrack): string {
 function LoanTracksCard({ tracks, totals, source }: { tracks: LoanTrack[]; totals: DocTotals; source: "ai" | "manual" | null }) {
   const commonBank = tracks.every((t) => t.bankName && t.bankName === tracks[0].bankName) ? tracks[0].bankName : null;
   return (
-    <div className="card">
+    <div className="card card--wide">
       <h3>
         <svg><use href="#ic-doc" /></svg>מסלולי המשכנתה{commonBank ? ` · ${commonBank}` : ""}
       </h3>
@@ -668,7 +669,7 @@ function CaseDocuments({ case_: c, onUpdate }: { case_: AdminCase; onUpdate: (pa
   }
 
   return (
-    <div className="card">
+    <div className="card card--wide">
       <h3><svg><use href="#ic-doc" /></svg>מסמכי הלקוח</h3>
       <div className="identity-row">
         <span>המסמך המקורי (עם פרטים אישיים — לעיניך בלבד)</span>
@@ -739,7 +740,7 @@ function AssignAdvisors({
     setSending(false);
     if (ok) {
       onAssigned(selected);
-      confettiBurst();
+      stampFlash();
       for (const id of selected) {
         const advisor = advisors[id];
         if (!advisor?.email) continue;
@@ -778,7 +779,7 @@ function AssignAdvisors({
               <input type="checkbox" checked={checked} onChange={() => toggle(a.id)} style={{ width: 16, height: 16 }} />
               <div className="lead-row__avatar">{initials}</div>
               <div className="lead-row__info"><strong>{a.name}</strong><small>{a.specialty}</small></div>
-              <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
+              <div className="lead-row__stat"><span>דירוג</span><b><svg viewBox="0 0 24 24" width="0.9em" height="0.9em" fill="currentColor" aria-hidden style={{ display: "inline", verticalAlign: "-0.1em", color: "var(--accent-strong)" }}><path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85L12 3.5Z" /></svg> {a.rating}</b></div>
               <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
             </label>
           );
@@ -801,7 +802,7 @@ function CaseCompletion({ caseId, onUpdate }: { caseId: string; onUpdate: (patch
     setSending(null);
     if (ok) {
       onUpdate({ status: outcome, completionNote: note || null, completedBy: "admin" });
-      if (outcome === "closed") confettiBurst();
+      if (outcome === "closed") stampFlash();
     }
   }
 
@@ -928,7 +929,7 @@ function AdvisorRow({ advisor: a, onSaved, canManage }: { advisor: Advisor; onSa
           {a.profileLocked ? " · פרופיל נעול" : ""}
         </small>
       </div>
-      <div className="lead-row__stat"><span>דירוג</span><b>★ {a.rating}</b></div>
+      <div className="lead-row__stat"><span>דירוג</span><b><svg viewBox="0 0 24 24" width="0.9em" height="0.9em" fill="currentColor" aria-hidden style={{ display: "inline", verticalAlign: "-0.1em", color: "var(--accent-strong)" }}><path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85L12 3.5Z" /></svg> {a.rating}</b></div>
       <div className="lead-row__stat"><span>תיקים שנסגרו</span><b>{a.casesWon}</b></div>
       <div className="lead-row__stat"><span>זמן תגובה</span><b>{a.avgResponseHours} ש׳</b></div>
       {!canManage ? null : !editing ? (

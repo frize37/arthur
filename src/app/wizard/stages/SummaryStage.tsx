@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { StageProps } from "../lib/reducer";
 import { GOAL_LABELS, isComplexCase } from "../lib/types";
 import { bandFor, monthlyPayment, shekel } from "../lib/finance";
-import { confettiBurst } from "../lib/effects";
+import { stampFlash } from "../lib/effects";
 import { BuddyRow, ChipRow } from "../components/ui";
 import { RiggedBear } from "../components/RiggedBear";
 import { submitCaseToDatabase } from "../lib/submitCase";
@@ -34,7 +34,7 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
 
   useEffect(() => {
     if (band === "good" && !state.celebratedSummary) {
-      confettiBurst();
+      stampFlash();
       dispatch({ type: "CELEBRATE_SUMMARY" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,65 +44,64 @@ export function SummaryStage({ state, set, dispatch, back }: StageProps) {
     return <DonePanel />;
   }
 
+  const ledger = [
+    { label: "החזר חודשי משוער", value: shekel(payment), strong: true },
+    { label: "הכנסה פנויה כוללת", value: shekel(totalIncome) },
+    { label: "ההחזר הנוח שהגדרתם", value: shekel(state.comfortPayment) },
+    { label: "הסף המקסימלי שהגדרתם", value: shekel(state.maxStressPayment) },
+  ];
+
   return (
     <section className="stage">
       <BuddyRow mood={summaryMood} bubble={summaryBubble} />
 
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div className="card-badge">📊 בזמן אמת</div>
-        <div className="gauge-wrap" style={{ ["--glow" as string]: `var(--${band})` }}>
-          <div className="gauge">
-            <div className="gauge__arc" />
-            <div className="gauge__hole" />
-            <div className="gauge__needle" style={{ transform: `rotate(${needleDeg}deg)` }} />
-            <div className="gauge__hub" />
+      <div className="sum-grid">
+        <div className="sum-panel">
+          <h2 className="sum-panel__title">איפה אתם עומדים</h2>
+          <div className="sum-gauge">
+            <div className="gauge-wrap">
+              <div className="gauge">
+                <div className="gauge__arc" />
+                <div className="gauge__hole" />
+                <div className="gauge__needle" style={{ transform: `rotate(${needleDeg}deg)` }} />
+                <div className="gauge__hub" />
+              </div>
+              <div className="gauge-ticks"><span>0%</span><span>35%</span><span>40%</span><span>60%+</span></div>
+            </div>
+            <div className="sum-ratio">
+              <span>יחס החזר מהכנסה</span>
+              <b className="num">{(ratio * 100).toFixed(0)}%</b>
+              <span className={`band-chip band-${band}`}>{bandLabel}</span>
+            </div>
           </div>
-          <div className="gauge-ticks"><span>0%</span><span>35%</span><span>40%</span><span>60%+</span></div>
-          <div className="ratio-big">
-            יחס החזר מהכנסה<b className="num">{(ratio * 100).toFixed(0)}%</b>
-          </div>
-          <div className={`band-chip band-${band}`} style={{ alignSelf: "center" }}>{bandLabel}</div>
-        </div>
-        <div className="statrow">
-          <div className="stat"><span>החזר חודשי משוער</span><b className="num">{shekel(payment)}</b></div>
-          <div className="stat"><span>הכנסה פנויה כוללת</span><b className="num">{shekel(totalIncome)}</b></div>
-        </div>
-        <div className="statrow">
-          <div className="stat"><span>ההחזר הנוח שהגדרתם</span><b className="num">{shekel(state.comfortPayment)}</b></div>
-          <div className="stat"><span>הסף המקסימלי שהגדרתם</span><b className="num">{shekel(state.maxStressPayment)}</b></div>
-        </div>
-      </div>
-
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <h3 style={{ fontSize: 16 }}>התיק שלכם יוצא ליועצי המשכנתאות המתאימים לו</h3>
-        <div className="sendflow">
-          <svg style={{ width: 26, height: 26, color: "var(--teal)" }}><use href="#ic-layers" /></svg>
-          <svg className="sendflow__arrow" viewBox="0 0 24 24" style={{ width: 18, height: 18, transform: "scaleX(-1)" }}>
-            <path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <div className="sendflow__dot" /><div className="sendflow__dot" /><div className="sendflow__dot" />
-        </div>
-        <div className="specialty-grid">
-          <div className="specialty"><svg><use href="#ic-down" /></svg><span>מיחזור וריביות</span></div>
-          <div className="specialty"><svg><use href="#ic-clock" /></svg><span>מסלולים משתנים</span></div>
-          <div className="specialty"><svg><use href="#ic-search" /></svg><span>עצמאים ותיקים מורכבים</span></div>
-          <div className="specialty"><svg><use href="#ic-merge" /></svg><span>איחוד הלוואות</span></div>
-        </div>
-        <div className="anon-note">
-          הנתונים נשלחים ליועצים <b>ללא שם או פרטים מזהים</b>. כל יועץ מגיש הצעת מחיר, ואנחנו מעבירים אליכם רק את <b>ההצעה המשתלמת ביותר</b>.
+          <dl className="sum-ledger">
+            {ledger.map((row) => (
+              <div key={row.label} className={row.strong ? "is-strong" : undefined}>
+                <dt>{row.label}</dt>
+                <dd className="num">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        <ContactAndVerify state={state} set={set} dispatch={dispatch} />
+        <div className="sum-panel sum-panel--send">
+          <h2 className="sum-panel__title">שליחת התיק ליועצים</h2>
+          <ol className="sum-route" aria-label="מה קורה עכשיו">
+            <li><span>1</span>פרטי קשר</li>
+            <li><span>2</span>אימות במייל</li>
+            <li><span>3</span>התיק יוצא ליועצים</li>
+          </ol>
+          <p className="sum-note">
+            הנתונים נשלחים ליועצים <b>ללא שם או פרטים מזהים</b>, רק למי שמתמחה בתיק כמו שלכם. כל יועץ מגיש הצעת מחיר, ואנחנו מעבירים אליכם את <b>ההצעה המשתלמת ביותר</b>.
+          </p>
+          <ContactAndVerify state={state} set={set} dispatch={dispatch} />
+        </div>
       </div>
 
       <div className="navrow">
         <button type="button" className="btn btn-ghost" onClick={back}>חזרה</button>
         <span className="spacer" />
-        <button
-          type="button"
-          className="btn-link"
-          onClick={() => dispatch({ type: "RESET" })}
-        >
+        <button type="button" className="btn-link" onClick={() => dispatch({ type: "RESET" })}>
           התחלת תהליך מחדש
         </button>
       </div>
@@ -209,38 +208,51 @@ function ContactAndVerify({
 
   if (!showVerify) {
     return (
-      <div>
-        <form className="contact-form" onSubmit={handleSubmit}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)" }}>השאירו פרטים כדי שנדע לאן להעביר את ההצעה הזוכה</label>
-          <input type="text" ref={nameRef} placeholder="שם מלא" defaultValue={state.contactName} required />
-          <input type="tel" ref={phoneRef} placeholder="050-0000000" defaultValue={state.contactPhone} required />
-          <input type="email" ref={emailRef} placeholder="כתובת מייל" defaultValue={state.contactEmail} required />
-          <ChipRow
-            value={state.contactTime}
-            onSelect={(v) => set("contactTime", v)}
-            options={[
-              { value: "morning", label: "בוקר" },
-              { value: "noon", label: "צהריים" },
-              { value: "evening", label: "ערב" },
-            ]}
-          />
-          {sendError && (
-            <div className="match-note warn">
-              <svg><use href="#ic-alert" /></svg>{sendError}
-            </div>
-          )}
-          <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: 14 }} disabled={sendingCode}>
-            {sendingCode ? "שולח קוד אימות…" : "המשך לאימות זהות"}
-          </button>
-        </form>
-      </div>
+      <form className="contact-form" onSubmit={handleSubmit}>
+        <div className="contact-form__row">
+          <label className="contact-field">
+            <span>שם מלא</span>
+            <input type="text" ref={nameRef} autoComplete="name" defaultValue={state.contactName} required />
+          </label>
+          <label className="contact-field">
+            <span>טלפון</span>
+            <input type="tel" ref={phoneRef} autoComplete="tel" dir="ltr" placeholder="050-0000000" defaultValue={state.contactPhone} required />
+          </label>
+        </div>
+        <div className="contact-form__row">
+          <label className="contact-field">
+            <span>מייל (לשם יישלח קוד)</span>
+            <input type="email" ref={emailRef} autoComplete="email" dir="ltr" defaultValue={state.contactEmail} required />
+          </label>
+          <div className="contact-field">
+            <span>מתי נוח שנחזור אליכם?</span>
+            <ChipRow
+              value={state.contactTime}
+              onSelect={(v) => set("contactTime", v)}
+              options={[
+                { value: "morning", label: "בוקר" },
+                { value: "noon", label: "צהריים" },
+                { value: "evening", label: "ערב" },
+              ]}
+            />
+          </div>
+        </div>
+        {sendError && (
+          <div className="match-note warn" role="alert">
+            <svg><use href="#ic-alert" /></svg>{sendError}
+          </div>
+        )}
+        <button type="submit" className="btn btn-primary contact-form__submit" disabled={sendingCode}>
+          {sendingCode ? "שולח קוד אימות…" : "המשך לאימות זהות"}
+        </button>
+      </form>
     );
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="bubble" style={{ background: "var(--surface-2)" }}>
-        <svg style={{ width: 15, height: 15, verticalAlign: -2, color: "var(--teal)" }}><use href="#ic-lock" /></svg> לפני שהתיק ננעל ויוצא ליועצים, שלחנו קוד אימות בן 4 ספרות לכתובת <b>{pendingEmail}</b>.
+      <div className="verify-note">
+        <svg><use href="#ic-lock" /></svg> לפני שהתיק ננעל ויוצא ליועצים, שלחנו קוד אימות בן 4 ספרות לכתובת <b>{pendingEmail}</b>.
       </div>
       <div className="field">
         <label>קוד מהמייל</label>
@@ -252,10 +264,10 @@ function ContactAndVerify({
             placeholder="0000"
             value={emailCodeInput}
             onChange={(e) => setEmailCodeInput(e.target.value)}
-            style={{ width: 96, textAlign: "center", fontFamily: "var(--font-rubik)", fontSize: 19, letterSpacing: 5, border: "1.5px solid var(--line)", borderRadius: 10, padding: 9, background: "var(--surface)", color: "var(--ink)" }}
+            className="code-input" aria-label="קוד בן 4 ספרות"
           />
           <button type="button" className="btn-link" onClick={() => startVerification(pendingEmail)} disabled={sendingCode}>
-            {sendingCode ? "שולח…" : justResent ? "✓ קוד חדש נשלח" : "שליחה חוזרת"}
+            {sendingCode ? "שולח…" : justResent ? "קוד חדש נשלח" : "שליחה חוזרת"}
           </button>
         </div>
         {emailError && <small className="hint" style={{ color: "var(--risk)" }}>קוד שגוי — נסו שוב.</small>}
@@ -265,7 +277,7 @@ function ContactAndVerify({
           <svg><use href="#ic-alert" /></svg>{submitError}
         </div>
       )}
-      <button type="button" className="btn btn-primary" style={{ width: "100%", padding: 14 }} onClick={handleVerify} disabled={submitting}>
+      <button type="button" className="btn btn-primary contact-form__submit" onClick={handleVerify} disabled={submitting}>
         {submitting ? "נועל את התיק…" : "אימות ונעילת התיק"}
       </button>
       <button type="button" className="btn-link" style={{ alignSelf: "center" }} onClick={() => setShowVerify(false)}>
@@ -279,14 +291,13 @@ function DonePanel() {
   return (
     <section className="stage">
       <div className="done-panel">
-        <div className="done-panel__glow" />
-        <div className="done-bear-wrap">
+                <div className="done-bear-wrap">
           <RiggedBear mood="wave" />
         </div>
-        <span className="kicker-onhero">✓ נשלח בהצלחה</span>
-        <h2>סיימנו! נהיה בקשר 👋</h2>
+        <span className="done-stamp" aria-hidden>נשלח<small>ע״י ארתור</small></span>
+        <h2>סיימנו! נהיה בקשר</h2>
         <p>
-          תודה! אימתתי את הזהות שלכם, ונעלתי את התיק (בעילום שם) אצלי. עכשיו אני בוחר לכם את היועצים הכי מתאימים, ומהרגע שתתקבל הצעה משתלמת — אני מתקשר בטווח השעות שבחרתם.
+          תודה! אימתתי את הזהות שלכם, ונעלתי את התיק אצלי. עכשיו אני בוחר לכם את היועצים הכי מתאימים, ומהרגע שתתקבל הצעה משתלמת — אני מתקשר בטווח השעות שבחרתם.
         </p>
         <button
           type="button"

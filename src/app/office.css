@@ -1,0 +1,144 @@
+/*
+ * The office side of the case file, shared by the advisor dashboard and the
+ * admin console. It loads after each app's own stylesheet and re-dresses the
+ * same classes: the navy desk up top, paper sheets for content, cases as
+ * folders with an index tab, pills as small printed tabs. Operate first —
+ * scanning and density win over expression; the world lives in the details.
+ */
+
+.advisor-root, .admin-root { background: var(--paper); min-height: 100vh; }
+.advisor-root h1, .advisor-root h2, .advisor-root h3,
+.admin-root h1, .admin-root h2, .admin-root h3 { font-family: var(--font-secular), var(--font-assistant), sans-serif; font-weight: 400; letter-spacing: 0; }
+
+/* the desk strip */
+:is(.advisor-root, .admin-root) .topbar { background: var(--desk); border-bottom: 0; color: #fff; }
+:is(.advisor-root, .admin-root) .brand span { font-family: var(--font-secular), sans-serif; font-weight: 400; font-size: 18px; color: #fff; }
+:is(.advisor-root, .admin-root) .brand small { color: var(--on-folder-soft); }
+:is(.advisor-root, .admin-root) .brand svg { color: var(--accent); }
+:is(.advisor-root, .admin-root) :is(.advisor-chip__info, .admin-chip__info) strong { color: #fff; }
+:is(.advisor-root, .admin-root) :is(.advisor-chip__info, .admin-chip__info) small { color: var(--on-folder-soft); }
+.advisor-root .advisor-chip__edit { color: var(--accent); }
+:is(.advisor-root, .admin-root) :is(.advisor-chip__avatar, .admin-chip__avatar) { background: var(--accent); color: var(--desk); font-weight: 800; }
+.advisor-root .bell-btn { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .18); }
+.advisor-root .bell-btn svg { color: #fff; }
+.advisor-root .bell-dot { background: var(--stamp); border-color: var(--desk); }
+.advisor-root .topbar button:not(.bell-btn):not(.advisor-chip__edit),
+.admin-root .topbar button { color: var(--on-folder-soft); }
+
+/* dropdown sheets from the desk */
+:is(.advisor-root, .admin-root) :is(.bell-panel, .profile-panel) { border-radius: 8px; border-color: var(--rule); box-shadow: var(--shadow-paper); color: var(--ink); }
+:is(.advisor-root, .admin-root) :is(.bell-panel__head, .profile-panel__head) { font-weight: 800; }
+
+/* the ledger: stat tiles are ruled entries with a colored tab edge */
+:is(.advisor-root, .admin-root) .stat-tile { border-radius: 0 0 6px 6px; border: 1.5px solid var(--rule); border-top: 5px solid var(--tab, var(--hoodie)); box-shadow: none; }
+:is(.advisor-root, .admin-root) .stat-tile:nth-child(2) { --tab: var(--accent); }
+:is(.advisor-root, .admin-root) .stat-tile:nth-child(3) { --tab: var(--pop-warm); }
+:is(.advisor-root, .admin-root) .stat-tile:nth-child(4) { --tab: var(--folder); }
+:is(.advisor-root, .admin-root) .stat-tile span { color: var(--ink-soft); font-weight: 700; font-size: 13px; }
+:is(.advisor-root, .admin-root) .stat-tile b { font-family: var(--font-secular), sans-serif; font-weight: 400; font-size: 28px; font-variant-numeric: tabular-nums; }
+:is(.advisor-root, .admin-root) .stat-tile em { color: var(--teal); font-weight: 700; }
+
+:is(.advisor-root, .admin-root) .section-head h2 { font-size: 22px; }
+:is(.advisor-root, .admin-root) .section-head span { color: var(--ink-soft); font-weight: 600; }
+
+/* printed status tabs */
+:is(.advisor-root, .admin-root) :is(.pill, .band-good, .band-watch, .band-risk, .complex-badge, .verify-badge) { border-radius: 4px; font-weight: 800; font-size: 12px; }
+
+/* cases are folders in the cabinet: an index tab on the top edge */
+:is(.advisor-root, .admin-root) .case-list { gap: 18px; padding-top: 8px; }
+:is(.advisor-root, .admin-root) .case-row { position: relative; border-radius: 0 0 8px 8px; border: 1.5px solid var(--rule); background: var(--surface); padding: 15px 17px; transition: border-color .15s, box-shadow .15s, transform .15s; }
+:is(.advisor-root, .admin-root) .case-row::before { content: ""; position: absolute; top: -9px; right: -1.5px; width: 88px; height: 9px; border-radius: 6px 6px 0 0; background: var(--folder); }
+:is(.advisor-root, .admin-root) .case-row:hover { border-color: var(--folder); transform: translateY(-1px); box-shadow: 0 14px 24px -18px rgba(13, 30, 59, .55); }
+:is(.advisor-root, .admin-root) .case-row__icon { border-radius: 6px; background: var(--pop-soft); }
+:is(.advisor-root, .admin-root) .case-row__icon svg { color: var(--folder); }
+:is(.advisor-root, .admin-root) .case-row__main strong { font-weight: 800; font-size: 15.5px; }
+:is(.advisor-root, .admin-root) .case-row__main small { color: var(--ink-soft); font-size: 13px; }
+:is(.advisor-root, .admin-root) :is(.case-row__payment, .case-row__progress) span { color: var(--ink-soft); font-size: 12px; font-weight: 600; }
+:is(.advisor-root, .admin-root) :is(.case-row__payment, .case-row__progress) b { font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* content sheets */
+:is(.advisor-root, .admin-root) .card { border-radius: 8px; border: 1.5px solid var(--rule); box-shadow: 0 16px 28px -24px rgba(13, 30, 59, .6); }
+:is(.advisor-root, .admin-root) .card h3 { font-size: 18px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px; }
+:is(.advisor-root, .admin-root) .card h3 svg { color: var(--folder); }
+:is(.advisor-root, .admin-root) .brief-item span, :is(.advisor-root, .admin-root) .identity-row span { color: var(--ink-soft); font-size: 12.5px; font-weight: 600; }
+:is(.advisor-root, .admin-root) .brief-item b { font-weight: 800; font-variant-numeric: tabular-nums; }
+:is(.advisor-root, .admin-root) .stat { border-radius: 6px; background: var(--surface); border: 1.5px solid var(--rule); }
+:is(.advisor-root, .admin-root) .stat span { color: var(--ink-soft); font-weight: 600; }
+:is(.advisor-root, .admin-root) .stat b { font-weight: 800; }
+:is(.advisor-root, .admin-root) .ratio-big b { font-family: var(--font-secular), sans-serif; font-weight: 400; }
+
+:is(.advisor-root, .admin-root) .detail-title h2 { font-size: 24px; }
+:is(.advisor-root, .admin-root) .detail-title small { color: var(--ink-soft); font-weight: 600; }
+:is(.advisor-root, .admin-root) .back-btn { border-radius: 8px; border: 1.5px solid var(--line-strong); color: var(--ink); font-weight: 700; }
+:is(.advisor-root, .admin-root) .back-btn:hover { background: var(--surface-2); }
+
+/* controls */
+:is(.advisor-root, .admin-root) .btn { font-family: var(--font-secular), sans-serif; font-weight: 400; font-size: 15.5px; border-radius: 8px; }
+:is(.advisor-root, .admin-root) .btn-primary { background: var(--folder); color: #fff; box-shadow: 0 10px 18px -12px rgba(26, 58, 110, .9); }
+:is(.advisor-root, .admin-root) .btn-primary:hover { background: var(--desk); }
+:is(.advisor-root, .admin-root) .btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+:is(.advisor-root, .admin-root) .btn-ghost { color: var(--ink); border: 1.5px solid var(--line-strong); }
+:is(.advisor-root, .admin-root) .btn-ghost:hover { background: var(--surface-2); }
+:is(.advisor-root, .admin-root) .field label { color: var(--ink); font-weight: 800; font-size: 13.5px; }
+:is(.advisor-root, .admin-root) :is(.field input[type="number"], .field input[type="text"], .field textarea, .parsed-field input, .profile-panel input) {
+  border: 1.5px solid var(--line-strong); border-radius: 6px; background: #fff; font-size: 15px; }
+:is(.advisor-root, .admin-root) :is(.field input, .field textarea, .parsed-field input):focus { outline: none; border-color: var(--folder); box-shadow: 0 0 0 3px color-mix(in srgb, var(--hoodie) 28%, transparent); }
+:is(.advisor-root, .admin-root) :is(.suggested-note, .sent-note, .match-note) { border-radius: 6px; }
+:is(.advisor-root, .admin-root) .anon-note, :is(.advisor-root, .admin-root) .empty { color: var(--ink-soft); }
+:is(.advisor-root, .admin-root) .spinner { border-top-color: var(--folder); }
+
+/* admin: the sidebar is a column of index tabs */
+.admin-root .admin-sidebar button { border-radius: 8px 0 0 8px; font-weight: 800; color: var(--ink-soft); }
+.admin-root .admin-sidebar button:hover { background: var(--surface-2); color: var(--ink); }
+.admin-root .admin-sidebar button.active { background: var(--folder); color: #fff; }
+.admin-root .admin-sidebar button.active svg { color: var(--accent); }
+.admin-root .tab { border-radius: 8px 8px 0 0; }
+.admin-root :is(.offer-card, .lead-row, .identity-row, .timeline-item) { border-radius: 8px; }
+.admin-root :is(.offer-card__avatar, .lead-row__avatar) { background: var(--folder); }
+@media (max-width: 760px) { .admin-root .admin-sidebar button { border-radius: 8px 8px 0 0; } }
+
+/* ═════════ less scrolling: wider desk, denser sheets, a pinned side column ═════════ */
+:is(.advisor-root, .admin-root) .topbar__inner,
+:is(.advisor-root, .admin-root) .page { max-width: 1520px; }
+:is(.advisor-root, .admin-root) .page { padding-top: 16px; padding-bottom: 32px; gap: 16px; }
+:is(.advisor-root, .admin-root) .topbar { padding-block: 8px; }
+
+/* ledger strip: one short row */
+:is(.advisor-root, .admin-root) .stat-row { gap: 10px; margin-bottom: 14px !important; }
+:is(.advisor-root, .admin-root) .stat-tile { padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 10px; }
+:is(.advisor-root, .admin-root) .stat-tile b { font-size: 24px; padding: 0; grid-row: 1 / 3; grid-column: 2; }
+:is(.advisor-root, .admin-root) .stat-tile em { font-size: 12px; }
+
+/* the cabinet: two columns of case folders on a wide desk */
+:is(.advisor-root, .admin-root) .case-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 18px 14px; }
+:is(.advisor-root, .admin-root) .case-row { padding: 11px 14px; gap: 8px 14px; }
+:is(.advisor-root, .admin-root) .case-row__icon { width: 36px; height: 36px; }
+:is(.advisor-root, .admin-root) .case-row__badges { flex-direction: row; flex-wrap: wrap; align-items: center; }
+
+/* a case: info sheets two to a row, wide ones across, the working column pinned */
+:is(.advisor-root, .admin-root) .detail-head { margin-bottom: 12px !important; gap: 10px; flex-wrap: wrap; }
+:is(.advisor-root, .admin-root) .detail-layout { grid-template-columns: minmax(0, 2.1fr) minmax(330px, 1fr); gap: 14px; }
+:is(.advisor-root, .admin-root) .detail-layout__main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; grid-auto-flow: dense; }
+:is(.advisor-root, .admin-root) .detail-layout__main > .card--wide { grid-column: 1 / -1; }
+:is(.advisor-root, .admin-root) .detail-layout__side { gap: 14px; top: 72px; max-height: calc(100vh - 88px); overflow-y: auto; overscroll-behavior: contain; padding-inline-end: 2px; scrollbar-width: thin; }
+:is(.advisor-root, .admin-root) .card { padding: 14px 16px; }
+:is(.advisor-root, .admin-root) .card h3 { font-size: 16.5px; padding-bottom: 8px; margin-bottom: 10px; }
+:is(.advisor-root, .admin-root) .brief-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+:is(.advisor-root, .admin-root) .card--wide .brief-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+:is(.advisor-root, .admin-root) .brief-item b { font-size: 14px; }
+
+@media (max-width: 1180px) {
+  :is(.advisor-root, .admin-root) .case-list { grid-template-columns: minmax(0, 1fr); }
+  :is(.advisor-root, .admin-root) .card--wide .brief-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  :is(.advisor-root, .admin-root) .detail-layout__main { grid-template-columns: minmax(0, 1fr); }
+  :is(.advisor-root, .admin-root) .detail-layout { grid-template-columns: minmax(0, 1fr); }
+  :is(.advisor-root, .admin-root) .detail-layout__side { position: static; max-height: none; overflow: visible; }
+  :is(.advisor-root, .admin-root) .card--wide .brief-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* header buttons carry an icon at text size, never the SVG default */
+:is(.advisor-root, .admin-root) .btn { display: inline-flex; align-items: center; gap: 7px; }
+:is(.advisor-root, .admin-root) .btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+:is(.advisor-root, .admin-root) .detail-head .btn { padding: 8px 14px; font-size: 14.5px; }
