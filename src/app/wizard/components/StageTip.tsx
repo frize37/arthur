@@ -58,7 +58,6 @@ export function StageTip({ stage, requestType }: { stage: Stage; requestType: Wi
         </svg>
       </span>
       <div className="tipbox__body">
-        <span className="tipbox__kicker">הידעת?</span>
         <p>{text}</p>
       </div>
     </aside>

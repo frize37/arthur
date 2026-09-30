@@ -7,7 +7,7 @@ import "./wizard.css";
 import { IconSprite } from "./components/IconSprite";
 import { BuddySlotContext, ProgressBar } from "./components/ui";
 import { StageTip } from "./components/StageTip";
-import { CHAPTERS, STAGES, STAGE_CHAPTER, initialWizardState, WizardState, type Stage } from "./lib/types";
+import { STAGES, STAGE_CHAPTER, initialWizardState, WizardState, type Stage } from "./lib/types";
 import { wizardReducer } from "./lib/reducer";
 import {
   RequestTypeStage,
@@ -69,7 +69,7 @@ export function WizardApp() {
           <Link href="/" className="brand" aria-label="ארתור — עמוד הבית">
             <Image src="/brand/arthur-wordmark.png" alt="ארתור" width={160} height={80} className="brand__wordmark" />
           </Link>
-          <span className="topbar__note">בחינם · בלי התחייבות</span>
+          <span className="topbar__note">בחינם ובלי התחייבות</span>
         </div>
       </header>
 
@@ -83,7 +83,6 @@ export function WizardApp() {
                 <h1>{stageTitle(state.stage, state)}</h1>
                 <span className="sheet__step">
                   שלב {stepIndex + 1} מתוך {STAGES.length}
-                  {chapter !== undefined && <> · {CHAPTERS[chapter]}</>}
                 </span>
               </div>
               <BuddySlotContext.Provider value={buddySlot}>

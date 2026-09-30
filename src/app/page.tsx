@@ -101,14 +101,6 @@ function Check() {
   );
 }
 
-function Arrow() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M15 6l-6 6 6 6" />
-    </svg>
-  );
-}
-
 export default async function Home() {
   const [stats, advisors] = await Promise.all([fetchPublicStats(), fetchPublicAdvisors()]);
   const ledger = [
@@ -147,7 +139,6 @@ export default async function Home() {
                 <div className="cf-actions">
                   <Link href="/wizard" className="cf-cta">
                     לפתוח תיק בחינם
-                    <Arrow />
                   </Link>
                   <div className="cf-trust">
                     <span><Check />בחינם</span>
@@ -180,14 +171,14 @@ export default async function Home() {
                 </div>
                 <dl className="cf-fields">
                   <div className="cf-field"><dt>סוג</dt><dd>מיחזור משכנתה קיימת</dd></div>
-                  <div className="cf-field"><dt>יתרה</dt><dd>{shekel(1140000)} · 3 מסלולים</dd></div>
+                  <div className="cf-field"><dt>יתרה</dt><dd>{shekel(1140000)} ב-3 מסלולים</dd></div>
                   <div className="cf-field">
                     <dt>שם וטלפון</dt>
                     <dd className="cf-redacted"><i aria-hidden /><small>רק היועץ שתבחרו יראה</small></dd>
                   </div>
                 </dl>
                 <div className="cf-routing">
-                  <span>התיק יצא ל-4 יועצים · 3 הצעות התקבלו</span>
+                  <span>התיק יצא ל-4 יועצים, ו-3 כבר הגישו הצעה</span>
                   <span className="cf-dots" aria-hidden><i /><i /><i /><i /></span>
                 </div>
                 <div className="cf-slips">
@@ -221,7 +212,6 @@ export default async function Home() {
             <div className="cf-ledger">
               <div className="cf-ledger__head">
                 <strong id="ledger-title">הרישום של ארתור</strong>
-                <span>מתעדכן באופן שוטף</span>
               </div>
               <dl className="cf-ledger__rows">
                 {ledger.map((row) => (
@@ -331,7 +321,6 @@ export default async function Home() {
               <div className="cf-actions">
                 <Link href="/wizard" className="cf-cta cf-cta--yellow">
                   לפתוח תיק בחינם
-                  <Arrow />
                 </Link>
               </div>
             </div>
