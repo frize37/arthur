@@ -200,3 +200,23 @@ ${link}`
   );
   return send(ADMIN_EMAIL, `הצעה חדשה מ-${input.advisorName}`, html);
 }
+
+export async function sendAdvisorJoinRequestEmail(input: {
+  name: string;
+  phone: string;
+  email: string;
+  specialty?: string;
+}) {
+  if (!ADMIN_EMAIL) return { ok: false as const, error: "לא הוגדרה כתובת התראות מנהל." };
+  const row = (label: string, value: string) =>
+    `<p dir="rtl" style="font-size:14px;line-height:1.7;margin:0 0 4px;"><b>${label}:</b> ${escapeHtml(value)}</p>`;
+  const html = shell(
+    "יועץ חדש מבקש להצטרף",
+    `<h1 dir="rtl" style="font-size:18px;margin:0 0 14px;">בקשת הצטרפות של יועץ משכנתאות</h1>
+${row("שם", input.name)}
+${row("טלפון", input.phone)}
+${row("מייל", input.email)}
+${input.specialty ? row("תחום התמחות", input.specialty) : ""}`
+  );
+  return send(ADMIN_EMAIL, `בקשת הצטרפות: ${input.name}`, html);
+}

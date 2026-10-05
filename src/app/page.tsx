@@ -119,7 +119,7 @@ export default async function Home() {
             <a href="#how">איך זה עובד</a>
             <a href="#advisors">היועצים</a>
             <a href="#faq">שאלות</a>
-            <a href="#join" className="cf-nav__join">יועצים? הצטרפו</a>
+            <Link href="/login" className="cf-nav__join">כניסה ליועצים</Link>
           </nav>
         </div>
       </header>
@@ -300,6 +300,7 @@ export default async function Home() {
                 <p className="cf-sub">ארתור מכין את התיק: שאלון מלא, נתוני דוח היתרות ופרטי המסלולים, בלי פרט מזהה. אתם מגישים הצעה, והלקוח בוחר.</p>
                 <div className="cf-actions">
                   <Link href="/login" className="cf-cta cf-cta--yellow">כניסה ליועצים</Link>
+                  <Link href="/login#join" className="cf-link">עדיין לא איתנו? בקשה להצטרף</Link>
                 </div>
               </div>
               <ul className="cf-join__list">

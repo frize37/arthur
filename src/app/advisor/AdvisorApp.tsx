@@ -249,74 +249,121 @@ export function AdvisorApp({ advisorId, advisorName }: { advisorId: string; advi
         </div>
       </div>
 
-      <div className="page">
+      <div className={"split" + (selected ? " split--case" : "")}>
         {loading ? (
           <div className="empty">טוען תיקים…</div>
-        ) : !selected ? (
-          <ListView cases={cases} stats={stats} onOpen={openCase} />
         ) : (
-          <DetailView
-            case_={selected}
-            advisorId={advisorId}
-            advisorName={advisorName}
-            commission={commission}
-            onBack={() => setSelectedId(null)}
-            onUpdate={(patch) => updateCase(selected.id, patch)}
-          />
+          <>
+            <aside className="queue" aria-label="התיקים שלי">
+              <CaseQueue cases={cases} stats={stats} selectedId={selectedId} onOpen={openCase} />
+            </aside>
+            <main className="pane">
+              {selected ? (
+                <DetailView
+                  key={selected.id}
+                  case_={selected}
+                  advisorId={advisorId}
+                  advisorName={advisorName}
+                  commission={commission}
+                  onBack={() => setSelectedId(null)}
+                  onUpdate={(patch) => updateCase(selected.id, patch)}
+                />
+              ) : (
+                <QueueOverview stats={stats} />
+              )}
+            </main>
+          </>
         )}
       </div>
     </div>
   );
 }
 
-function ListView({
+type QueueTab = "todo" | "open" | "won" | "archive";
+
+const QUEUE_TABS: { key: QueueTab; label: string; statuses: AdvisorCase["status"][] }[] = [
+  { key: "todo", label: "לטיפול", statuses: ["pending"] },
+  { key: "open", label: "הצעות פתוחות", statuses: ["sent"] },
+  { key: "won", label: "זכינו", statuses: ["won", "closed"] },
+  { key: "archive", label: "ארכיון", statuses: ["closed_no_deal", "lost"] },
+];
+
+/** The case list beside the open case: one line per case, filtered by what it needs from the advisor. */
+function CaseQueue({
   cases,
   stats,
+  selectedId,
   onOpen,
 }: {
   cases: AdvisorCase[];
   stats: { open: number; pending: number; sent: number; savings: number };
+  selectedId: string | null;
   onOpen: (id: string) => void;
 }) {
+  const [tab, setTab] = useState<QueueTab>(() => (cases.some((c) => c.status === "pending") ? "todo" : "open"));
+  const current = QUEUE_TABS.find((t) => t.key === tab)!;
+  const visible = cases.filter((c) => current.statuses.includes(c.status));
+
   return (
     <>
-      <div className="stat-row" style={{ marginBottom: 22 }}>
-        <div className="stat-tile"><span>תיקים פתוחים</span><b className="num">{stats.open}</b><em>{stats.pending} חדשים לטיפול</em></div>
-        <div className="stat-tile"><span>ממתינים להצעה</span><b className="num">{stats.pending}</b><em>לטפל בהקדם</em></div>
-        <div className="stat-tile"><span>הצעות שנשלחו החודש</span><b className="num">{stats.sent}</b><em>מתוכן ממתינות לתשובה</em></div>
-        <div className="stat-tile"><span>חיסכון שסופק ללקוחות</span><b className="num">{shekel(stats.savings)}</b><em>בתיקים שנסגרו</em></div>
+      <div className="queue__head">
+        <h1>התיקים שלי</h1>
+        <p>
+          {stats.pending} ממתינים להצעה, {cases.filter((c) => c.status === "sent").length} הצעות פתוחות
+        </p>
       </div>
-
-      <div className="section-head">
-        <h2>התיקים שלך</h2>
-        <span>{cases.length} תיקים בסך הכל</span>
-      </div>
-      <div className="case-list" style={{ marginTop: 12 }}>
-        {cases.map((c) => {
-          const calc = computeCase(c);
+      <div className="queue__tabs" role="tablist" aria-label="סינון תיקים">
+        {QUEUE_TABS.map((t) => {
+          const count = cases.filter((c) => t.statuses.includes(c.status)).length;
           return (
-            <button key={c.id} type="button" className="case-row" onClick={() => onOpen(c.id)}>
-              <span className="case-row__icon"><svg><use href={`#${LABELS.specialtyIcon[c.requestType]}`} /></svg></span>
-              <span className="case-row__main">
-                <strong>תיק {c.caseNumber} · {LABELS.requestType[c.requestType]}</strong>
-                <small>{LABELS.goal[c.goal]} · התקבל {c.receivedAt}</small>
-              </span>
-              <span className="case-row__payment">
-                <span>{calc.isEstimate ? "החזר (אומדן)" : "החזר חודשי"}</span>
-                <b className="num">{shekel(calc.payment)}</b>
-              </span>
-              <span className="case-row__badges">
-                <span className={`band-${calc.band}`}>
-                  {calc.band === "good" ? "יחס החזר תקין" : calc.band === "watch" ? "יחס החזר גבוה" : "מעל סף האישור"}
-                </span>
-                {c.complex && <span className="complex-badge"><svg><use href="#ic-search" /></svg>תיק מורכב</span>}
-              </span>
-              <span className={`pill ${STATUS_META[c.status].cls}`}>{STATUS_META[c.status].label}</span>
+            <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}>
+              {t.label}
+              <span className="num">{count}</span>
             </button>
           );
         })}
       </div>
+      <div className="queue__list">
+        {visible.length === 0 ? (
+          <div className="queue__empty">
+            {tab === "todo" ? "אין כרגע תיקים שממתינים להצעה שלך. תיק חדש יופיע כאן, ותקבל עליו התראה." : "אין תיקים בלשונית הזו."}
+          </div>
+        ) : (
+          visible.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className="queue-row"
+              aria-current={c.id === selectedId ? "true" : undefined}
+              onClick={() => onOpen(c.id)}
+            >
+              <b className="num">{c.caseNumber}</b>
+              <span className="queue-row__amt num">{shekel(c.property.mortgage)}</span>
+              <small>
+                {LABELS.requestType[c.requestType]}, {LABELS.goal[c.goal]}
+              </small>
+              <span className={`status status--${c.status}`}>{c.status === "pending" ? c.receivedAt : STATUS_META[c.status].label}</span>
+            </button>
+          ))
+        )}
+      </div>
     </>
+  );
+}
+
+/** What the pane shows before a case is picked: the advisor's numbers, and where to start. */
+function QueueOverview({ stats }: { stats: { open: number; pending: number; sent: number; savings: number } }) {
+  return (
+    <div className="overview">
+      <h2>סקירה</h2>
+      <dl className="overview__strip">
+        <div><dt>ממתינים להצעה</dt><dd className="num">{stats.pending}</dd></div>
+        <div><dt>תיקים פתוחים</dt><dd className="num">{stats.open}</dd></div>
+        <div><dt>הצעות שהגשת</dt><dd className="num">{stats.sent}</dd></div>
+        <div><dt>חיסכון שסיפקת ללקוחות</dt><dd className="num">{shekel(stats.savings)}</dd></div>
+      </dl>
+      <p className="overview__hint">בחרו תיק מהרשימה כדי לראות את הפרטים ולהגיש הצעה.</p>
+    </div>
   );
 }
 

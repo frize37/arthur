@@ -1,144 +1,194 @@
 /*
- * The office side of the case file, shared by the advisor dashboard and the
- * admin console. It loads after each app's own stylesheet and re-dresses the
- * same classes: the navy desk up top, paper sheets for content, cases as
- * folders with an index tab, pills as small printed tabs. Operate first —
- * scanning and density win over expression; the world lives in the details.
+ * The office: advisor dashboard and admin console. Operate surfaces, so the
+ * case-file world steps back — a quiet neutral desk, white panels, one family
+ * (Assistant), and the folder navy only for the primary action and the current
+ * selection. Status is a small dot beside plain text, never a colored badge.
+ * Layout is a list beside the open case, so working a case never leaves the list.
+ * Loads after each app's own stylesheet and re-dresses the same classes.
  */
 
-.advisor-root, .admin-root { background: var(--paper); min-height: 100vh; }
-.advisor-root h1, .advisor-root h2, .advisor-root h3,
-.admin-root h1, .admin-root h2, .admin-root h3 { font-family: var(--font-secular), var(--font-assistant), sans-serif; font-weight: 400; letter-spacing: 0; }
+:is(.advisor-root, .admin-root) {
+  --o-bg: #F5F6F8;
+  --o-panel: #FFFFFF;
+  --o-panel-2: #EEF0F3;
+  --o-hover: #E7EAEE;
+  --o-line: #E2E5EA;
+  --o-line-2: #D3D8DF;
+  --o-ink: #16202E;
+  --o-ink-2: #4A5565;
+  --o-ink-3: #636C7C;
+  --o-accent: var(--folder);
+  --o-accent-soft: #E8EDF5;
+  --o-ok: #1E8452;
+  --o-warn: #A26A00;
+  --o-risk: #C23B2A;
+  --o-info: #2F5FA8;
+  --o-mute: #8A93A1;
+  --o-top: 56px;
+  background: var(--o-bg); color: var(--o-ink); min-height: 100vh; font-size: 15px;
+}
+:is(.advisor-root, .admin-root) :is(h1, h2, h3) { font-family: var(--font-assistant), sans-serif; font-weight: 800; letter-spacing: 0; color: var(--o-ink); }
+:is(.advisor-root, .admin-root) .num { font-variant-numeric: tabular-nums; }
+:is(.advisor-root, .admin-root) :focus-visible { outline: 2px solid var(--o-accent); outline-offset: 2px; border-radius: 4px; }
 
-/* the desk strip */
-:is(.advisor-root, .admin-root) .topbar { background: var(--desk); border-bottom: 0; color: #fff; }
-:is(.advisor-root, .admin-root) .brand span { font-family: var(--font-secular), sans-serif; font-weight: 400; font-size: 18px; color: #fff; }
-:is(.advisor-root, .admin-root) .brand small { color: var(--on-folder-soft); }
-:is(.advisor-root, .admin-root) .brand svg { color: var(--accent); }
-:is(.advisor-root, .admin-root) :is(.advisor-chip__info, .admin-chip__info) strong { color: #fff; }
-:is(.advisor-root, .admin-root) :is(.advisor-chip__info, .admin-chip__info) small { color: var(--on-folder-soft); }
-.advisor-root .advisor-chip__edit { color: var(--accent); }
-:is(.advisor-root, .admin-root) :is(.advisor-chip__avatar, .admin-chip__avatar) { background: var(--accent); color: var(--desk); font-weight: 800; }
-.advisor-root .bell-btn { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .18); }
-.advisor-root .bell-btn svg { color: #fff; }
-.advisor-root .bell-dot { background: var(--stamp); border-color: var(--desk); }
-.advisor-root .topbar button:not(.bell-btn):not(.advisor-chip__edit),
-.admin-root .topbar button { color: var(--on-folder-soft); }
+/* ───────── top bar ───────── */
+:is(.advisor-root, .admin-root) .topbar { position: sticky; top: 0; z-index: 30; height: var(--o-top); padding: 0 20px; background: var(--o-panel); border-bottom: 1px solid var(--o-line); color: var(--o-ink); }
+:is(.advisor-root, .admin-root) .topbar__inner { max-width: none; height: 100%; display: flex; align-items: center; gap: 16px; }
+:is(.advisor-root, .admin-root) .brand { gap: 10px; }
+:is(.advisor-root, .admin-root) .brand img, :is(.advisor-root, .admin-root) .brand svg { width: 30px; height: 30px; color: var(--o-accent); }
+:is(.advisor-root, .admin-root) .brand span { font-family: var(--font-assistant), sans-serif; font-weight: 800; font-size: 15px; color: var(--o-ink); }
+:is(.advisor-root, .admin-root) .brand small { color: var(--o-ink-3); font-size: 12px; }
+:is(.advisor-root, .admin-root) .top-actions, :is(.advisor-root, .admin-root) .topbar__end { margin-inline-start: auto; display: flex; align-items: center; gap: 12px; }
+:is(.advisor-root, .admin-root) :is(.advisor-chip__info, .admin-chip__info) strong { color: var(--o-ink); font-size: 13.5px; }
+:is(.advisor-root, .admin-root) :is(.advisor-chip__info, .admin-chip__info) small { color: var(--o-ink-3); font-size: 12px; }
+.advisor-root .advisor-chip__edit { color: var(--o-accent); font-size: 12px; }
+:is(.advisor-root, .admin-root) :is(.advisor-chip__avatar, .admin-chip__avatar) { background: var(--o-accent-soft); color: var(--o-accent); font-family: var(--font-assistant), sans-serif; font-weight: 800; }
+.advisor-root .advisor-chip__camera { background: var(--o-accent); color: #fff; border-color: var(--o-panel); }
+.advisor-root .bell-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--o-line); background: var(--o-panel); }
+.advisor-root .bell-btn svg { color: var(--o-ink-2); }
+.advisor-root .bell-dot { background: var(--o-risk); border-color: var(--o-panel); }
+:is(.advisor-root, .admin-root) :is(.bell-panel, .profile-panel) { border-radius: 10px; border: 1px solid var(--o-line); box-shadow: 0 12px 28px -12px rgba(22, 32, 46, .28); color: var(--o-ink); }
+:is(.advisor-root, .admin-root) :is(.bell-panel__head, .profile-panel__head) { font-family: var(--font-assistant), sans-serif; font-weight: 800; color: var(--o-ink-2); }
+.advisor-root .notif:hover { background: var(--o-panel-2); }
+.advisor-root .notif svg { color: var(--o-ink-3); }
 
-/* dropdown sheets from the desk */
-:is(.advisor-root, .admin-root) :is(.bell-panel, .profile-panel) { border-radius: 8px; border-color: var(--rule); box-shadow: var(--shadow-paper); color: var(--ink); }
-:is(.advisor-root, .admin-root) :is(.bell-panel__head, .profile-panel__head) { font-weight: 800; }
+/* admin sections as tabs in the bar */
+.admin-root .topnav { display: flex; gap: 2px; height: 100%; margin-inline-start: 24px; }
+.admin-root .topnav button { display: flex; align-items: center; gap: 7px; height: 100%; padding: 0 14px; border: 0; border-bottom: 2px solid transparent; background: none; font-weight: 700; font-size: 14px; color: var(--o-ink-3); cursor: pointer; }
+.admin-root .topnav button svg { width: 16px; height: 16px; }
+.admin-root .topnav button:hover { color: var(--o-ink); }
+.admin-root .topnav button[aria-current="page"] { color: var(--o-accent); border-bottom-color: var(--o-accent); }
 
-/* the ledger: stat tiles are ruled entries with a colored tab edge */
-:is(.advisor-root, .admin-root) .stat-tile { border-radius: 0 0 6px 6px; border: 1.5px solid var(--rule); border-top: 5px solid var(--tab, var(--hoodie)); box-shadow: none; }
-:is(.advisor-root, .admin-root) .stat-tile:nth-child(2) { --tab: var(--accent); }
-:is(.advisor-root, .admin-root) .stat-tile:nth-child(3) { --tab: var(--pop-warm); }
-:is(.advisor-root, .admin-root) .stat-tile:nth-child(4) { --tab: var(--folder); }
-:is(.advisor-root, .admin-root) .stat-tile span { color: var(--ink-soft); font-weight: 700; font-size: 13.5px; }
-:is(.advisor-root, .admin-root) .stat-tile b { font-family: var(--font-secular), sans-serif; font-weight: 400; font-size: 28px; font-variant-numeric: tabular-nums; }
-:is(.advisor-root, .admin-root) .stat-tile em { color: var(--teal); font-weight: 700; }
+/* ───────── list beside the open case ───────── */
+:is(.advisor-root, .admin-root) .split { display: grid; grid-template-columns: 360px minmax(0, 1fr); align-items: start; min-height: calc(100vh - var(--o-top)); }
+:is(.advisor-root, .admin-root) .split > .empty { grid-column: 1 / -1; }
+:is(.advisor-root, .admin-root) .queue { position: sticky; top: var(--o-top); height: calc(100vh - var(--o-top)); background: var(--o-panel-2); border-inline-end: 1px solid var(--o-line); display: flex; flex-direction: column; min-height: 0; }
+:is(.advisor-root, .admin-root) .queue__head { padding: 16px 16px 10px; }
+:is(.advisor-root, .admin-root) .queue__head h1 { font-size: 18px; }
+:is(.advisor-root, .admin-root) .queue__head p { font-size: 13px; color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .queue__tabs { display: flex; gap: 2px; padding: 0 10px; border-bottom: 1px solid var(--o-line-2); overflow-x: auto; }
+:is(.advisor-root, .admin-root) .queue__tabs button { display: flex; align-items: center; gap: 5px; border: 0; background: none; padding: 8px 8px; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: 13.5px; font-weight: 700; color: var(--o-ink-3); cursor: pointer; white-space: nowrap; }
+:is(.advisor-root, .admin-root) .queue__tabs button span { font-size: 12px; font-weight: 600; color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .queue__tabs button:hover { color: var(--o-ink); }
+:is(.advisor-root, .admin-root) .queue__tabs button[aria-selected="true"] { color: var(--o-accent); border-bottom-color: var(--o-accent); }
+:is(.advisor-root, .admin-root) .queue__filter { display: flex; align-items: center; gap: 8px; padding: 0 16px 12px; border-bottom: 1px solid var(--o-line-2); }
+:is(.advisor-root, .admin-root) .queue__filter label { font-size: 13px; font-weight: 700; color: var(--o-ink-2); }
+:is(.advisor-root, .admin-root) .queue__filter select { flex: 1; font: inherit; font-size: 14px; font-weight: 600; padding: 6px 10px; border: 1px solid var(--o-line-2); border-radius: 8px; background: var(--o-panel); color: var(--o-ink); }
+:is(.advisor-root, .admin-root) .queue__list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-gutter: auto; }
+:is(.advisor-root, .admin-root) .queue__empty { padding: 24px 16px; font-size: 14px; color: var(--o-ink-3); line-height: 1.55; }
+:is(.advisor-root, .admin-root) .queue-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; width: 100%; padding: 11px 16px; border: 0; border-bottom: 1px solid var(--o-line); background: none; text-align: right; cursor: pointer; color: var(--o-ink); }
+:is(.advisor-root, .admin-root) .queue-row:hover { background: var(--o-hover); }
+:is(.advisor-root, .admin-root) .queue-row[aria-current="true"] { background: var(--o-panel); box-shadow: inset -3px 0 0 var(--o-accent); }
+:is(.advisor-root, .admin-root) .queue-row b { font-weight: 800; font-size: 14.5px; }
+:is(.advisor-root, .admin-root) .queue-row small { font-size: 12.5px; color: var(--o-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(.advisor-root, .admin-root) .queue-row__amt { font-weight: 700; font-size: 13.5px; text-align: left; color: var(--o-ink-2); }
+:is(.advisor-root, .admin-root) .pane { min-width: 0; padding: 0 24px 32px; }
 
-:is(.advisor-root, .admin-root) .section-head h2 { font-size: 22px; }
-:is(.advisor-root, .admin-root) .section-head span { color: var(--ink-soft); font-weight: 600; }
+/* status: a dot and plain words */
+:is(.advisor-root, .admin-root) .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--o-ink-2); white-space: nowrap; justify-self: end; }
+:is(.advisor-root, .admin-root) .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--dot, var(--o-mute)); flex-shrink: 0; }
+:is(.advisor-root, .admin-root) :is(.status--pending, .status--new, .status--verifying, .status--ready) { --dot: var(--o-warn); }
+:is(.advisor-root, .admin-root) :is(.status--sent, .status--awaiting) { --dot: var(--o-info); }
+:is(.advisor-root, .admin-root) :is(.status--won, .status--closed) { --dot: var(--o-ok); }
+:is(.advisor-root, .admin-root) :is(.status--lost, .status--closed_no_deal) { --dot: var(--o-mute); }
 
-/* printed status tabs */
-:is(.advisor-root, .admin-root) :is(.pill, .band-good, .band-watch, .band-risk, .complex-badge, .verify-badge) { border-radius: 4px; font-weight: 800; font-size: 12px; }
+/* the overview shown before a case is picked */
+:is(.advisor-root, .admin-root) .overview { max-width: 860px; }
+:is(.advisor-root, .admin-root) .overview h2 { font-size: 20px; margin-bottom: 12px; }
+:is(.advisor-root, .admin-root) .overview__strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin: 0; background: var(--o-panel); border: 1px solid var(--o-line); border-radius: 10px; }
+:is(.advisor-root, .admin-root) .overview__strip div { padding: 12px 16px; border-inline-start: 1px solid var(--o-line); }
+:is(.advisor-root, .admin-root) .overview__strip div:first-child { border-inline-start: 0; }
+:is(.advisor-root, .admin-root) .overview__strip dt { font-size: 12.5px; font-weight: 600; color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .overview__strip dd { margin: 0; font-size: 22px; font-weight: 800; }
+:is(.advisor-root, .admin-root) .overview__hint { margin-top: 14px; font-size: 14px; color: var(--o-ink-3); }
 
-/* cases are folders in the cabinet: an index tab on the top edge */
-:is(.advisor-root, .admin-root) .case-list { gap: 18px; padding-top: 8px; }
-:is(.advisor-root, .admin-root) .case-row { position: relative; border-radius: 0 0 8px 8px; border: 1.5px solid var(--rule); background: var(--surface); padding: 15px 17px; transition: border-color .15s, box-shadow .15s, transform .15s; }
-:is(.advisor-root, .admin-root) .case-row::before { content: ""; position: absolute; top: -9px; right: -1.5px; width: 88px; height: 9px; border-radius: 6px 6px 0 0; background: var(--folder); }
-:is(.advisor-root, .admin-root) .case-row:hover { border-color: var(--folder); transform: none; box-shadow: none; }
-:is(.advisor-root, .admin-root) .case-row__icon { border-radius: 6px; background: var(--pop-soft); }
-:is(.advisor-root, .admin-root) .case-row__icon svg { color: var(--folder); }
-:is(.advisor-root, .admin-root) .case-row__main strong { font-weight: 800; font-size: 15px; }
-:is(.advisor-root, .admin-root) .case-row__main small { color: var(--ink-soft); font-size: 13.5px; }
-:is(.advisor-root, .admin-root) :is(.case-row__payment, .case-row__progress) span { color: var(--ink-soft); font-size: 12px; font-weight: 600; }
-:is(.advisor-root, .admin-root) :is(.case-row__payment, .case-row__progress) b { font-weight: 800; font-variant-numeric: tabular-nums; }
-
-/* content sheets */
-:is(.advisor-root, .admin-root) .card { border-radius: 8px; border: 1.5px solid var(--rule); box-shadow: 0 16px 28px -24px rgba(13, 30, 59, .6); }
-:is(.advisor-root, .admin-root) .card h3 { font-size: 18px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px; }
-:is(.advisor-root, .admin-root) .card h3 svg { color: var(--folder); }
-:is(.advisor-root, .admin-root) .brief-item span, :is(.advisor-root, .admin-root) .identity-row span { color: var(--ink-soft); font-size: 12px; font-weight: 600; }
-:is(.advisor-root, .admin-root) .brief-item b { font-weight: 800; font-variant-numeric: tabular-nums; }
-:is(.advisor-root, .admin-root) .stat { border-radius: 6px; background: var(--surface); border: 1.5px solid var(--rule); }
-:is(.advisor-root, .admin-root) .stat span { color: var(--ink-soft); font-weight: 600; }
-:is(.advisor-root, .admin-root) .stat b { font-weight: 800; }
-:is(.advisor-root, .admin-root) .ratio-big b { font-family: var(--font-secular), sans-serif; font-weight: 400; }
-
+/* ───────── the open case ───────── */
+:is(.advisor-root, .admin-root) .detail-head { position: sticky; top: var(--o-top); z-index: 5; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin: 0 -24px 16px !important; padding: 14px 24px 12px; background: var(--o-bg); border-bottom: 1px solid var(--o-line); }
+:is(.advisor-root, .admin-root) .overview { padding-top: 18px; }
 :is(.advisor-root, .admin-root) .detail-title h2 { font-size: 22px; }
-:is(.advisor-root, .admin-root) .detail-title small { color: var(--ink-soft); font-weight: 600; }
-:is(.advisor-root, .admin-root) .back-btn { border-radius: 8px; border: 1.5px solid var(--line-strong); color: var(--ink); font-weight: 700; }
-:is(.advisor-root, .admin-root) .back-btn:hover { background: var(--surface-2); }
+:is(.advisor-root, .admin-root) .detail-title small { color: var(--o-ink-3); font-size: 13.5px; font-weight: 600; }
+:is(.advisor-root, .admin-root) .back-btn { display: none; border-radius: 8px; border: 1px solid var(--o-line-2); color: var(--o-ink); background: var(--o-panel); font-weight: 700; }
+:is(.advisor-root, .admin-root) .detail-head > .btn { margin-inline-start: auto; }
+
+:is(.advisor-root, .admin-root) .detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: 14px; align-items: start; }
+:is(.advisor-root, .admin-root) .detail-layout__main { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+:is(.advisor-root, .admin-root) .detail-layout__main > .card--wide { grid-column: 1 / -1; }
+:is(.advisor-root, .admin-root) .detail-layout__side { position: static; display: flex; flex-direction: column; gap: 14px; max-height: none; overflow: visible; }
+
+:is(.advisor-root, .admin-root) .card { background: var(--o-panel); border: 1px solid var(--o-line) !important; border-radius: 10px; box-shadow: none; padding: 14px 16px; }
+:is(.advisor-root, .admin-root) .card h3 { font-size: 14.5px; font-weight: 800; padding-bottom: 0; margin-bottom: 12px; border: 0; display: flex; align-items: center; gap: 7px; }
+:is(.advisor-root, .admin-root) .card h3 svg { width: 16px; height: 16px; color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .brief-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; }
+:is(.advisor-root, .admin-root) .card--wide .brief-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+:is(.advisor-root, .admin-root) :is(.brief-item, .identity-row) span { display: block; font-size: 12.5px; font-weight: 600; color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) :is(.brief-item, .identity-row) b { font-family: var(--font-assistant), sans-serif; font-size: 14.5px; font-weight: 700; color: var(--o-ink); font-variant-numeric: tabular-nums; }
+:is(.advisor-root, .admin-root) .stat { background: var(--o-panel-2); border: 0; border-radius: 8px; padding: 9px 11px; }
+:is(.advisor-root, .admin-root) .stat span { font-size: 12px; color: var(--o-ink-3); font-weight: 600; }
+:is(.advisor-root, .admin-root) .stat b { font-family: var(--font-assistant), sans-serif; font-size: 15px; font-weight: 800; }
+:is(.advisor-root, .admin-root) .ratio-big b { font-family: var(--font-assistant), sans-serif; font-weight: 800; font-size: 28px; }
+:is(.advisor-root, .admin-root) .gauge__hole { background: var(--o-panel); }
+:is(.advisor-root, .admin-root) .gauge-wrap::before { display: none; }
+
+/* badges become quiet tags; status pills become dot + words */
+:is(.advisor-root, .admin-root) :is(.band-good, .band-watch, .band-risk, .complex-badge, .verify-badge) { background: var(--o-panel-2); color: var(--o-ink-2); border-radius: 4px; font-size: 12px; font-weight: 700; padding: 2px 8px; }
+:is(.advisor-root, .admin-root) .band-risk { background: #FBECEA; color: var(--o-risk); }
+:is(.advisor-root, .admin-root) .band-watch { color: var(--o-warn); }
+:is(.advisor-root, .admin-root) .complex-badge svg { color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .pill { background: none !important; color: var(--o-ink-2) !important; padding: 0; border-radius: 0; font-size: 13px; font-weight: 600; gap: 6px; }
+:is(.advisor-root, .admin-root) .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--dot, var(--o-mute)); }
+:is(.advisor-root, .admin-root) :is(.pill-pending, .pill-verifying, .pill-ready) { --dot: var(--o-warn); }
+:is(.advisor-root, .admin-root) :is(.pill-sent, .pill-awaiting) { --dot: var(--o-info); }
+:is(.advisor-root, .admin-root) :is(.pill-won, .pill-closed) { --dot: var(--o-ok); }
+:is(.advisor-root, .admin-root) .pill-lost { --dot: var(--o-mute); }
 
 /* controls */
-:is(.advisor-root, .admin-root) .btn { font-family: var(--font-secular), sans-serif; font-weight: 400; font-size: 15px; border-radius: 8px; }
-:is(.advisor-root, .admin-root) .btn-primary { background: var(--folder); color: #fff; box-shadow: 0 10px 18px -12px rgba(26, 58, 110, .9); }
-:is(.advisor-root, .admin-root) .btn-primary:hover { background: var(--desk); }
-:is(.advisor-root, .admin-root) .btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-:is(.advisor-root, .admin-root) .btn-ghost { color: var(--ink); border: 1.5px solid var(--line-strong); }
-:is(.advisor-root, .admin-root) .btn-ghost:hover { background: var(--surface-2); }
-:is(.advisor-root, .admin-root) .field label { color: var(--ink); font-weight: 800; font-size: 13.5px; }
-:is(.advisor-root, .admin-root) :is(.field input[type="number"], .field input[type="text"], .field textarea, .parsed-field input, .profile-panel input) {
-  border: 1.5px solid var(--line-strong); border-radius: 6px; background: #fff; font-size: 15px; }
-:is(.advisor-root, .admin-root) :is(.field input, .field textarea, .parsed-field input):focus { outline: none; border-color: var(--folder); box-shadow: 0 0 0 3px color-mix(in srgb, var(--hoodie) 28%, transparent); }
-:is(.advisor-root, .admin-root) :is(.suggested-note, .sent-note, .match-note) { border-radius: 6px; }
-:is(.advisor-root, .admin-root) .anon-note, :is(.advisor-root, .admin-root) .empty { color: var(--ink-soft); }
-:is(.advisor-root, .admin-root) .spinner { border-top-color: var(--folder); }
+:is(.advisor-root, .admin-root) .btn { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-assistant), sans-serif; font-weight: 700; font-size: 14px; border-radius: 8px; padding: 8px 14px; box-shadow: none; transition: background .15s, border-color .15s; }
+:is(.advisor-root, .admin-root) .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+:is(.advisor-root, .admin-root) .btn:hover { transform: none; }
+:is(.advisor-root, .admin-root) .btn-primary { background: var(--o-accent); color: #fff; border: 1px solid var(--o-accent); }
+:is(.advisor-root, .admin-root) .btn-primary:hover { background: #142E58; }
+:is(.advisor-root, .admin-root) .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+:is(.advisor-root, .admin-root) .btn-ghost { background: var(--o-panel); color: var(--o-ink); border: 1px solid var(--o-line-2); }
+:is(.advisor-root, .admin-root) .btn-ghost:hover { background: var(--o-panel-2); }
+:is(.advisor-root, .admin-root) .field label { color: var(--o-ink-2); font-weight: 700; font-size: 13px; }
+:is(.advisor-root, .admin-root) :is(.field input[type="number"], .field input[type="text"], .field textarea, .parsed-field input, .profile-panel input, select) {
+  border: 1px solid var(--o-line-2); border-radius: 8px; background: var(--o-panel); font-size: 14.5px; color: var(--o-ink); }
+:is(.advisor-root, .admin-root) :is(.field input, .field textarea, .parsed-field input, select):focus { outline: none; border-color: var(--o-accent); box-shadow: 0 0 0 3px var(--o-accent-soft); }
+:is(.advisor-root, .admin-root) :is(.suggested-note, .sent-note) { background: var(--o-panel-2); color: var(--o-ink-2); border-radius: 8px; }
+:is(.advisor-root, .admin-root) :is(.suggested-note, .sent-note) svg { color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .match-note { border-radius: 8px; }
+:is(.advisor-root, .admin-root) :is(.anon-note, .empty) { color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .spinner { border-top-color: var(--o-accent); }
 
-/* admin: the sidebar is a column of index tabs */
-.admin-root .admin-sidebar button { border-radius: 8px 0 0 8px; font-weight: 800; color: var(--ink-soft); }
-.admin-root .admin-sidebar button:hover { background: var(--surface-2); color: var(--ink); }
-.admin-root .admin-sidebar button.active { background: var(--folder); color: #fff; }
-.admin-root .admin-sidebar button.active svg { color: var(--accent); }
-.admin-root .tab { border-radius: 8px 8px 0 0; }
+/* admin-only pieces: quiet versions */
 .admin-root :is(.offer-card, .lead-row, .identity-row, .timeline-item) { border-radius: 8px; }
-.admin-root :is(.offer-card__avatar, .lead-row__avatar) { background: var(--folder); }
-@media (max-width: 760px) { .admin-root .admin-sidebar button { border-radius: 8px 8px 0 0; } }
+.admin-root .offer-card { border: 1px solid var(--o-line); box-shadow: none; }
+.admin-root :is(.offer-card__avatar, .lead-row__avatar) { background: var(--o-accent-soft); color: var(--o-accent); font-family: var(--font-assistant), sans-serif; }
+.admin-root .timeline-dot { background: var(--o-panel-2); color: var(--o-ink-3); }
+.admin-root .tab { border-radius: 8px; }
+.admin-root .tab[aria-pressed="true"] { background: var(--o-accent-soft); color: var(--o-accent); border-color: transparent; }
+:is(.advisor-root, .admin-root) .stat-tile { border: 1px solid var(--o-line); border-radius: 10px; box-shadow: none; padding: 12px 14px; }
+:is(.advisor-root, .admin-root) .stat-tile b { font-family: var(--font-assistant), sans-serif; font-weight: 800; font-size: 22px; }
+:is(.advisor-root, .admin-root) .stat-tile span { color: var(--o-ink-3); }
+:is(.advisor-root, .admin-root) .stat-tile em { color: var(--o-ink-3); }
+.admin-root .page { max-width: 1320px; margin-inline: auto; padding: 20px; }
 
-/* ═════════ less scrolling: wider desk, denser sheets, a pinned side column ═════════ */
-:is(.advisor-root, .admin-root) .topbar__inner,
-:is(.advisor-root, .admin-root) .page { max-width: 1520px; }
-:is(.advisor-root, .admin-root) .page { padding-top: 16px; padding-bottom: 32px; gap: 16px; }
-:is(.advisor-root, .admin-root) .topbar { padding-block: 8px; }
-
-/* ledger strip: one short row */
-:is(.advisor-root, .admin-root) .stat-row { gap: 10px; margin-bottom: 14px !important; }
-:is(.advisor-root, .admin-root) .stat-tile { padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 10px; }
-:is(.advisor-root, .admin-root) .stat-tile b { font-size: 22px; padding: 0; grid-row: 1 / 3; grid-column: 2; }
-:is(.advisor-root, .admin-root) .stat-tile em { font-size: 12px; }
-
-/* the cabinet: two columns of case folders on a wide desk */
-:is(.advisor-root, .admin-root) .case-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 18px 14px; }
-:is(.advisor-root, .admin-root) .case-row { padding: 11px 14px; gap: 8px 14px; }
-:is(.advisor-root, .admin-root) .case-row__icon { width: 36px; height: 36px; }
-:is(.advisor-root, .admin-root) .case-row__badges { flex-direction: row; flex-wrap: wrap; align-items: center; }
-
-/* a case: info sheets two to a row, wide ones across, the working column pinned */
-:is(.advisor-root, .admin-root) .detail-head { margin-bottom: 12px !important; gap: 10px; flex-wrap: wrap; }
-:is(.advisor-root, .admin-root) .detail-layout { grid-template-columns: minmax(0, 2.1fr) minmax(330px, 1fr); gap: 14px; }
-:is(.advisor-root, .admin-root) .detail-layout__main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; grid-auto-flow: dense; }
-:is(.advisor-root, .admin-root) .detail-layout__main > .card--wide { grid-column: 1 / -1; }
-:is(.advisor-root, .admin-root) .detail-layout__side { gap: 14px; top: 72px; max-height: calc(100vh - 88px); overflow-y: auto; overscroll-behavior: contain; padding-inline-end: 2px; scrollbar-width: thin; }
-:is(.advisor-root, .admin-root) .card { padding: 14px 16px; }
-:is(.advisor-root, .admin-root) .card h3 { font-size: 16.5px; padding-bottom: 8px; margin-bottom: 10px; }
-:is(.advisor-root, .admin-root) .brief-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
-:is(.advisor-root, .admin-root) .card--wide .brief-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-:is(.advisor-root, .admin-root) .brief-item b { font-size: 13.5px; }
-
+/* ───────── narrow screens: the list, then the case with a way back ───────── */
 @media (max-width: 1180px) {
-  :is(.advisor-root, .admin-root) .case-list { grid-template-columns: minmax(0, 1fr); }
-  :is(.advisor-root, .admin-root) .card--wide .brief-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 900px) {
-  :is(.advisor-root, .admin-root) .detail-layout__main { grid-template-columns: minmax(0, 1fr); }
   :is(.advisor-root, .admin-root) .detail-layout { grid-template-columns: minmax(0, 1fr); }
   :is(.advisor-root, .admin-root) .detail-layout__side { position: static; max-height: none; overflow: visible; }
-  :is(.advisor-root, .admin-root) .card--wide .brief-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
-/* header buttons carry an icon at text size, never the SVG default */
-:is(.advisor-root, .admin-root) .btn { display: inline-flex; align-items: center; gap: 7px; }
-:is(.advisor-root, .admin-root) .btn svg { width: 17px; height: 17px; flex-shrink: 0; }
-:is(.advisor-root, .admin-root) .detail-head .btn { padding: 8px 14px; font-size: 15px; }
+@media (max-width: 900px) {
+  :is(.advisor-root, .admin-root) .split { grid-template-columns: minmax(0, 1fr); min-height: calc(100vh - var(--o-top)); }
+  :is(.advisor-root, .admin-root) .queue { position: static; height: auto; }
+  :is(.advisor-root, .admin-root) .detail-head { margin-inline: -14px; padding-inline: 14px; }
+  :is(.advisor-root, .admin-root) .split:not(.split--case) .pane { display: none; }
+  :is(.advisor-root, .admin-root) .split--case .queue { display: none; }
+  :is(.advisor-root, .admin-root) .queue__list { overflow: visible; }
+  :is(.advisor-root, .admin-root) .pane { padding: 14px 14px 28px; overflow: visible; }
+  :is(.advisor-root, .admin-root) .back-btn { display: inline-flex; }
+  :is(.advisor-root, .admin-root) .detail-layout__main { grid-template-columns: minmax(0, 1fr); }
+  :is(.advisor-root, .admin-root) .brand small, :is(.advisor-root, .admin-root) :is(.advisor-chip__info, .admin-chip__info) { display: none; }
+  .admin-root .topnav { margin-inline-start: 8px; }
+  .admin-root .topnav button { padding: 0 8px; }
+}

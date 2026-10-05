@@ -100,7 +100,7 @@ export function AdminApp({
     <div className="admin-root">
       <AdminIcons />
 
-      <div className="topbar">
+      <header className="topbar">
         <div className="topbar__inner">
           <div className="brand">
             <svg><use href="#ic-tower" /></svg>
@@ -109,7 +109,22 @@ export function AdminApp({
               <small>קונסולת ניהול פנימית</small>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <nav className="topnav" aria-label="אזורי הקונסולה">
+            <button type="button" aria-current={view === "cases" ? "page" : undefined} onClick={() => setView("cases")}>
+              <svg><use href="#ic-doc" /></svg>תיקים
+            </button>
+            <button
+              type="button"
+              aria-current={view === "team" ? "page" : undefined}
+              onClick={() => {
+                setView("team");
+                setSelectedId(null);
+              }}
+            >
+              <svg><use href="#ic-user" /></svg>יועצים וצוות
+            </button>
+          </nav>
+          <div className="topbar__end">
             <div className="admin-chip">
               <div className="admin-chip__avatar">{adminName.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
               <div className="admin-chip__info">
@@ -120,93 +135,94 @@ export function AdminApp({
             <SignOutButton className="btn btn-ghost" />
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="page">
-        <div className="admin-shell">
-          <nav className="admin-sidebar">
-            <button type="button" className={view === "cases" ? "active" : ""} onClick={() => setView("cases")}>
-              <svg><use href="#ic-doc" /></svg>תיקים
-            </button>
-            <button
-              type="button"
-              className={view === "team" ? "active" : ""}
-              onClick={() => {
-                setView("team");
-                setSelectedId(null);
-              }}
-            >
-              <svg><use href="#ic-user" /></svg>יועצים וצוות
-            </button>
-          </nav>
-          <div className="admin-main">
-        {view === "team" ? (
+      {view === "team" ? (
+        <div className="page">
           <TeamPage advisors={advisors} onChanged={reloadAdvisors} canManage={adminRole === "admin"} />
-        ) : loading ? (
-          <div className="empty">טוען תיקים…</div>
-        ) : !selected ? (
-          <>
-            <div className="stat-row" style={{ marginBottom: 22 }}>
-              <div className="stat-tile"><span>תיקים החודש</span><b className="num">{stats.total}</b><em>{stats.closed} נסגרו בהצלחה</em></div>
-              <div className="stat-tile"><span>ממתינים להקצאה</span><b className="num">{stats.unassigned}</b><em>צריך לבחור יועצים</em></div>
-              <div className="stat-tile"><span>ממתינים לאימות זהות</span><b className="num">{stats.verifying}</b><em>לא ניתן לשלוח ליועצים</em></div>
-              <div className="stat-tile"><span>מוכנים לבחירת מנצח</span><b className="num">{stats.ready}</b><em>4/4 הצעות התקבלו</em></div>
-              <div className="stat-tile"><span>חיסכון שאושר ללקוחות</span><b className="num">{shekel(stats.savings)}</b><em>בתיקים שנסגרו</em></div>
-            </div>
-
-            <div className="section-head">
-              <h2>כל התיקים</h2>
-              <span>{visibleCases.length} תיקים מוצגים</span>
-            </div>
-            <div className="tab-row" style={{ margin: "12px 0 6px" }}>
-              {TABS.map((t) => {
-                const count = t.key === "all" ? cases.length : cases.filter((c) => c.status === t.key).length;
-                return (
-                  <button key={t.key} type="button" className="tab" aria-pressed={activeFilter === t.key} onClick={() => setActiveFilter(t.key)}>
-                    {t.label} <span className="count">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="case-list" style={{ marginTop: 10 }}>
-              {visibleCases.length === 0 ? (
-                <div className="empty">אין תיקים בסטטוס הזה כרגע.</div>
-              ) : (
-                visibleCases.map((c) => {
-                  const progress =
-                    c.status === "new" ? "טרם הוקצה ליועצים" : c.status === "verifying" ? "טרם נשלח" : `${c.offers.length} הצעות התקבלו`;
-                  return (
-                    <button key={c.id} type="button" className="case-row" onClick={() => setSelectedId(c.id)}>
-                      <span className="case-row__icon"><svg><use href={`#${LABELS.specialtyIcon[c.requestType]}`} /></svg></span>
-                      <span className="case-row__main">
-                        <strong>תיק {c.caseNumber} · {LABELS.requestType[c.requestType]}</strong>
-                        <small>{LABELS.goal[c.goal]} · התקבל {c.receivedAt}</small>
-                      </span>
-                      <span className="case-row__progress"><span>סטטוס הצעות</span><b>{progress}</b></span>
-                      <span className="case-row__badges">
-                        {c.complex && <span className="complex-badge"><svg><use href="#ic-search" /></svg>תיק מורכב</span>}
-                      </span>
-                      <span className={`pill ${STATUS_META[c.status].cls}`}>{STATUS_META[c.status].label}</span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </>
-        ) : (
-          <DetailView
-            key={selected.id}
-            case_={selected}
-            advisors={advisors}
-            adminId={adminId}
-            adminName={adminName}
-            onBack={() => setSelectedId(null)}
-            onUpdate={(patch) => updateCase(selected.id, patch)}
-          />
-        )}
-          </div>
         </div>
-      </div>
+      ) : (
+        <div className={"split" + (selected ? " split--case" : "")}>
+          {loading ? (
+            <div className="empty">טוען תיקים…</div>
+          ) : (
+            <>
+              <aside className="queue" aria-label="כל התיקים">
+                <div className="queue__head">
+                  <h1>כל התיקים</h1>
+                  <p>
+                    {stats.unassigned} ממתינים להקצאה, {stats.ready} מוכנים לבחירת מנצח
+                  </p>
+                </div>
+                <div className="queue__filter">
+                  <label htmlFor="case-filter">סטטוס</label>
+                  <select id="case-filter" value={activeFilter} onChange={(e) => setActiveFilter(e.target.value as typeof activeFilter)}>
+                    {TABS.map((t) => {
+                      const count = t.key === "all" ? cases.length : cases.filter((c) => c.status === t.key).length;
+                      return (
+                        <option key={t.key} value={t.key}>
+                          {t.label} ({count})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                <div className="queue__list">
+                  {visibleCases.length === 0 ? (
+                    <div className="queue__empty">אין תיקים בסטטוס הזה כרגע.</div>
+                  ) : (
+                    visibleCases.map((c) => {
+                      const progress =
+                        c.status === "new" ? "טרם הוקצה" : c.status === "verifying" ? "טרם נשלח" : `${c.offers.length} הצעות`;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className="queue-row"
+                          aria-current={c.id === selectedId ? "true" : undefined}
+                          onClick={() => setSelectedId(c.id)}
+                        >
+                          <b className="num">{c.caseNumber}</b>
+                          <span className="queue-row__amt">{progress}</span>
+                          <small>
+                            {LABELS.requestType[c.requestType]}, {LABELS.goal[c.goal]}
+                          </small>
+                          <span className={`status status--${c.status}`}>{STATUS_META[c.status].label}</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </aside>
+              <main className="pane">
+                {selected ? (
+                  <DetailView
+                    key={selected.id}
+                    case_={selected}
+                    advisors={advisors}
+                    adminId={adminId}
+                    adminName={adminName}
+                    onBack={() => setSelectedId(null)}
+                    onUpdate={(patch) => updateCase(selected.id, patch)}
+                  />
+                ) : (
+                  <div className="overview">
+                    <h2>סקירה</h2>
+                    <dl className="overview__strip">
+                      <div><dt>תיקים החודש</dt><dd className="num">{stats.total}</dd></div>
+                      <div><dt>ממתינים להקצאה</dt><dd className="num">{stats.unassigned}</dd></div>
+                      <div><dt>ממתינים לאימות זהות</dt><dd className="num">{stats.verifying}</dd></div>
+                      <div><dt>מוכנים לבחירת מנצח</dt><dd className="num">{stats.ready}</dd></div>
+                      <div><dt>חיסכון שאושר ללקוחות</dt><dd className="num">{shekel(stats.savings)}</dd></div>
+                    </dl>
+                    <p className="overview__hint">בחרו תיק מהרשימה כדי להקצות יועצים, להשוות הצעות ולסגור אותו.</p>
+                  </div>
+                )}
+              </main>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

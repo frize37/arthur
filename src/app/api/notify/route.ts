@@ -1,6 +1,6 @@
 import "server-only";
 import { NextRequest, NextResponse } from "next/server";
-import { sendAdvisorAssignedEmail, sendCaseSubmittedEmails, sendOfferSubmittedEmail, sendWinnerChosenEmails } from "@/lib/email";
+import { sendAdvisorAssignedEmail, sendAdvisorJoinRequestEmail, sendCaseSubmittedEmails, sendOfferSubmittedEmail, sendWinnerChosenEmails } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -19,6 +19,17 @@ export async function POST(req: NextRequest) {
       case "winner-chosen":
         await sendWinnerChosenEmails(body);
         break;
+      case "advisor-join": {
+        // Public form on the login page: keep only short, plain fields.
+        const clean = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+        const name = clean(body.name, 80), phone = clean(body.phone, 30), email = clean(body.email, 120);
+        if (!name || !phone || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          return NextResponse.json({ ok: false, error: "חסרים שם, טלפון או מייל תקין." }, { status: 400 });
+        }
+        const sent = await sendAdvisorJoinRequestEmail({ name, phone, email, specialty: clean(body.specialty, 120) });
+        if (!sent.ok) return NextResponse.json({ ok: false, error: sent.error }, { status: 502 });
+        break;
+      }
       case "offer-submitted":
         await sendOfferSubmittedEmail(body);
         break;
